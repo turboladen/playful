@@ -3,6 +3,12 @@ Feature: Controlled Device
   I want to use the device that offers some service
   So that I can consume that service
 
+  Scenario: Device added to the network
+    Given I have a non-local IP address
+    And a UDP port on that IP is free
+    When I start my device on that IP address and port
+    Then the device multicasts a discovery message
+
   @negative
   Scenario: Device startup without an IP
     Given I don't have an IP address
