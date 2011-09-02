@@ -1,5 +1,5 @@
 require "upnp/version"
 
-module Upnp
+module UPnP
   # Your code goes here...
 end

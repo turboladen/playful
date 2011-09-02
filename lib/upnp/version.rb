@@ -1,3 +1,3 @@
-module Upnp
+module UPnP
   VERSION = "0.0.1"
 end
