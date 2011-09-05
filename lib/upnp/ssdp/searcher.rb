@@ -1,12 +1,9 @@
 require_relative 'connection'
 
 class SSDP::Searcher < SSDP::Connection
-  attr_reader :responses
-
   def initialize(search, ttl)
     super ttl
     @search = search
-    @responses = []
   end
 
   def post_init
@@ -16,9 +13,9 @@ class SSDP::Searcher < SSDP::Connection
   end
 
   def receive_data(data)
-    #if data =~ /(^HTTP|ST:)/i
+    if data =~ /(^HTTP|ST:)/i
       puts "<#{self.class}> #{data}"
       responses << data
-    #end
+    end
   end
 end

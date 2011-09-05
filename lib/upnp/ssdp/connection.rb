@@ -15,13 +15,17 @@ class SSDP
     # Default packet time to live (hops)
     TTL = 4
 
+    attr_reader :responses
+
     def initialize ttl=TTL
       @ttl = ttl
+      @responses = []
       setup_multicast_socket
     end
 
     def receive_data(data)
       puts "<#{self.class}> #{data}"
+      responses << data
     end
 
     def setup_multicast_socket
