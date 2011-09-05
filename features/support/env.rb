@@ -1,4 +1,5 @@
 require 'socket'
+require_relative '../../lib/upnp/control_point'
 
 def local_ip_and_port
   orig, Socket.do_not_reverse_lookup = Socket.do_not_reverse_lookup, true

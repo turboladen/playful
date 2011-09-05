@@ -1,5 +1,5 @@
 When /^I start my control point$/ do
-  @control_point = UPnP::ControlPoint.new(@ip, @port)
+  @control_point = UPnP::ControlPoint.new
   @control_point.start.should be_true
 end
 

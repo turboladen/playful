@@ -1,14 +1,18 @@
-require 'ipaddr'
-require_relative '../core_ext/socket_patch'
-require 'eventmachine'
+require_relative 'ssdp'
 
-class UPnP::ControlPoint
-  def initialize(ip, port)
-    @ip = ip
-    @port = port
-  end
+module UPnP
+  class ControlPoint
+    attr_reader :devices
 
-  def start
+    def initialize(ip='0.0.0.0', port=0)
+      @ip = ip
+      @port = port
+      @devices = []
+    end
 
+    def start
+      @devices = SSDP.search("ssdp:all")
+      @devices = SSDP.search "upnp:rootdevice" if @devices.empty?
+    end
   end
 end
