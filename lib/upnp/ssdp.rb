@@ -3,7 +3,7 @@ require 'ipaddr'
 require 'socket'
 require 'eventmachine'
 
-require_relative 'ssdp/discoverer'
+require_relative 'ssdp/listener'
 require_relative 'ssdp/searcher'
 
 class SSDP
@@ -18,9 +18,9 @@ class SSDP
   TTL = 4
 
   # Simply open a multicast UDP socket and listen for data.
-  def self.discover(ttl=TTL)
+  def self.listen(ttl=TTL)
     EM.run do
-      EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, SSDP::Discoverer, ttl)
+      EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, SSDP::Listener, ttl)
       i = 0
       EM.add_periodic_timer(1) { i += 1; puts "#{i}\r"}
       trap_signals
@@ -48,7 +48,7 @@ ST: #{search_target}\r
     responses = []
 
     EM.run do
-      EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, SSDP::Discoverer, ttl)
+      EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, SSDP::Listener, ttl)
       s = EM.open_datagram_socket('0.0.0.0', 0, SSDP::Searcher, search, ttl)
       EM.add_shutdown_hook { responses = s.responses }
       EM.add_timer(response_wait_time) { EM.stop }
