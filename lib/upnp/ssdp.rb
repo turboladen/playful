@@ -27,29 +27,20 @@ class SSDP
     end
   end
 
-  # Builds the search request from the given parameters, opens a UDP socket on
-  # 0.0.0.0, on an ephemeral port, SSDP::Searcher sends the request and receives
-  # the responses.  The search will stop after +response_wait_time+.
+  # Opens a UDP socket on 0.0.0.0, on an ephemeral port, has SSDP::Searcher
+  # build and send the search request, then receives the responses.  The search
+  # will stop after +response_wait_time+.
   #
   # @param [String] search_target
   # @param [Fixnum] response_wait_time
   # @param [Fixnum] ttl
   # @param [Array] An Array of all of the responses received from the request.
   def self.search(search_target="ssdp:all", response_wait_time=5, ttl=TTL)
-    search = <<-MSEARCH
-M-SEARCH * HTTP/1.1\r
-HOST: #{BROADCAST}:#{MULTICAST_PORT}\r
-MAN: "ssdp:discover"\r
-MX: #{response_wait_time}\r
-ST: #{search_target}\r
-\r
-    MSEARCH
-
     responses = []
 
     EM.run do
-      EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, SSDP::Listener, ttl)
-      s = EM.open_datagram_socket('0.0.0.0', 0, SSDP::Searcher, search, ttl)
+      s = EM.open_datagram_socket('0.0.0.0', 0, SSDP::Searcher, search_target,
+        response_wait_time, ttl)
       EM.add_shutdown_hook { responses = s.responses }
       EM.add_timer(response_wait_time) { EM.stop }
       trap_signals
