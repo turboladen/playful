@@ -1,19 +1,24 @@
 require_relative 'connection'
 
 class SSDP::Searcher < SSDP::Connection
+  attr_reader :responses
+
   def initialize(search, ttl)
     super ttl
     @search = search
+    @responses = []
   end
 
   def post_init
-    setup_multicast_socket
-    send_datagram @search, BROADCAST, MULTICAST_PORT
-    puts "Send search: #{@search}"
+    if (send_datagram @search, BROADCAST, MULTICAST_PORT) > 0
+      puts("Sent datagram search #1:", @search)
+    end
   end
 
   def receive_data(data)
-    p data if data =~ /^HTTP/
-    puts "meow", data if data =~ /ST:/i
+    #if data =~ /(^HTTP|ST:)/i
+      puts "<#{self.class}> #{data}"
+      responses << data
+    #end
   end
 end

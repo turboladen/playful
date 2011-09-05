@@ -17,14 +17,11 @@ class SSDP
 
     def initialize ttl=TTL
       @ttl = ttl
-    end
-
-    def post_init
       setup_multicast_socket
     end
 
     def receive_data(data)
-      p data
+      puts "<#{self.class}> #{data}"
     end
 
     def setup_multicast_socket
@@ -35,6 +32,14 @@ class SSDP
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000")
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, ttl)
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_TTL, ttl)
+    end
+
+    def peer
+      @peer ||=
+        begin
+          port, ip = Socket.unpack_sockaddr_in(get_sockname)
+          "#{ip}:#{port}"
+        end
     end
   end
 end
