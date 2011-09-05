@@ -15,6 +15,7 @@ class SSDP
     # Default packet time to live (hops)
     TTL = 4
 
+    # @return [Array] The list of responses from the current request.
     attr_reader :responses
 
     def initialize ttl=TTL
@@ -28,6 +29,7 @@ class SSDP
       responses << data
     end
 
+    # Sets Socket options to allow for multicasting.
     def setup_multicast_socket
       membership = IPAddr.new(BROADCAST).hton + IPAddr.new('0.0.0.0').hton
       ttl = [@ttl].pack 'i'
@@ -38,6 +40,9 @@ class SSDP
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_TTL, ttl)
     end
 
+    # Gets the current "peer"'s IP and PORT.
+    #
+    # @return [String] A String in the form: ip:port.
     def peer
       @peer ||=
         begin
