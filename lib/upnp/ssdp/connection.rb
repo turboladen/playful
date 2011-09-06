@@ -37,7 +37,6 @@ class SSDP
       new_data = { }
 
       data.each_line do |line|
-        puts "line:", line
         line =~ /(\S*): (.*)/
 
         unless $1.nil?
