@@ -12,19 +12,12 @@ class SSDP::Searcher < SSDP::Connection
     end
   end
 
-  def receive_data(data)
-    if data =~ /(^HTTP|ST:)/i
-      puts "<#{self.class}> #{data}"
-      responses << data
-    end
-  end
-
   # Builds the M-SEARCH request string.
   #
   # @param [String] search_target
   # @param [Fixnum] response_wait_time
   def m_search(search_target, response_wait_time)
-     <<-MSEARCH
+    <<-MSEARCH
 M-SEARCH * HTTP/1.1\r
 HOST: #{BROADCAST}:#{MULTICAST_PORT}\r
 MAN: "ssdp:discover"\r

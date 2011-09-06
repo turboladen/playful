@@ -24,9 +24,31 @@ class SSDP
       setup_multicast_socket
     end
 
-    def receive_data(data)
-      puts "<#{self.class}> #{data}"
-      responses << data
+    def receive_data(response)
+      puts "<#{self.class}> #{response}"
+      @responses << parse(response)
+    end
+
+    # Converts the headers to a set of key-value pairs.
+    #
+    # @param [String] data The data to convert.
+    # @return [Hash] The converted data.
+    def parse(data)
+      new_data = { }
+
+      data.each_line do |line|
+        puts "line:", line
+        line =~ /(\S*): (.*)/
+
+        unless $1.nil?
+          key = $1
+          value = $2
+          key = key.gsub('-', '_').downcase.to_sym
+          new_data[key] = value.strip
+        end
+      end
+
+      new_data
     end
 
     # Sets Socket options to allow for multicasting.
