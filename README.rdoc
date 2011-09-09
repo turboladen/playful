@@ -1,0 +1,48 @@
+= upnp
+
+* {Homepage}[http://rubygems.org/gems/upnp]
+* {Documentation}[http://rubydoc.info/gems/upnp/frames]
+* {UPnP Device Architecture Documentation}[http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf]
+
+== Description
+
+Ruby's UPnP RubyGem was outdated in Ruby 1.9 when support for Soap4r was dropped.  This gem intends to
+fill that void for Ruby 1.9 and allow for SSDP search, discovery, advertisement, the ability to act as
+a UPnP control point, as well as UPnP devices and services.
+
+== Features
+
+* SSDP search and discovery.
+
+== Examples
+
+  require 'upnp/ssdp'
+  all_devices = SSDP.search                         # search for all devices
+  root_devices = SSDP.search 'upnp:rootdevices'     # search for root devices
+  my_devices = SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'      # search for specific device by UUID
+  my_media_server = SSDP.search 'urn:schemas-upnp-org:device:MediaServer:1' # search for all MediaServer:1s
+
+== Requirements
+
+* Rubies (tested)
+  * 1.9.2
+  * 1.9.3-preview1
+* Gems
+  * nori
+  * eventmachine
+* Gems (development)
+  * bundler, ~> 1.0.0
+  * cucumber, ~> 0.10.0
+  * rspec, ~> 2.5.0
+  * simplecov, >= 0.4.0 (MRI 1.9.x only)
+  * yard, >= 0.6.0
+
+== Install
+
+  $ gem install upnp
+
+== Copyright
+
+Copyright (c) 2011 sloveless
+
+See LICENSE.rdoc for details.
