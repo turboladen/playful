@@ -22,7 +22,7 @@ class SSDP
     EM.run do
       EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, SSDP::Listener, ttl)
       i = 0
-      EM.add_periodic_timer(1) { i += 1; puts "#{i}\r"}
+      EM.add_periodic_timer(1) { i += 1; print "listening for \b#{i}"}
       trap_signals
     end
   end
