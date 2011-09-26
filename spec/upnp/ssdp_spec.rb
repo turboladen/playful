@@ -90,6 +90,16 @@ describe SSDP do
       end
     end
 
+    it "can wait for user-defined seconds for responses" do
+      before = Time.now
+
+      SSDP.search(:all, 1)
+
+      after = Time.now
+      (after - before).should < 1.1
+      (after - before).should > 1.0
+    end
+
     it "finds a device by its URN" do
       pending
     end
