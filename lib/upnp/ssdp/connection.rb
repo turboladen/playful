@@ -56,7 +56,6 @@ class SSDP
       membership = IPAddr.new(BROADCAST).hton + IPAddr.new('0.0.0.0').hton
       ttl = [@ttl].pack 'i'
 
-      puts membership.class
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_ADD_MEMBERSHIP, membership)
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000")
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, ttl)
