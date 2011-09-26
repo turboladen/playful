@@ -1,6 +1,4 @@
 require_relative '../core_ext/socket_patch'
-require 'ipaddr'
-require 'socket'
 require 'eventmachine'
 
 require_relative 'ssdp/listener'
