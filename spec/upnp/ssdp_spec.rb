@@ -59,7 +59,13 @@ describe SSDP do
       end
 
       it "waits for 5 seconds for responses" do
-        pending
+        before = Time.now
+
+        SSDP.search
+
+        after = Time.now
+        (after - before).should < 5.1
+        (after - before).should > 5.0
       end
     end
 
@@ -80,6 +86,7 @@ describe SSDP do
       end
 
       it "by using :root" do
+        pending
       end
     end
 
