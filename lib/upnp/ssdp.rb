@@ -37,6 +37,7 @@ class SSDP
   # @param [Array] An Array of all of the responses received from the request.
   def self.search(search_target="ssdp:all", response_wait_time=5, ttl=TTL)
     responses = []
+    search_target = search_target_to_s(search_target) unless search_target.is_a? String
 
     EM.run do
       s = EM.open_datagram_socket('0.0.0.0', 0, SSDP::Searcher, search_target,
@@ -58,4 +59,38 @@ class SSDP
       EM.stop
     end
   end
+
+  # Converts non-String search targets to String.
+  #
+  # @param [Hash,Symbo] st The search target to convert.
+  # @return [String] The converted String, according to the UPnP spec.
+  def self.search_target_to_s(st)
+    if st.is_a? Hash
+      if st.has_key? :uuid then
+        return "uuid:#{st[:uuid]}"
+      elsif st.has_key? :device_type
+        if st.has_key? :domain_name
+          return "urn:#{st[:domain_name]}:device:#{st[:device_type]}"
+        else
+          return "urn:schemas-upnp-org:device:#{st[:device_type]}"
+        end
+      elsif st.has_key? :service_type
+        if st.has_key? :domain_name
+          return "urn:#{st[:domain_name]}:service:#{st[:service_type]}"
+        else
+          return "urn:schemas-upnp-org:service:#{st[:service_type]}"
+        end
+      end
+    end
+
+    case st
+    when :all then
+      return "ssdp:all"
+    when :root then
+      return "upnp:rootdevice"
+    when "root" then
+      return "upnp:rootdevice"
+    end
+  end
 end
+
