@@ -7,8 +7,8 @@ class SSDP::Searcher < SSDP::Connection
   end
 
   def post_init
-    if (send_datagram @search, BROADCAST, MULTICAST_PORT) > 0
-      puts("Sent datagram search #1:", @search)
+    if send_datagram(@search, BROADCAST, MULTICAST_PORT) > 0
+      puts("Sent datagram search #1:\n", @search)
     end
   end
 

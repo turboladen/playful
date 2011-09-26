@@ -18,14 +18,14 @@ class SSDP
   TTL = 4
 
   # Simply open a multicast UDP socket and listen for data.
-  def self.listen(ttl=TTL)
-    EM.run do
-      EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, SSDP::Listener, ttl)
-      i = 0
-      EM.add_periodic_timer(1) { i += 1; print "listening for \b#{i}"}
-      trap_signals
-    end
-  end
+  #def self.listen(ttl=TTL)
+  #  EM.run do
+  #    EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, SSDP::Listener, ttl)
+  #    i = 0
+  #    EM.add_periodic_timer(1) { i += 1; print "listening for \b#{i}"}
+  #    trap_signals
+  #  end
+  #end
 
   # Opens a UDP socket on 0.0.0.0, on an ephemeral port, has SSDP::Searcher
   # build and send the search request, then receives the responses.  The search
