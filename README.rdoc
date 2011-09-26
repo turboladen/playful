@@ -10,6 +10,16 @@ Ruby's UPnP RubyGem was outdated in Ruby 1.9 when support for Soap4r was dropped
 fill that void for Ruby 1.9 and allow for SSDP search, discovery, advertisement, the ability to act as
 a UPnP control point, as well as UPnP devices and services.
 
+=== Getting Started
+
+As of this writing, the SSDP functionality depends on an unreleased version of {EventMachine}[http://github.com/eventmachine/eventmachine]
+in order to do multicast UDP.  Before using this library, make sure you:
+
+* <code>gem install bundler</code>
+* <code>bundle install</code>
+
+Once EventMachine 1.0.0 is released, I'll remove the dep on the git version of EM.
+
 == Features
 
 * SSDP search and discovery.
