@@ -19,6 +19,7 @@ class SSDP
     attr_reader :responses
 
     def initialize ttl=TTL
+      puts "ttl", ttl
       @ttl = ttl
       @responses = []
       setup_multicast_socket
@@ -55,21 +56,11 @@ class SSDP
       membership = IPAddr.new(BROADCAST).hton + IPAddr.new('0.0.0.0').hton
       ttl = [@ttl].pack 'i'
 
+      puts membership.class
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_ADD_MEMBERSHIP, membership)
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000")
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, ttl)
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_TTL, ttl)
-    end
-
-    # Gets the current "peer"'s IP and PORT.
-    #
-    # @return [String] A String in the form: ip:port.
-    def peer
-      @peer ||=
-        begin
-          port, ip = Socket.unpack_sockaddr_in(get_sockname)
-          "#{ip}:#{port}"
-        end
     end
   end
 end

@@ -8,15 +8,16 @@ Gem::Specification.new do |s|
   s.authors     = ["turboladen"]
   s.email       = ["steve.loveless@gmail.com"]
   s.homepage    = "http://github.com/turboladen/upnp"
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{Use me to build a UPnP app!}
+  s.description = %q{upnp provides the tools you need to build an app that runs
+in a UPnP environment.}
 
   s.rubyforge_project = "upnp"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-  s.extra_rdoc_files = %w(ChangeLog.rdoc README.rdoc)
+  s.extra_rdoc_files = %w(History.rdoc README.rdoc)
   s.require_paths = ["lib"]
 
   s.required_ruby_version = Gem::Requirement.new(">=1.9.1")
