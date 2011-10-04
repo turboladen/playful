@@ -1,19 +1,12 @@
 require_relative '../core_ext/socket_patch'
 require 'eventmachine'
 
+require_relative 'globals'
 require_relative 'ssdp/listener'
 require_relative 'ssdp/searcher'
 
 class SSDP
-
-  # Default broadcast address
-  BROADCAST = '239.255.255.250'
-
-  # Default multicast port
-  MULTICAST_PORT = 1900
-
-  # Default TTL
-  TTL = 4
+  include UPnP::Globals
 
   # Simply open a multicast UDP socket and listen for data.
   #def self.listen(ttl=TTL)
