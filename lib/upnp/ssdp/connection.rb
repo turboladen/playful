@@ -1,5 +1,5 @@
 require_relative '../../core_ext/socket_patch'
-require 'upnp/globals'
+require_relative '../globals'
 require 'ipaddr'
 require 'socket'
 require 'eventmachine'
