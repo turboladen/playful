@@ -23,6 +23,7 @@ in a UPnP environment.}
   s.required_ruby_version = Gem::Requirement.new(">=1.9.1")
 
   s.add_dependency('nori', '~>1.0.2')
+  s.add_dependency('eventmachine', '>=1.0.0.beta.4')
   s.add_development_dependency('code_statistics', '>=0.2.13')
   s.add_development_dependency('cucumber', '>=1.0.0')
   s.add_development_dependency('metric_fu', '>=2.0.1')
