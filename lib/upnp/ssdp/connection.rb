@@ -1,19 +1,12 @@
 require_relative '../../core_ext/socket_patch'
+require 'upnp/globals'
 require 'ipaddr'
 require 'socket'
 require 'eventmachine'
 
 class SSDP
   class Connection < EventMachine::Connection
-
-    # Default broadcast address
-    BROADCAST = '239.255.255.250'
-
-    # Default multicast port
-    MULTICAST_PORT = 1900
-
-    # Default packet time to live (hops)
-    TTL = 4
+    include UPnP::Globals
 
     # @return [Array] The list of responses from the current request.
     attr_reader :responses
