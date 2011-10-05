@@ -1,44 +1,5 @@
 require_relative '../spec_helper'
 
-ROOT_DEVICE1 = <<-RD
-HTTP/1.1 200 OK
-CACHE-CONTROL: max-age=1200
-DATE: Mon, 26 Sep 2011 06:40:19 GMT
-LOCATION: http://192.168.10.3:5001/description/fetch
-SERVER: Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1
-ST: upnp:rootdevice
-EXT:
-USN: uuid:3c202906-992d-3f0f-b94c-90e1902a136d::upnp:rootdevice
-Content-Length: 0
-
-RD
-
-ROOT_DEVICE2 = <<-RD
-HTTP/1.1 200 OK
-CACHE-CONTROL: max-age=1200
-DATE: Mon, 26 Sep 2011 06:40:20 GMT
-LOCATION: http://192.168.10.4:5001/description/fetch
-SERVER: Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1
-ST: upnp:rootdevice
-EXT:
-USN: uuid:3c202906-992d-3f0f-b94c-90e1902a136e::upnp:rootdevice
-Content-Length: 0
-
-RD
-
-MEDIA_SERVER = <<-MD
-HTTP/1.1 200 OK
-CACHE-CONTROL: max-age=1200
-DATE: Mon, 26 Sep 2011 06:40:21 GMT
-LOCATION: http://192.168.10.3:5001/description/fetch
-SERVER: Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1
-ST: urn:schemas-upnp-org:device:MediaServer:1
-EXT:
-USN: uuid:3c202906-992d-3f0f-b94c-90e1902a136d::urn:schemas-upnp-org:device:MediaServer:1
-Content-Length: 0
-
-MD
-
 describe SSDP do
   #describe '.listen' do
   #  it 'starts the EM reactor' do

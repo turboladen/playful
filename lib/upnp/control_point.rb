@@ -26,9 +26,10 @@ module UPnP
       Nori.parser = :nokogiri if defined? ::Nokogiri
     end
 
-    def find_devices
-      @devices = SSDP.search("ssdp:all")
-      @devices = SSDP.search "upnp:rootdevice" if @devices.empty?
+    # @param [String] search_type
+    # @return [Hash]
+    def find_devices(search_type="ssdp:all")
+      @devices = SSDP.search(search_type)
 
       @devices.each do |device|
         device[:description] = get_description(device[:location])
