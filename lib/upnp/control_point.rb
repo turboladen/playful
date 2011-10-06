@@ -41,7 +41,10 @@ module UPnP
     end
 
     def find_services
-      return [] if @devices.empty?
+      if @devices.empty?
+        @services = []
+        return
+      end
 
       @devices.each do |device|
         device[:description]["root"]["device"]["serviceList"]["service"].each do |service|
