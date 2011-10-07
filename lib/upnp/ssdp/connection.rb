@@ -18,8 +18,16 @@ class SSDP
       setup_multicast_socket
     end
 
+    def peer_info
+      peer_bytes = get_peername[2, 6].unpack("nC4")
+      port = peer_bytes.first
+      ip = peer_bytes[1, 4].join(".")
+      return ip, port
+    end
+
     def receive_data(response)
-      puts "<#{self.class}> #{response}"
+      ip, port = peer_info
+      puts "<#{self.class}> Response from #{ip}:#{port}:\n#{response}\n"
       @responses << parse(response)
     end
 
@@ -50,7 +58,9 @@ class SSDP
       ttl = [@ttl].pack 'i'
 
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_ADD_MEMBERSHIP, membership)
-      set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000")
+      #unless ENV["RUBY_UPNP_ENV"] == "testing"
+      #  set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000")
+      #end
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, ttl)
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_TTL, ttl)
     end
