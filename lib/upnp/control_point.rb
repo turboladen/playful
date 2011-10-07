@@ -28,6 +28,7 @@ module UPnP
 
     # @param [String] search_type
     # @return [Hash]
+    # @todo This should be removed and just allow direct access to SSDP.
     def find_devices(search_type="ssdp:all")
       @devices = SSDP.search(search_type)
 
