@@ -15,3 +15,4 @@ RSpec.configure do |config|
 
 end
 
+ENV["RUBY_UPNP_ENV"] = "testing"

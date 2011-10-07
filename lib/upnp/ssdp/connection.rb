@@ -58,11 +58,12 @@ class SSDP
       ttl = [@ttl].pack 'i'
 
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_ADD_MEMBERSHIP, membership)
-      #unless ENV["RUBY_UPNP_ENV"] == "testing"
-      #  set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000")
-      #end
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, ttl)
       set_sock_opt(Socket::IPPROTO_IP, Socket::IP_TTL, ttl)
+
+      unless ENV["RUBY_UPNP_ENV"] == "testing"
+        set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000")
+      end
     end
   end
 end
