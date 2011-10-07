@@ -1,3 +1,5 @@
+ENV["RUBY_UPNP_ENV"] = "production"
+
 module UPnP
   module Globals
 
