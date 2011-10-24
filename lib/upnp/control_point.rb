@@ -1,6 +1,6 @@
-require_relative 'ssdp'
 require 'open-uri'
 require 'nori'
+require 'ssdp'
 
 begin
   require 'nokogiri'
@@ -38,6 +38,7 @@ module UPnP
     end
 
     def get_description(location)
+      puts "location"
       Nori.parse(open(location).read)
     end
 

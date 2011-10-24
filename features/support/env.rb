@@ -1,4 +1,5 @@
 require 'socket'
+require 'log_buddy'
 require_relative '../../lib/upnp/control_point'
 
 def local_ip_and_port
