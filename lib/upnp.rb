@@ -1,5 +1,6 @@
+require 'log_switch'
 require_relative "upnp/version"
 
 module UPnP
-  # Your code goes here...
+  extend LogSwitch
 end
