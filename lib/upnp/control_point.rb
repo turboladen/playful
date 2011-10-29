@@ -27,10 +27,12 @@ module UPnP
     end
 
     # @param [String] search_type
+    # @param [Fixnum] max_wait_time The MX value to use for searching.
+    # @param [Fixnum] ttl
     # @return [Hash]
     # @todo This should be removed and just allow direct access to SSDP.
-    def find_devices(search_type="ssdp:all")
-      @devices = SSDP.search(search_type)
+    def find_devices(search_type, max_wait_time, ttl=4)
+      @devices = SSDP.search(search_type, max_wait_time, ttl)
 
       @devices.each do |device|
         device[:description] = get_description(device[:location])
@@ -38,7 +40,6 @@ module UPnP
     end
 
     def get_description(location)
-      puts "location"
       Nori.parse(open(location).read)
     end
 
