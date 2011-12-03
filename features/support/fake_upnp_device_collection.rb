@@ -43,11 +43,12 @@ class FakeUPnPDeviceCollection
     @ssdp_listen_thread = Thread.new do
       loop do
         text, sender = multicast_socket.recvfrom(1024)
-        puts "<#{self.class}> received text:\n#{text} from #{sender}"
+        #puts "<#{self.class}> received text:\n#{text} from #{sender}"
 
         #if text =~ /ST: upnp:rootdevice/
         #if text =~ /#{@response}/m
         if text =~ /M-SEARCH.*#{@local_ip}/m
+          puts "<#{self.class}> received text:\n#{text} from #{sender}"
           return_port, return_ip = sender[1], sender[2]
 
           puts "<#{self.class}> sending response\n#{@response}\n back to: #{return_ip}:#{return_port}"
