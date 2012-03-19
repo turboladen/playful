@@ -1,7 +1,6 @@
 = upnp
 
-* {Homepage}[http://rubygems.org/gems/upnp]
-* {Documentation}[http://rubydoc.info/gems/upnp/frames]
+* {Homepage}[http://github.com/turboladen/upnp]
 * {UPnP Device Architecture Documentation}[http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf]
 
 == Description
