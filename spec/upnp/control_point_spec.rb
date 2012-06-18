@@ -1,4 +1,4 @@
-require_relative '../spec_helper'
+require 'spec_helper'
 require_relative '../support/search_responses'
 require 'upnp/control_point'
 
