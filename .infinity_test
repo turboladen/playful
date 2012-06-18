@@ -1,0 +1,5 @@
+infinity_test do
+  notifications :growl
+
+  use :rubies => %w(1.9.2 1.9.3), :test_framework => :rspec
+end
