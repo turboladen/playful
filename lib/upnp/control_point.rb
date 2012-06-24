@@ -1,6 +1,6 @@
 require 'open-uri'
 require 'nori'
-require 'ssdp'
+require_relative 'ssdp'
 
 begin
   require 'nokogiri'
@@ -32,7 +32,7 @@ module UPnP
     # @return [Hash]
     # @todo This should be removed and just allow direct access to SSDP.
     def find_devices(search_type, max_wait_time, ttl=4)
-      @devices = SSDP.search(search_type, max_wait_time, ttl)
+      @devices = UPnP::SSDP.search(search_type, max_wait_time, ttl)
 
       @devices.each do |device|
         device[:description] = get_description(device[:location])
