@@ -39,10 +39,6 @@ module UPnP
       end
     end
 
-    def get_description(location)
-      Nori.parse(open(location).read)
-    end
-
     def find_services
       if @devices.empty?
         @services = []
@@ -52,12 +48,15 @@ module UPnP
       @devices.each do |device|
         device[:description]["root"]["device"]["serviceList"]["service"].each do |service|
           scpd_url = build_scpd_url(device[:description]["root"]["URLBase"], service["SCPDURL"])
-          puts scpd_url
           service[:description] = get_description(scpd_url)
-          p service[:description]
           @services << service
         end
       end
+    end
+    private
+
+    def get_description(location)
+      Nori.parse(open(location).read)
     end
 
     def build_scpd_url(url_base, scpdurl)
@@ -67,5 +66,6 @@ module UPnP
 
       url_base + scpdurl
     end
+
   end
 end
