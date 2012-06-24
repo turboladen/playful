@@ -6,5 +6,8 @@ Feature: Control Point
   Scenario: Search for devices on startup
     Given I have a non-local IP address
     And a UDP port on that IP is free
-    When I start my control point
-    Then it listents for multicast a discovery message searching for devices
+    When I create my control point
+    And tell it to find all root devices
+    And tell it to find all services
+    Then it gets a list of root devices
+    And it gets a list of services
