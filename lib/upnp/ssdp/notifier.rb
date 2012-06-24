@@ -1,7 +1,7 @@
 require_relative 'connection'
 require_relative 'version'
 
-class SSDP::Notifier < SSDP::Connection
+class UPnP::SSDP::Notifier < UPnP::SSDP::Connection
 
   def initialize(nt, usn, ddf_url, valid_for_duration)
     @os = RbConfig::CONFIG['host_vendor'].capitalize + "/" +

@@ -1,5 +1,6 @@
 require_relative 'connection'
 
+module UPnP
 # A subclass of an EventMachine::Connection, this handles doing M-SEARCHes.
 class SSDP::Searcher < SSDP::Connection
 
@@ -33,4 +34,5 @@ ST: #{search_target}\r
 \r
     MSEARCH
   end
+end
 end

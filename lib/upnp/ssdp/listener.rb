@@ -1,4 +1,4 @@
 require_relative 'connection'
 
-class SSDP::Listener < SSDP::Connection
+class UPnP::SSDP::Listener < UPnP::SSDP::Connection
 end
