@@ -8,12 +8,13 @@ rescue LoadError
   # Fail quietly
 end
 
-# Allows for controlling a UPnP device as defined in the UPnP spec for control
-# points.
-#
-# It uses +Nori+ for parsing the description XML files, which will use +Nokogiri+
-# if you have it installed.
 module UPnP
+
+  # Allows for controlling a UPnP device as defined in the UPnP spec for control
+  # points.
+  #
+  # It uses +Nori+ for parsing the description XML files, which will use +Nokogiri+
+  # if you have it installed.
   class ControlPoint
     attr_reader :devices
     attr_reader :services
@@ -30,7 +31,6 @@ module UPnP
     # @param [Fixnum] max_wait_time The MX value to use for searching.
     # @param [Fixnum] ttl
     # @return [Hash]
-    # @todo This should be removed and just allow direct access to SSDP.
     def find_devices(search_type, max_wait_time, ttl=4)
       @devices = UPnP::SSDP.search(search_type, max_wait_time, ttl)
 
