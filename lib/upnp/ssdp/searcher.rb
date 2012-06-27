@@ -2,6 +2,13 @@ require_relative 'connection'
 
 module UPnP
 # A subclass of an EventMachine::Connection, this handles doing M-SEARCHes.
+#
+# Search types:
+#   ssdp:all
+#   upnp:rootdevice
+#   uuid:[device-uuid]
+#   urn:schemas-upnp-org:device:[deviceType-version]
+#   urn:schemas-upnp-org:service:[serviceType-version]
 class SSDP::Searcher < SSDP::Connection
 
   # @param [String] search_target
