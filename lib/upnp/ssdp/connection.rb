@@ -4,9 +4,11 @@ require 'ipaddr'
 require 'socket'
 require 'eventmachine'
 
+
 module UPnP
   class SSDP
     class Connection < EventMachine::Connection
+      include EventMachine::Deferrable
       include UPnP::SSDP::NetworkConstants
 
       # @return [Array] The list of responses from the current request.
@@ -15,6 +17,7 @@ module UPnP
       def initialize ttl=TTL
         @ttl = ttl
         @responses = []
+
         setup_multicast_socket
       end
 
