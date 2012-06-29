@@ -24,6 +24,7 @@ in a UPnP environment.}
   s.add_dependency('eventmachine', '>=1.0.0.beta.4')
   s.add_dependency('nori', '~>1.0.2')
   s.add_dependency('log_switch', '~>0.1.4')
+  s.add_dependency('thin', '~>1.3.1')
 
   s.add_development_dependency('bundler', '>=0')
   s.add_development_dependency('code_statistics', '>=0.2.13')
