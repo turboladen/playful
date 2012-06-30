@@ -6,6 +6,7 @@ require 'rack/lobster'
 require 'em-websocket'
 require_relative 'ssdp'
 require_relative 'control_point/service'
+require_relative 'control_point/device'
 
 begin
   require 'nokogiri'
@@ -36,12 +37,21 @@ module UPnP
     end
 
     def start
+      response_wait_time = 2
+
+      #search_for ="ssdp:all"
+      search_for ="upnp:rootdevice"
+      #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-5::urn:schemas-pelco-com:service:VideoOutput:1"
+      #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-2"
+
       if EM.reactor_running?
         puts "joining reactor..."
-        do_search.call
+
+        do_search(search_for, response_wait_time, 4)
+        web_server
       else
         EM.run do
-          do_search
+          do_search(search_for, response_wait_time, 4)
           web_server
         end
       end
@@ -59,14 +69,7 @@ module UPnP
       end
     end
 
-    def do_search
-      response_wait_time = 5
-
-      #search_for ="ssdp:all"
-      search_for ="upnp:rootdevice"
-      #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-5::urn:schemas-pelco-com:service:VideoOutput:1"
-      #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-2"
-
+    def do_search(search_for, response_wait_time, ttl)
       searcher = EM.open_datagram_socket(@ip, 0, UPnP::SSDP::Searcher,
         search_for, response_wait_time, 4)
 
@@ -94,60 +97,11 @@ module UPnP
     end
 
     def extract_devices_and_services(new_devices)
-      @devices = new_devices.map do |device|
-        { description: get_description(device[:location]) }
-      end
+      @devices = new_devices.map { |device| Device.new(device) }
 
       require 'pp'
-      puts "last"
+      puts "last device"
       pp @devices.last
-
-      find_services
-      puts "services"
-      pp @services.first
-      p @services.first.GetSearchCapabilities
-    end
-
-    # @param [String] search_type
-    # @param [Fixnum] max_wait_time The MX value to use for searching.
-    # @param [Fixnum] ttl
-    # @return [Hash]
-=begin
-    def find_devices(search_type, max_wait_time, ttl=4)
-      @devices = UPnP::SSDP.search(search_type, max_wait_time, ttl)
-
-      @devices.each do |device|
-        device[:description] = get_description(device[:location])
-      end
-    end
-=end
-
-    def find_services
-      if @devices.empty?
-        return
-      end
-
-      @devices.each do |device|
-        next if device[:description][:root][:device][:serviceList].nil?
-
-        device[:description][:root][:device][:serviceList].each_value do |service|
-          if service.is_a? Array
-            service.each do |s|
-              #@services << extract_service(device, s)
-              @services << Service.new(device[:description][:root][:URLBase], s)
-            end
-          else
-            #@services << extract_service(device, service)
-            @services << Service.new(device[:description][:root][:URLBase], service[:SCPDURL])
-          end
-        end
-      end
-    end
-
-    protected
-
-    def get_description(location)
-      Nori.parse(open(location).read)
     end
   end
 end

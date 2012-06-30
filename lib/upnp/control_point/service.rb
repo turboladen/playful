@@ -1,4 +1,5 @@
 require 'savon'
+require_relative 'base'
 
 
 Savon.configure do |c|
@@ -8,7 +9,7 @@ end
 
 module UPnP
   class ControlPoint
-    class Service
+    class Service < Base
 
       # @return [String] UPnP service type, including URN.
       attr_reader :service_type
@@ -75,18 +76,6 @@ module UPnP
             end
           end
         end
-      end
-
-      def get_description(location)
-        Nori.parse(open(location).read)
-      end
-
-      def build_url(url_base, scpdurl)
-        if url_base.end_with?('/') && scpdurl.start_with?('/')
-          scpdurl.sub!('/', '')
-        end
-
-        url_base + scpdurl
       end
     end
   end
