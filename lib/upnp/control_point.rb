@@ -1,6 +1,11 @@
 require 'open-uri'
 require 'nori'
+require 'thin'
+require 'rack'
+require 'rack/lobster'
+require 'em-websocket'
 require_relative 'ssdp'
+require_relative 'control_point/service'
 
 begin
   require 'nokogiri'
@@ -31,11 +36,46 @@ module UPnP
     end
 
     def start
+      if EM.reactor_running?
+        puts "joining reactor..."
+        do_search.call
+      else
+        EM.run do
+          do_search.call
+          web_server
+        end
+      end
+    end
+
+    def web_server
+      Thin::Server.start('0.0.0.0', 3000) do
+        use Rack::CommonLogger
+        use Rack::ShowExceptions
+
+        map "/lobster" do
+          use Rack::Lint
+          run Rack::Lobster.new
+        end
+      end
+    end
+
+    def do_search
       response_wait_time = 5
 
-      EM.run do
+      #search_for ="ssdp:all"
+      search_for ="upnp:rootdevice"
+      #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-5::urn:schemas-pelco-com:service:VideoOutput:1"
+      #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-2"
+
+      proc do
         searcher = EM.open_datagram_socket(@ip, 0, UPnP::SSDP::Searcher,
-          "ssdp:all", response_wait_time, 4)
+          search_for, response_wait_time, 4)
+
+        EventMachine::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
+          ws.onopen {
+            ws.send "services: #{@services}"
+          }
+        end
 
         searcher.callback do
           extract_devices_and_services(searcher.responses)
@@ -50,6 +90,8 @@ module UPnP
           puts "Device count: #{@devices.size}"
           puts "Service count: #{@services.size}"
         end
+
+        SSDP.trap_signals
       end
     end
 
@@ -58,7 +100,14 @@ module UPnP
         { description: get_description(device[:location]) }
       end
 
+      require 'pp'
+      puts "last"
+      pp @devices.last
+
       find_services
+      puts "services"
+      pp @services.first
+      p @services.first.GetSearchCapabilities
     end
 
     # @param [String] search_type
@@ -84,25 +133,23 @@ module UPnP
         next if device[:description][:root][:device][:serviceList].nil?
 
         device[:description][:root][:device][:serviceList].each_value do |service|
-          scpd_url = build_scpd_url(device[:description][:root][:URLBase], service[:SCPDURL])
-          service[:description] = get_description(scpd_url)
-          @services << service
+          if service.is_a? Array
+            service.each do |s|
+              #@services << extract_service(device, s)
+              @services << Service.new(device[:description][:root][:URLBase], s)
+            end
+          else
+            #@services << extract_service(device, service)
+            @services << Service.new(device[:description][:root][:URLBase], service[:SCPDURL])
+          end
         end
       end
     end
 
-    private
+    protected
 
     def get_description(location)
       Nori.parse(open(location).read)
-    end
-
-    def build_scpd_url(url_base, scpdurl)
-      if url_base.end_with?('/') && scpdurl.start_with?('/')
-        scpdurl.sub!('/', '')
-      end
-
-      url_base + scpdurl
     end
   end
 end
