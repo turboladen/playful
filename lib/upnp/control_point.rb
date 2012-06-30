@@ -41,7 +41,7 @@ module UPnP
         do_search.call
       else
         EM.run do
-          do_search.call
+          do_search
           web_server
         end
       end
@@ -67,32 +67,30 @@ module UPnP
       #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-5::urn:schemas-pelco-com:service:VideoOutput:1"
       #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-2"
 
-      proc do
-        searcher = EM.open_datagram_socket(@ip, 0, UPnP::SSDP::Searcher,
-          search_for, response_wait_time, 4)
+      searcher = EM.open_datagram_socket(@ip, 0, UPnP::SSDP::Searcher,
+        search_for, response_wait_time, 4)
 
-        EventMachine::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
-          ws.onopen {
-            ws.send "services: #{@services}"
-          }
-        end
-
-        searcher.callback do
-          extract_devices_and_services(searcher.responses)
-        end
-
-        EM.add_timer(response_wait_time) do
-          searcher.set_deferred_status(:succeeded)
-          searcher.close_connection
-        end
-
-        EM.add_periodic_timer(5) do
-          puts "Device count: #{@devices.size}"
-          puts "Service count: #{@services.size}"
-        end
-
-        SSDP.trap_signals
+      EventMachine::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
+        ws.onopen {
+          ws.send "services: #{@services}"
+        }
       end
+
+      searcher.callback do
+        extract_devices_and_services(searcher.responses)
+      end
+
+      EM.add_timer(response_wait_time) do
+        searcher.set_deferred_status(:succeeded)
+        searcher.close_connection
+      end
+
+      EM.add_periodic_timer(5) do
+        puts "Device count: #{@devices.size}"
+        puts "Service count: #{@services.size}"
+      end
+
+      SSDP.trap_signals
     end
 
     def extract_devices_and_services(new_devices)
