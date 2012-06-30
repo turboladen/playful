@@ -31,6 +31,8 @@ module UPnP
       # @return [URI::HTTP] Base URL for this service's device.
       attr_reader :device_base_url
 
+      attr_reader :description
+
       def initialize(device_base_url, device_service)
         @device_base_url = device_base_url
         @scpd_url = build_url(@device_base_url, device_service[:SCPDURL])
@@ -40,8 +42,8 @@ module UPnP
         @service_type = device_service[:serviceType]
         @service_id = device_service[:serviceId]
 
-        description = get_description(@scpd_url)
-        define_methods_from_actions(description[:scpd][:actionList][:action])
+        @description = get_description(@scpd_url)
+        define_methods_from_actions(@description[:scpd][:actionList][:action])
 
         @soap_client = Savon.client do |wsdl|
           wsdl.endpoint = @control_url
