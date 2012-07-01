@@ -6,6 +6,13 @@ Savon.configure do |c|
   c.env_namespace = :s
 end
 
+begin
+  require 'em-http'
+  HTTPI.adapter = :em_http
+rescue ArgumentError
+  # Fail silently
+end
+
 
 module UPnP
   class ControlPoint
