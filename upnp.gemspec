@@ -26,6 +26,7 @@ in a UPnP environment.}
   s.add_dependency('nori', '>=1.0.2')
   s.add_dependency('log_switch', '>=0.1.4')
   s.add_dependency('savon', '>=1.0.0')
+  s.add_dependency('thin')
 
   s.add_development_dependency('bundler', '>=0')
   s.add_development_dependency('code_statistics', '>=0.2.13')
