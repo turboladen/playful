@@ -38,12 +38,21 @@ module UPnP
       responses = []
       search_target = search_target.to_upnp_s unless search_target.is_a? String
 
-      EM.run do
-        s = EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
+      connect = proc do
+        EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
           response_wait_time, ttl)
-        EM.add_shutdown_hook { responses = s.responses }
-        EM.add_timer(response_wait_time) { EM.stop }
-        trap_signals
+      end
+
+      if EM.reactor_running?
+        return connect.call
+      else
+        EM.run do
+          s = connect.call
+          EM.add_shutdown_hook { responses = s.responses }
+          EM.add_timer(response_wait_time) { EM.stop }
+          trap_signals
+        end
+
       end
 
       responses

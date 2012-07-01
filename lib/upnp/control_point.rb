@@ -82,8 +82,7 @@ module UPnP
     end
 
     def do_search(search_for, response_wait_time, ttl)
-      searcher = EM.open_datagram_socket(@ip, 0, UPnP::SSDP::Searcher,
-        search_for, response_wait_time, 4)
+      searcher = SSDP.search(search_for, response_wait_time, ttl)
 
       EventMachine::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
         ws.onopen {
