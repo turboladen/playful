@@ -35,6 +35,8 @@ module UPnP
     end
 
     def start
+      @stopping = false
+
       response_wait_time = 2
 
       #search_for ="ssdp:all"
@@ -42,17 +44,29 @@ module UPnP
       #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-5::urn:schemas-pelco-com:service:VideoOutput:1"
       #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-2"
 
-      if EM.reactor_running?
-        puts "joining reactor..."
-
+      starter = -> do
         do_search(search_for, response_wait_time, 4)
         #web_server
-      else
-        EM.run do
-          do_search(search_for, response_wait_time, 4)
-        #  web_server
-        end
+        @running = true
       end
+
+      if EM.reactor_running?
+        puts "joining reactor..."
+        starter.call
+      else
+        EM.run(&starter)
+      end
+    end
+
+    def stop
+      @running = false
+      @stopping = false
+
+      EM.stop if EM.reactor_running?
+    end
+
+    def running?
+      @running
     end
 
     def web_server
@@ -88,10 +102,14 @@ module UPnP
 
       EM.add_periodic_timer(5) do
         puts "Device count: #{@devices.size}"
-        puts "Service count: #{@services.size}"
       end
 
-      SSDP.trap_signals
+      trap_signals
+    end
+
+    def trap_signals
+      trap('INT') { stop }
+      trap('TERM') { stop }
     end
 
     def extract_devices(new_devices)
