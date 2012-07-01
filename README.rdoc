@@ -26,12 +26,16 @@ Once EventMachine 1.0.0 is released, I'll remove the dep on the git version of E
 == Examples
 
   require 'upnp/ssdp'
+
   all_devices = SSDP.search                         # search for all devices
   all_devices = SSDP.search 'ssdp:all'              # or be explicit
   all_devices = SSDP.search :all                    # or use short-hand
+
   root_devices = SSDP.search 'upnp:rootdevices'     # search for root devices
   root_devices = SSDP.search :root                  # short-hand
+
   my_devices = SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'      # search for specific device by UUID
+
   my_media_server = SSDP.search 'urn:schemas-upnp-org:device:MediaServer:1' # search for all MediaServer:1s
 
 == Requirements
