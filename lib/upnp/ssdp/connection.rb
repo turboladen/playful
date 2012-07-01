@@ -35,7 +35,11 @@ module UPnP
       def receive_data(response)
         ip, port = peer_info
         SSDP.log "<#{self.class}> Response from #{ip}:#{port}:\n#{response}\n"
-        @responses << parse(response)
+        parsed_response = parse(response)
+        if parsed_response.has_key? :nts
+          p parsed_response[:nts]
+        end
+        @responses << parsed_response
       end
 
       # Converts the headers to a set of key-value pairs.
