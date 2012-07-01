@@ -23,13 +23,11 @@ module UPnP
   # if you have it installed.
   class ControlPoint
     attr_reader :devices
-    attr_reader :services
 
     def initialize(ip='0.0.0.0', port=0)
       @ip = ip
       @port = port
       @devices = []
-      @services = []
       Nori.parser = :nokogiri if defined? ::Nokogiri
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
@@ -48,11 +46,11 @@ module UPnP
         puts "joining reactor..."
 
         do_search(search_for, response_wait_time, 4)
-        web_server
+        #web_server
       else
         EM.run do
           do_search(search_for, response_wait_time, 4)
-          web_server
+        #  web_server
         end
       end
     end
@@ -75,12 +73,12 @@ module UPnP
 
       EventMachine::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
         ws.onopen {
-          ws.send "services: #{@services}"
+          ws.send "devices: #{@devices}"
         }
       end
 
       searcher.callback do
-        extract_devices_and_services(searcher.responses)
+        extract_devices(searcher.responses)
       end
 
       EM.add_timer(response_wait_time) do
@@ -96,12 +94,16 @@ module UPnP
       SSDP.trap_signals
     end
 
-    def extract_devices_and_services(new_devices)
+    def extract_devices(new_devices)
       @devices = new_devices.map { |device| Device.new(device) }
 
       require 'pp'
-      puts "last device"
-      pp @devices.last
+      @devices.each do |device|
+        device.services.each do |service|
+          pp service.service_type
+          pp service.singleton_methods
+        end
+      end
     end
   end
 end
