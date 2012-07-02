@@ -24,4 +24,3 @@ module UPnP
       end
     end
   end
-end

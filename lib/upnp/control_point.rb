@@ -10,6 +10,7 @@ require_relative 'control_point/device'
 
 begin
   require 'nokogiri'
+  Nori.parser = :nokogiri if defined? ::Nokogiri
 rescue LoadError
   # Fail quietly
 end
@@ -22,13 +23,11 @@ module UPnP
   # It uses +Nori+ for parsing the description XML files, which will use +Nokogiri+
   # if you have it installed.
   class ControlPoint
-    attr_reader :devices
+    attr_reader :device
 
-    def initialize(ip='0.0.0.0', port=0)
-      @ip = ip
-      @port = port
-      @devices = []
-      Nori.parser = :nokogiri if defined? ::Nokogiri
+    def initialize(device_id)
+      @device_id = device_id
+
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
       end
@@ -38,15 +37,10 @@ module UPnP
       @stopping = false
 
       response_wait_time = 2
-
-      #search_for ="ssdp:all"
-      search_for ="upnp:rootdevice"
-      #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-5::urn:schemas-pelco-com:service:VideoOutput:1"
-      #search_for = "uuid:100330fe-5d3e-4a5e-98c7-0000a6504b8c-Camera-2"
+      ttl = 4
 
       starter = -> do
-        do_search(search_for, response_wait_time, 4)
-        #web_server
+        do_search(@device_id, response_wait_time, ttl)
         @running = true
       end
 
@@ -69,29 +63,17 @@ module UPnP
       @running
     end
 
-    def web_server
-      Thin::Server.start('0.0.0.0', 3000) do
-        use Rack::CommonLogger
-        use Rack::ShowExceptions
-
-        map "/lobster" do
-          use Rack::Lint
-          run Rack::Lobster.new
-        end
-      end
-    end
-
     def do_search(search_for, response_wait_time, ttl)
       searcher = SSDP.search(search_for, response_wait_time, ttl)
 
       EventMachine::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
         ws.onopen {
-          ws.send "devices: #{@devices}"
+          ws.send "device: #{@device}"
         }
       end
 
       searcher.callback do
-        extract_devices(searcher.responses)
+        extract_device(searcher.discovery_responses.first)
       end
 
       EM.add_timer(response_wait_time) do
@@ -100,7 +82,8 @@ module UPnP
       end
 
       EM.add_periodic_timer(5) do
-        puts "Device count: #{@devices.size}"
+        puts "Device: #{@device}"
+        puts "Device services: #{@device.services}"
       end
 
       trap_signals
@@ -111,16 +94,8 @@ module UPnP
       trap('TERM') { stop }
     end
 
-    def extract_devices(new_devices)
-      @devices = new_devices.map { |device| Device.new(device) }
-
-      require 'pp'
-      @devices.each do |device|
-        device.services.each do |service|
-          pp service.service_type
-          pp service.singleton_methods
-        end
-      end
+    def extract_device(discovery_response)
+      @device = Device.new(discovery_response)
     end
   end
 end

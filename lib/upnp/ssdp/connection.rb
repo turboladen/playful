@@ -11,12 +11,17 @@ module UPnP
       include EventMachine::Deferrable
       include UPnP::SSDP::NetworkConstants
 
-      # @return [Array] The list of responses from the current request.
-      attr_reader :responses
+      # @return [Array] The list of responses from the current discovery request.
+      attr_reader :discovery_responses
+
+      attr_reader :available_responses
+      attr_reader :byebye_responses
 
       def initialize ttl=TTL
         @ttl = ttl
-        @responses = []
+        @discovery_responses = []
+        @available_responses = []
+        @byebye_responses = []
 
         setup_multicast_socket
       end
@@ -36,10 +41,18 @@ module UPnP
         ip, port = peer_info
         SSDP.log "<#{self.class}> Response from #{ip}:#{port}:\n#{response}\n"
         parsed_response = parse(response)
+
         if parsed_response.has_key? :nts
-          p parsed_response[:nts]
+          if parsed_response[:nts] == "ssdp:alive"
+            @available_responses << parsed_response
+          elsif parsed_response[:nts] == "ssdp:bye-bye"
+            @byebye_responses << parsed_response
+          else
+            raise "Unknown NTS value: #{parsed_response[:nts]}"
+          end
+        else
+          @discovery_responses << parsed_response
         end
-        @responses << parsed_response
       end
 
       # Converts the headers to a set of key-value pairs.

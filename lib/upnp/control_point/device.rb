@@ -120,6 +120,8 @@ module UPnP
 =end
 
       def extract_services(service_list)
+        return if service_list.nil?
+
         service_list.each_value do |service|
           if service.is_a? Array
             service.each do |s|

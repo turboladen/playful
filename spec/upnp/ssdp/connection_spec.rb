@@ -13,8 +13,8 @@ describe "SSDP::Connection" do
 
   it "lets you read its responses" do
     responses = double 'responses'
-    subject.instance_variable_set(:@responses, responses)
-    subject.responses.should == responses
+    subject.instance_variable_set(:@discovery_responses, responses)
+    subject.discovery_responses.should == responses
   end
 
   describe "#peer_info" do
@@ -45,7 +45,7 @@ describe "SSDP::Connection" do
       subject.should_receive(:peer_info).at_least(:once).
         and_return(['0.0.0.0', 4567])
       subject.receive_data(response)
-      subject.responses.should == [parsed_response]
+      subject.discovery_responses.should == [parsed_response]
     end
   end
 

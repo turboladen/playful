@@ -34,7 +34,7 @@ describe SSDP do
       EM.stub(:run).and_yield
       EM.stub(:add_timer)
       searcher = double "Searcher"
-      searcher.stub(:responses).and_return(["one", "two"])
+      searcher.stub(:discovery_responses).and_return(["one", "two"])
       EM.stub(:open_datagram_socket).and_return searcher
     end
 

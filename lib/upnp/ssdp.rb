@@ -48,7 +48,7 @@ module UPnP
       else
         EM.run do
           s = connect.call
-          EM.add_shutdown_hook { responses = s.responses }
+          EM.add_shutdown_hook { responses = s.discovery_responses }
           EM.add_timer(response_wait_time) { EM.stop }
           trap_signals
         end
@@ -64,7 +64,7 @@ module UPnP
 
       EM.run do
         s = send_notification(notification_type, usn, ddf_url, valid_for_duration)
-        EM.add_shutdown_hook { responses = s.responses }
+        EM.add_shutdown_hook { responses = s.discovery_responses }
 
         EM.add_periodic_timer(valid_for_duration) do
           s = send_notification(notification_type, usn, ddf_url, valid_for_duration)
