@@ -1,8 +1,5 @@
 require 'open-uri'
 require 'nori'
-require 'thin'
-require 'rack'
-require 'rack/lobster'
 require 'em-websocket'
 require_relative 'ssdp'
 require_relative 'control_point/service'
