@@ -4,6 +4,12 @@ require 'open-uri'
 module UPnP
   class ControlPoint
     class Base
+      def initialize
+        Nori.configure do |config|
+          config.convert_tags_to { |tag| tag.to_sym }
+        end
+      end
+
       protected
 
       def get_description(location)

@@ -17,10 +17,11 @@ module UPnP
             use Rack::Lint
             run Rack::Lobster.new
           end
-        end      
+        end
 
         # Do advertisement
         # Listen for subscribers
       end
     end
   end
+end

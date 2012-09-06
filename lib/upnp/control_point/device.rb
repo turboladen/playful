@@ -1,4 +1,5 @@
 require_relative 'base'
+require_relative 'service'
 
 
 module UPnP
@@ -75,6 +76,7 @@ module UPnP
       attr_reader :udn
 
       def initialize(device_as_hash)
+        super()
         @raw_hash = device_as_hash
 
         @cache_control = device_as_hash[:cache_control]
