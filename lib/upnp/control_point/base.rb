@@ -1,3 +1,5 @@
+require 'nori'
+
 module UPnP
   class ControlPoint
     class Base
