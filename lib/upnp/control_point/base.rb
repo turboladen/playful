@@ -1,4 +1,5 @@
 require 'nori'
+require 'open-uri'
 
 module UPnP
   class ControlPoint
