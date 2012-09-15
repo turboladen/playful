@@ -15,14 +15,7 @@ module Upnp
     method_option :log, type: :boolean
     def search(target="upnp:rootdevice")
       UPnP::SSDP.log = options[:log]
-
-      puts "target: #{target}"
-      puts "target class: #{target.class}"
-      results = UPnP::SSDP.search(target,
-        options[:response_wait_time],
-        options[:ttl],
-        options[:search_count],
-        options[:broadcast_search])
+      results = UPnP::SSDP.search(target, options)
 
       puts <<-RESULTS
 size: #{results.size}
