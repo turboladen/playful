@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/ssdp')
 require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/control_point/device')
-require 'pp'
+require 'ap'
 
 module Upnp
   class Ssdp < Thor
@@ -39,7 +39,14 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
     def search_and_parse(target="upnp:rootdevice")
       responses = invoke :search, target
       devices = responses.uniq.map { |r| UPnP::ControlPoint::Device.new(r) }
-      pp devices
+      #puts "SERVICES"
+      #ap devices.first.services
+      #puts "First Service's ACTIONS"
+      #ap devices.first.services.first.actions
+      #puts "Services state table"
+      #ap devices.first.services.first.service_state_table
+      #puts "id class", devices.first.services.first.GetSystemUpdateID.class
+      puts devices.first.services.first.GetSystemUpdateID
     end
   end
 end
