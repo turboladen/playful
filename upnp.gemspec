@@ -21,7 +21,7 @@ in a UPnP environment.}
   s.require_paths = ["lib"]
   s.required_ruby_version = Gem::Requirement.new(">=1.9.1")
 
-  s.add_dependency('eventmachine', '>=1.0.0.rc.4')
+  s.add_dependency('eventmachine', '>=1.0.0')
   s.add_dependency('em-http-request', '>=1.0.2')
   s.add_dependency('em-synchrony')  # for httpi & em_http
   s.add_dependency('em-websocket', '>=0.3.6')
