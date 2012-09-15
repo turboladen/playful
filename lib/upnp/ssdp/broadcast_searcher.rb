@@ -5,6 +5,7 @@ require 'socket'
 require 'eventmachine'
 
 
+# TODO: DRY this up!!  (it's mostly the same as UPnP::SSDP::MulticastConnection)
 module UPnP
   class SSDP
     class BroadcastSearcher < EventMachine::Connection
