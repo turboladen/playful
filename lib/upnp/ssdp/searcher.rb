@@ -10,6 +10,8 @@ module UPnP
   #   uuid:[device-uuid]
   #   urn:schemas-upnp-org:device:[deviceType-version]
   #   urn:schemas-upnp-org:service:[serviceType-version]
+  #   urn:[custom-schema]:device:[deviceType-version]
+  #   urn:[custom-schema]:service:[serviceType-version]
   class SSDP::Searcher < SSDP::Connection
 
     # @param [String] search_target
