@@ -33,14 +33,21 @@ module UPnP
     # @param [String] search_target
     # @param [Fixnum] response_wait_time
     # @param [Fixnum] ttl
+    # @param [Fixnum] search_count The number of times to send the search request.
     # @param [Array] An Array of all of the responses received from the request.
-    def self.search(search_target=:all, response_wait_time=3, ttl=TTL)
+    def self.search(search_target=:all, response_wait_time=3, ttl=TTL, search_count=2)
       responses = []
       search_target = search_target.to_upnp_s unless search_target.is_a? String
 
       connect = proc do
-        EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
-          response_wait_time, ttl)
+        tmp_responses = []
+
+        search_count.times do
+          tmp_responses << EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
+            response_wait_time, ttl)
+        end
+
+        tmp_responses.flatten
       end
 
       if EM.reactor_running?
@@ -48,7 +55,7 @@ module UPnP
       else
         EM.run do
           s = connect.call
-          EM.add_shutdown_hook { responses = s.discovery_responses }
+          EM.add_shutdown_hook { responses = *s.map(&:discovery_responses).flatten }
           EM.add_timer(response_wait_time) { EM.stop }
           trap_signals
         end
