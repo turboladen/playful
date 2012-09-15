@@ -86,7 +86,7 @@ module UPnP
       # Sets Socket options to allow for multicasting.  If ENV["RUBY_UPNP_ENV"] is
       # equal to "testing", then it doesn't turn off multicast looping.
       def setup_multicast_socket
-        set_membership(IPAddr.new(BROADCAST).hton + IPAddr.new('0.0.0.0').hton)
+        set_membership(IPAddr.new(MULTICAST_IP).hton + IPAddr.new('0.0.0.0').hton)
         set_multicast_ttl(@ttl)
         set_ttl(@ttl)
 

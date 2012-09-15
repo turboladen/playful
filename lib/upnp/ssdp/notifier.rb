@@ -11,7 +11,7 @@ class UPnP::SSDP::Notifier < UPnP::SSDP::Connection
   end
 
   def post_init
-    if send_datagram(@notification, BROADCAST, MULTICAST_PORT) > 0
+    if send_datagram(@notification, MULTICAST_IP, MULTICAST_PORT) > 0
       SSDP.log("Sent notification:\n#{@notification}")
     end
   end
@@ -26,7 +26,7 @@ class UPnP::SSDP::Notifier < UPnP::SSDP::Connection
   def notification(nt, usn, ddf_url, valid_for_duration)
     <<-NOTIFICATION
 NOTIFY * HTTP/1.1\r
-HOST: #{BROADCAST}:#{MULTICAST_PORT}\r
+HOST: #{MULTICAST_IP}:#{MULTICAST_PORT}\r
 CACHE-CONTROL: max-age=#{valid_for_duration}\r
 LOCATION: #{ddf_url}\r
 NT: #{nt}\r

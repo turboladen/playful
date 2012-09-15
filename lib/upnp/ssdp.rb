@@ -19,7 +19,7 @@ module UPnP
     # Simply open a multicast UDP socket and listen for data.
     #def self.listen(ttl=TTL)
     #  EM.run do
-    #    EM.open_datagram_socket(BROADCAST, MULTICAST_PORT, UPnP::SSDP::Listener, ttl)
+    #    EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT, UPnP::SSDP::Listener, ttl)
     #    i = 0
     #    EM.add_periodic_timer(1) { i += 1; print "listening for \b#{i}"}
     #    trap_signals

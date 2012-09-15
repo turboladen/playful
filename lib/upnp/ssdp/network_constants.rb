@@ -3,7 +3,7 @@ module UPnP
     module NetworkConstants
 
       # Default broadcast address
-      BROADCAST = '239.255.255.250'
+      MULTICAST_IP = '239.255.255.250'
 
       # Default multicast port
       MULTICAST_PORT = 1900

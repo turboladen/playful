@@ -23,7 +23,7 @@ module UPnP
     # Sends the M-SEARCH that was built during init.  Logs what was sent if the
     # send was successful.
     def post_init
-      if send_datagram(@search, BROADCAST, MULTICAST_PORT) > 0
+      if send_datagram(@search, MULTICAST_IP, MULTICAST_PORT) > 0
         SSDP.log("Sent datagram search:\n#{@search}")
       end
     end
@@ -35,7 +35,7 @@ module UPnP
     def m_search(search_target, response_wait_time)
       <<-MSEARCH
 M-SEARCH * HTTP/1.1\r
-HOST: #{BROADCAST}:#{MULTICAST_PORT}\r
+HOST: #{MULTICAST_IP}:#{MULTICAST_PORT}\r
 MAN: "ssdp:discover"\r
 MX: #{response_wait_time}\r
 ST: #{search_target}\r

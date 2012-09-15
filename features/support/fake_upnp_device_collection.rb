@@ -34,7 +34,7 @@ class FakeUPnPDeviceCollection
   # @return [Thread] The thread that's doing the listening.
   def start_ssdp_listening
     multicast_socket = setup_multicast_socket
-    multicast_socket.bind(BROADCAST, MULTICAST_PORT)
+    multicast_socket.bind(MULTICAST_IP, MULTICAST_PORT)
 
     ttl = [4].pack 'i'
     unicast_socket = UDPSocket.open
@@ -94,7 +94,7 @@ class FakeUPnPDeviceCollection
   end
 
   def setup_multicast_socket
-    membership = IPAddr.new(BROADCAST).hton + IPAddr.new('0.0.0.0').hton
+    membership = IPAddr.new(MULTICAST_IP).hton + IPAddr.new('0.0.0.0').hton
     ttl = [4].pack 'i'
 
     socket = UDPSocket.new
