@@ -2,7 +2,9 @@ module UPnP
   class SSDP
     module NetworkConstants
 
-      # Default broadcast address
+      BROADCAST_IP = '255.255.255.255'
+
+      # Default multicast IP address
       MULTICAST_IP = '239.255.255.250'
 
       # Default multicast port

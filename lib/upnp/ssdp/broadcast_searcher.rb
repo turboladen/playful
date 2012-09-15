@@ -7,7 +7,7 @@ require 'eventmachine'
 
 module UPnP
   class SSDP
-    class Connection < EventMachine::Connection
+    class BroadcastSearcher < EventMachine::Connection
       include EventMachine::Deferrable
       include UPnP::SSDP::NetworkConstants
 
@@ -17,13 +17,32 @@ module UPnP
       attr_reader :available_responses
       attr_reader :byebye_responses
 
-      def initialize ttl=TTL
+      def initialize(search_target, response_wait_time, ttl=TTL)
         @ttl = ttl
         @discovery_responses = []
         @available_responses = []
         @byebye_responses = []
 
-        setup_multicast_socket
+        setup_broadcast_socket
+
+        @search = m_search(search_target, response_wait_time)
+      end
+
+      def post_init
+        if send_datagram(@search, BROADCAST_IP, MULTICAST_PORT) > 0
+          SSDP.log("Sent broadcast datagram search:\n#{@search}")
+        end
+      end
+
+      def m_search(search_target, response_wait_time)
+        <<-MSEARCH
+M-SEARCH * HTTP/1.1\r
+HOST: #{MULTICAST_IP}:#{MULTICAST_PORT}\r
+MAN: "ssdp:discover"\r
+MX: #{response_wait_time}\r
+ST: #{search_target}\r
+\r
+        MSEARCH
       end
 
       # Gets the IP and port from the peer that just sent data.
@@ -83,45 +102,9 @@ module UPnP
         new_data
       end
 
-      # Sets Socket options to allow for multicasting.  If ENV["RUBY_UPNP_ENV"] is
-      # equal to "testing", then it doesn't turn off multicast looping.
-      def setup_multicast_socket
-        set_membership(IPAddr.new(MULTICAST_IP).hton + IPAddr.new('0.0.0.0').hton)
-        set_multicast_ttl(@ttl)
-        set_ttl(@ttl)
-
-        unless ENV["RUBY_UPNP_ENV"] == "testing"
-          switch_multicast_loop :off
-        end
-      end
-
-      # @param [String] membership The network byte ordered String that represents
-      #   the IP(s) that should join the membership group.
-      def set_membership(membership)
-        set_sock_opt(Socket::IPPROTO_IP, Socket::IP_ADD_MEMBERSHIP, membership)
-      end
-
-      # @param [Fixnum] ttl TTL to set IP_MULTICAST_TTL to.
-      def set_multicast_ttl(ttl)
-        set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, [ttl].pack('i'))
-      end
-
-      # @param [Fixnum] ttl TTL to set IP_TTL to.
-      def set_ttl(ttl)
-        set_sock_opt(Socket::IPPROTO_IP, Socket::IP_TTL, [ttl].pack('i'))
-      end
-
-      # @param [Symbol] on_off Turn on/off multicast looping.  Supply :on or :off.
-      def switch_multicast_loop(on_off)
-        hex_value = case on_off
-        when :on then "\001"
-        when "\001" then "\001"
-        when :off then "\000"
-        when "\000" then "\000"
-        else raise SSDP::Error, "Can't switch IP_MULTICAST_LOOP to '#{on_off}'"
-                    end
-
-        set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, hex_value)
+      # Sets Socket options to allow for brodcasting.
+      def setup_broadcast_socket
+        set_sock_opt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
       end
     end
   end

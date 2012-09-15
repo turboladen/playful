@@ -9,6 +9,8 @@ require_relative 'ssdp/listener'
 require_relative 'ssdp/searcher'
 require_relative 'ssdp/notifier'
 
+require_relative 'ssdp/broadcast_searcher'
+
 module UPnP
   class SSDP
     extend LogSwitch
@@ -34,8 +36,13 @@ module UPnP
     # @param [Fixnum] response_wait_time
     # @param [Fixnum] ttl
     # @param [Fixnum] search_count The number of times to send the search request.
+    # @param [Boolean] do_broadcast_search Tells the search call to also send
+    #   a M-SEARCH over 255.255.255.255.  This is *NOT* part of the UPnP spec;
+    #   it's merely a hack for working with some types of devices that don't
+    #   properly implement the UPnP spec.
     # @param [Array] An Array of all of the responses received from the request.
-    def self.search(search_target=:all, response_wait_time=3, ttl=TTL, search_count=2)
+    def self.search(search_target=:all, response_wait_time=3, ttl=TTL, search_count=2,
+      do_broadcast_search=false)
       responses = []
       search_target = search_target.to_upnp_s unless search_target.is_a? String
 
@@ -45,6 +52,11 @@ module UPnP
         search_count.times do
           tmp_responses << EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
             response_wait_time, ttl)
+
+          if do_broadcast_search
+            EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::BroadcastSearcher, search_target,
+              response_wait_time, ttl)
+          end
         end
 
         tmp_responses.flatten
