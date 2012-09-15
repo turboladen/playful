@@ -42,6 +42,10 @@ module UPnP
     #   it's merely a hack for working with some types of devices that don't
     #   properly implement the UPnP spec.
     # @option options [Array] An Array of all of the responses received from the request.
+    # @return [Array<Hash>] Returns a Hash that represents the headers from the
+    #   M-SEARCH response.  Each one of these can be passed in to UPnP::ControlPoint::Device.new
+    #   to download the device's description file, parse it, and interact with
+    #   the device's devices and/or services.
     def self.search(search_target=:all, options={})
       response_wait_time = options[:response_wait_time] || 3
       ttl = options[:ttl] || TTL
