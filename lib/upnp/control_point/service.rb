@@ -93,9 +93,13 @@ module UPnP
             argument = action[:argumentList][:argument]
 
             if argument.is_a?(Hash) && argument[:direction] == "out"
-              return_ruby_from_soap(action[:name], response, action[:argumentList][:argument])
+              return_ruby_from_soap(action[:name], response, argument)
             elsif argument.is_a? Array
-              # pending
+              argument.map do |a|
+                if a[:direction] == "out"
+                  return_ruby_from_soap(action[:name], response, a)
+                end
+              end
             else
               puts "No args with direction 'out'"
             end
@@ -112,6 +116,8 @@ module UPnP
       #   the SOAP call.
       # @param [Hash] out_argument The Hash that tells out the "out" argument
       #   which tells what data type to return.
+      # @return [Hash] Key will be the "out" argument name as a Symbol and the
+      #   key will be the value as its converted Ruby type.
       def return_ruby_from_soap(action_name, soap_response, out_argument)
         out_arg_name = out_argument[:name]
         #puts "out arg name: #{out_arg_name}"
@@ -126,8 +132,15 @@ module UPnP
         #puts "state var: #{state_variable}"
 
         if state_variable[:dataType] == "ui4"
-          return soap_response.
-            hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_i
+          {
+            out_arg_name.to_sym => soap_response.
+              hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_i
+          }
+        elsif state_variable[:dataType] == "string"
+          {
+            out_arg_name.to_sym => soap_response.
+              hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_s
+          }
         end
       end
     end

@@ -46,7 +46,13 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
       #puts "Services state table"
       #ap devices.first.services.first.service_state_table
       #puts "id class", devices.first.services.first.GetSystemUpdateID.class
-      puts devices.first.services.first.GetSystemUpdateID
+      puts "id: #{devices.first.services.first.GetSystemUpdateID}"
+
+      puts "Last Service's ACTIONS"
+      ap devices.first.services.last.actions
+      #puts "Services state table"
+      #ap devices.first.services.last.service_state_table
+      puts "protocol info: #{devices.first.services.last.GetProtocolInfo}"
     end
   end
 end
