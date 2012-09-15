@@ -7,7 +7,7 @@ require 'eventmachine'
 
 module UPnP
   class SSDP
-    class Connection < EventMachine::Connection
+    class MulticastConnection < EventMachine::Connection
       include EventMachine::Deferrable
       include UPnP::SSDP::NetworkConstants
 

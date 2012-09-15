@@ -1,4 +1,4 @@
-require_relative 'connection'
+require_relative 'multicast_connection'
 
-class UPnP::SSDP::Listener < UPnP::SSDP::Connection
+class UPnP::SSDP::Listener < UPnP::SSDP::MulticastConnection
 end

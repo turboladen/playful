@@ -1,7 +1,7 @@
-require_relative 'connection'
+require_relative 'multicast_connection'
 require_relative 'version'
 
-class UPnP::SSDP::Notifier < UPnP::SSDP::Connection
+class UPnP::SSDP::Notifier < UPnP::SSDP::MulticastConnection
 
   def initialize(nt, usn, ddf_url, valid_for_duration)
     @os = RbConfig::CONFIG['host_vendor'].capitalize + "/" +

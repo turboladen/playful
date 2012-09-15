@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'ssdp/connection'
 
-describe "SSDP::Connection" do
+describe "SSDP::MulticastConnection" do
   def prepped_connection
-    SSDP::Connection.any_instance.stub(:set_sock_opt)
-    SSDP::Connection.new(1)
+    SSDP::MulticastConnection.any_instance.stub(:set_sock_opt)
+    SSDP::MulticastConnection.new(1)
   end
 
   subject { prepped_connection }

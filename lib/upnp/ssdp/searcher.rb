@@ -1,4 +1,4 @@
-require_relative 'connection'
+require_relative 'multicast_connection'
 
 module UPnP
 
@@ -12,7 +12,7 @@ module UPnP
   #   urn:schemas-upnp-org:service:[serviceType-version]
   #   urn:[custom-schema]:device:[deviceType-version]
   #   urn:[custom-schema]:service:[serviceType-version]
-  class SSDP::Searcher < SSDP::Connection
+  class SSDP::Searcher < SSDP::MulticastConnection
 
     # @param [String] search_target
     # @param [Fixnum] response_wait_time
