@@ -1,21 +1,21 @@
 require 'spec_helper'
-require 'ssdp/searcher'
+require 'upnp/ssdp/searcher'
 
-describe "SSDP::Searcher" do
+describe UPnP::SSDP::Searcher do
   def prepped_searcher
-    SSDP::Searcher.any_instance.stub(:set_sock_opt)
-    SSDP::Searcher.any_instance.should_receive(:setup_multicast_socket)
-    SSDP::Searcher.any_instance.stub(:send_datagram).and_return(1)
-    SSDP::Searcher.new(1, "ssdp:all", 5, 4)
+    UPnP::SSDP::Searcher.any_instance.stub(:set_sock_opt)
+    UPnP::SSDP::Searcher.any_instance.should_receive(:setup_multicast_socket)
+    UPnP::SSDP::Searcher.any_instance.stub(:send_datagram).and_return(1)
+    UPnP::SSDP::Searcher.new(1, "ssdp:all", 5, 4)
   end
 
   subject { prepped_searcher }
 
-  before { SSDP.log = false }
+  before { UPnP::SSDP.log = false }
 
   describe "#initialize" do
     it "does an #m_search" do
-      SSDP::Searcher.any_instance.should_receive(:m_search).and_return(<<-MSEARCH
+      UPnP::SSDP::Searcher.any_instance.should_receive(:m_search).and_return(<<-MSEARCH
 M-SEARCH * HTTP/1.1\r
 HOST: 239.255.255.250:1900\r
 MAN: "ssdp:discover"\r
@@ -29,7 +29,7 @@ ST: ssdp:all\r
   end
 
   describe "#post_init" do
-    before { SSDP::Searcher.any_instance.stub(:m_search).and_return("hi") }
+    before { UPnP::SSDP::Searcher.any_instance.stub(:m_search).and_return("hi") }
 
     it "sends an M-SEARCH as a datagram over 239.255.255.250:1900" do
       subject.should_receive(:send_datagram).with("hi", '239.255.255.250', 1900)
@@ -37,7 +37,7 @@ ST: ssdp:all\r
     end
 
     it "logs the M-SEARCH that it sent" do
-      SSDP.should_receive(:log).with("Sent datagram search:\nhi").at_least(:once)
+      UPnP::SSDP.should_receive(:log).with("Sent datagram search:\nhi").at_least(:once)
       subject.post_init
     end
   end

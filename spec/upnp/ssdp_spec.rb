@@ -20,13 +20,13 @@ describe SSDP do
       it "tries when it is not a String" do
         search_target = []
         search_target.should_receive(:to_upnp_s)
-        SSDP.search(search_target)
+        UPnP::SSDP.search(search_target)
       end
 
       it "does not try when it is a String" do
         search_target = "a string"
         search_target.should_not_receive(:to_upnp_s)
-        SSDP.search(search_target)
+        UPnP::SSDP.search(search_target)
       end
     end
 
@@ -40,23 +40,23 @@ describe SSDP do
 
     it "opens a UDP socket on '0.0.0.0', port 0" do
       EM.stub(:add_shutdown_hook)
-      EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, SSDP::Searcher,
-        "ssdp:all", 5, 4)
-      SSDP.search
+      EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, UPnP::SSDP::Searcher,
+        "ssdp:all", 3, 4)
+      UPnP::SSDP.search
     end
 
     it "returns an Array of responses" do
       EM.stub(:add_shutdown_hook).and_yield
-      SSDP.search.should == ["one", "two"]
+      UPnP::SSDP.search.should == ["one", "two", "one", "two"]
     end
 
     describe '.trap_signals' do
       it "stops the reactor on INT" do
         EM.should_receive(:stop)
-        SSDP.trap_signals
+        UPnP::SSDP.trap_signals
 
         fork do
-          SSDP.search
+          UPnP::SSDP.search
         end
 
         Process.kill("INT", $$)
@@ -64,10 +64,10 @@ describe SSDP do
 
       it "stops the reactor on TERM" do
         EM.should_receive(:stop)
-        SSDP.trap_signals
+        UPnP::SSDP.trap_signals
 
         fork do
-          SSDP.search
+          UPnP::SSDP.search
         end
 
         Process.kill("TERM", $$)

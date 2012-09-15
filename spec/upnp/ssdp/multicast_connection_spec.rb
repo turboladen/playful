@@ -1,15 +1,15 @@
 require 'spec_helper'
-require 'ssdp/connection'
+require 'upnp/ssdp/multicast_connection'
 
-describe "SSDP::MulticastConnection" do
+describe UPnP::SSDP::MulticastConnection do
   def prepped_connection
-    SSDP::MulticastConnection.any_instance.stub(:set_sock_opt)
-    SSDP::MulticastConnection.new(1)
+    UPnP::SSDP::MulticastConnection.any_instance.stub(:set_sock_opt)
+    UPnP::SSDP::MulticastConnection.new(1)
   end
 
   subject { prepped_connection }
 
-  before { SSDP.log = false }
+  before { UPnP::SSDP.log = false }
 
   it "lets you read its responses" do
     responses = double 'responses'
@@ -40,6 +40,7 @@ describe "SSDP::MulticastConnection" do
     it "takes a response and adds it to the list of responses" do
       response = double 'response'
       parsed_response = double 'parsed response'
+      parsed_response.should_receive(:has_key?).with(:nts).and_return false
       subject.should_receive(:parse).with(response).exactly(1).times.
         and_return(parsed_response)
       subject.should_receive(:peer_info).at_least(:once).
@@ -83,7 +84,7 @@ describe "SSDP::MulticastConnection" do
       end
 
       it "logs the 'bad' response" do
-        SSDP.should_receive(:log).twice
+        UPnP::SSDP.should_receive(:log).twice
         subject.parse @data
       end
     end
@@ -148,9 +149,8 @@ describe "SSDP::MulticastConnection" do
     end
 
     it "raises when not :on, :off, '\\000', or '\\001'" do
-      expect { subject.switch_multicast_loop 12312312 }.to raise_exception(
-        SSDP::Error
-      )
+      expect { subject.switch_multicast_loop 12312312 }.
+        to raise_error(UPnP::SSDP::Error)
     end
   end
 end

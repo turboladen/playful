@@ -3,28 +3,12 @@ require_relative '../support/search_responses'
 require 'upnp/control_point'
 
 describe UPnP::ControlPoint do
-  describe "#initialize" do
-    context "default parameters" do
-      before { @cp = UPnP::ControlPoint.new }
-
-      it "sets @ip to '0.0.0.0'" do
-        ip = @cp.instance_variable_get :@ip
-        ip.should eq '0.0.0.0'
-      end
-
-      it "sets @port to 0" do
-        ip = @cp.instance_variable_get :@port
-        ip.should eq 0
-      end
-    end
-  end
-
   describe "#find_devices" do
     context "search type = ssdp:all" do
       before do
         responses = SSDP_SEARCH_RESPONSES_PARSED.each_value.to_a
         SSDP.should_receive(:search).with("ssdp:all").and_return responses
-        @cp = UPnP::ControlPoint.new
+        @cp = UPnP::ControlPoint.new(1)
 
         # FIX THIS to return valid descriptions!
         @cp.should_receive(:get_description).exactly(3).times.and_return ""
