@@ -2,11 +2,11 @@ require 'singleton'
 require 'socket'
 require 'ipaddr'
 
-require_relative '../../lib/upnp/globals'
+require_relative '../../lib/upnp/ssdp/network_constants'
 
 class FakeUPnPDeviceCollection
   include Singleton
-  include UPnP::Globals
+  include UPnP::SSDP::NetworkConstants
 
   attr_accessor :respond_with
 
