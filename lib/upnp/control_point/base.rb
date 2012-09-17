@@ -13,6 +13,7 @@ module UPnP
       protected
 
       def get_description(location)
+        UPnP::ControlPoint.log "Getting description for: #{location}"
         Nori.parse(open(location).read)
       end
 

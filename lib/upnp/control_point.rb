@@ -1,6 +1,7 @@
 require 'open-uri'
 require 'nori'
 require 'em-websocket'
+require 'log_switch'
 require_relative 'ssdp'
 require_relative 'control_point/service'
 require_relative 'control_point/device'
@@ -20,6 +21,9 @@ module UPnP
   # It uses +Nori+ for parsing the description XML files, which will use +Nokogiri+
   # if you have it installed.
   class ControlPoint
+    extend LogSwitch
+    include LogSwitch::Mixin
+
     attr_reader :device
 
     def initialize(device_id)
@@ -32,7 +36,6 @@ module UPnP
 
     def start
       @stopping = false
-
       response_wait_time = 2
       ttl = 4
 
@@ -42,9 +45,10 @@ module UPnP
       end
 
       if EM.reactor_running?
-        puts "joining reactor..."
+        log "Joining reactor..."
         starter.call
       else
+        log "Starting reactor..."
         EM.run(&starter)
       end
     end
