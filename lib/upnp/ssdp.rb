@@ -14,6 +14,7 @@ require_relative 'ssdp/broadcast_searcher'
 module UPnP
   class SSDP
     extend LogSwitch
+    include LogSwitch::Mixin
     include NetworkConstants
 
     self.logger.datetime_format = "%Y-%m-%d %H:%M:%S "
@@ -36,47 +37,48 @@ module UPnP
     # @param [Hash] options
     # @option options [Fixnum] response_wait_time
     # @option options [Fixnum] ttl
-    # @option options [Fixnum] search_count The number of times to send the search request.
     # @option options [Boolean] do_broadcast_search Tells the search call to also send
     #   a M-SEARCH over 255.255.255.255.  This is *NOT* part of the UPnP spec;
     #   it's merely a hack for working with some types of devices that don't
     #   properly implement the UPnP spec.
     # @option options [Array] An Array of all of the responses received from the request.
-    # @return [Array<Hash>] Returns a Hash that represents the headers from the
+    # @return [Array<Hash>,UPnP::SSDP::Searcher] Returns a Hash that represents the headers from the
     #   M-SEARCH response.  Each one of these can be passed in to UPnP::ControlPoint::Device.new
     #   to download the device's description file, parse it, and interact with
-    #   the device's devices and/or services.
+    #   the device's devices and/or services.  If the reactor is already running
+    #   this will return a Proc that can be used as a callback.
     def self.search(search_target=:all, options={})
       response_wait_time = options[:response_wait_time] || 3
       ttl = options[:ttl] || TTL
-      search_count = options[:search_count] || 2
       do_broadcast_search = options[:do_broadcast_search] || false
 
       responses = []
       search_target = search_target.to_upnp_s unless search_target.is_a? String
 
-      connect = proc do
-        tmp_responses = []
+      multicast_searcher = proc do
+        EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
+          response_wait_time, ttl)
+      end
 
-        search_count.times do
-          tmp_responses << EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
-            response_wait_time, ttl)
-
-          if do_broadcast_search
-            EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::BroadcastSearcher, search_target,
-              response_wait_time, ttl)
-          end
-        end
-
-        tmp_responses.flatten
+      broadcast_searcher = proc do
+        EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::BroadcastSearcher, search_target,
+          response_wait_time, ttl)
       end
 
       if EM.reactor_running?
-        return connect.call
+        return multicast_searcher.call
       else
         EM.run do
-          s = connect.call
-          EM.add_shutdown_hook { responses = *s.map(&:discovery_responses).flatten }
+          s = multicast_searcher.call
+          b = broadcast_searcher.call if do_broadcast_search
+
+          EM.add_shutdown_hook do
+            responses << s.discovery_responses
+            responses << b.discovery_responses if do_broadcast_search
+
+            responses = *responses.flatten
+          end
+
           EM.add_timer(response_wait_time) { EM.stop }
           trap_signals
         end

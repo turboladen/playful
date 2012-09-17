@@ -10,7 +10,6 @@ module Upnp
     desc "search TARGET", "Searches for devices of type TARGET"
     method_option :response_wait_time, default: 3
     method_option :ttl, default: 4
-    method_option :search_count, default: 2
     method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
     def search(target="upnp:rootdevice")
@@ -34,7 +33,6 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
     desc "search_and_parse TARGET", "Searches for devices, fetches, and parses their DDFs"
     method_option :response_wait_time, default: 3
     method_option :ttl, default: 4
-    method_option :search_count, default: 2
     method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
     def search_and_parse(target="upnp:rootdevice")
