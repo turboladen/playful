@@ -26,8 +26,11 @@ module UPnP
 
     attr_reader :device
 
-    def initialize(device_id)
-      @device_id = device_id
+    # @params [String] search_target The device(s) to control.
+    # @params [Fixnum] search_count The number of times to do an SSDP search.
+    def initialize(search_target, search_count=2)
+      @search_target = search_target
+      @search_count = search_count
 
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
@@ -40,7 +43,7 @@ module UPnP
       ttl = 4
 
       starter = -> do
-        do_search(@device_id, response_wait_time, ttl)
+        do_search(@search_target, response_wait_time, ttl)
         @running = true
       end
 
@@ -76,7 +79,9 @@ module UPnP
       end
 
       searcher.callback do
-        extract_device(searcher.discovery_responses.uniq.first)
+        searcher.discovery_responses.uniq.each do |response|
+          extract_device response
+        end
       end
 
       EM.add_timer(response_wait_time) do
@@ -86,6 +91,7 @@ module UPnP
 
       EM.add_periodic_timer(5) do
         puts "Device: #{@device}"
+        puts "Device devices: #{@device.devices}"
         puts "Device services: #{@device.services}"
       end
 
