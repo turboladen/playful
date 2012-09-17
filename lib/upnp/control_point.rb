@@ -65,7 +65,9 @@ module UPnP
     end
 
     def do_search(search_for, response_wait_time, ttl)
-      searcher = SSDP.search(search_for, response_wait_time, ttl)
+      searcher = SSDP.search(search_for, {
+        response_wait_time: response_wait_time, ttl: ttl
+      })
 
       EventMachine::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
         ws.onopen {
@@ -74,7 +76,7 @@ module UPnP
       end
 
       searcher.callback do
-        extract_device(searcher.discovery_responses.first)
+        extract_device(searcher.discovery_responses.uniq.first)
       end
 
       EM.add_timer(response_wait_time) do
@@ -95,8 +97,8 @@ module UPnP
       trap('TERM') { stop }
     end
 
-    def extract_device(discovery_response)
-      @device = Device.new(discovery_response)
+    def extract_device(m_search_response)
+      @device = Device.new(m_search_response: m_search_response)
     end
   end
 end
