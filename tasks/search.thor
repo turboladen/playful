@@ -11,11 +11,12 @@ module Upnp
     method_option :response_wait_time, default: 3
     method_option :ttl, default: 4
     method_option :search_count, default: 2
-    method_option :broadcast_search, default: false
+    method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
     def search(target="upnp:rootdevice")
       UPnP::SSDP.log = options[:log]
       results = UPnP::SSDP.search(target, options)
+      ap results
 
       puts <<-RESULTS
 size: #{results.size}
@@ -34,7 +35,7 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
     method_option :response_wait_time, default: 3
     method_option :ttl, default: 4
     method_option :search_count, default: 2
-    method_option :broadcast_search, default: false
+    method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
     def search_and_parse(target="upnp:rootdevice")
       responses = invoke :search, target
