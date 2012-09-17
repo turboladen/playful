@@ -55,26 +55,30 @@ module UPnP
 
         @description = get_description(@scpd_url)
 
-        @service_state_table = @description[:scpd][:serviceStateTable][:stateVariable]
-        @actions = []
-        define_methods_from_actions(@description[:scpd][:actionList][:action])
+        @service_state_table = if @description[:scpd][:serviceStateTable].is_a? Hash
+          @description[:scpd][:serviceStateTable][:stateVariable]
+        elsif @description[:scpd][:serviceStateTable].is_a? Array
+          @description[:scpd][:serviceStateTable].map do |state|
+            state[:stateVariable]
+          end
+        end
 
-        @soap_client = Savon.client do |wsdl|
-          wsdl.endpoint = @control_url
-          wsdl.namespace = @service_type
+        @actions = []
+        if @description[:scpd][:actionList]
+          define_methods_from_actions(@description[:scpd][:actionList][:action])
+
+          @soap_client = Savon.client do |wsdl|
+            wsdl.endpoint = @control_url
+            wsdl.namespace = @service_type
+          end
         end
       end
 
       private
 
       def define_methods_from_actions(action_list)
-        action_list.each do |action|
-=begin
-        in_args_count = action[:argumentList][:argument].find_all do |arg|
-          arg[:direction] == 'in'
-        end.size
-=end
-          @actions << action
+        if action_list.is_a? Hash
+          action = action_list
 
           define_singleton_method(action[:name].to_sym) do |*params|
             st = @service_type
@@ -104,6 +108,44 @@ module UPnP
               puts "No args with direction 'out'"
             end
           end
+        elsif action_list.is_a? Array
+          action_list.each do |action|
+=begin
+        in_args_count = action[:argumentList][:argument].find_all do |arg|
+          arg[:direction] == 'in'
+        end.size
+=end
+            @actions << action
+
+            define_singleton_method(action[:name].to_sym) do |*params|
+              st = @service_type
+
+              response = @soap_client.request(:u, action[:name], "xmlns:u" => @service_type) do
+                http.headers['SOAPACTION'] = "#{st}##{action[:name]}"
+
+                soap.body = params.inject({}) do |result, arg|
+                  puts "arg: #{arg}"
+                  result[:argument_name] = arg
+
+                  result
+                end
+              end
+
+              argument = action[:argumentList][:argument]
+
+              if argument.is_a?(Hash) && argument[:direction] == "out"
+                return_ruby_from_soap(action[:name], response, argument)
+              elsif argument.is_a? Array
+                argument.map do |a|
+                  if a[:direction] == "out"
+                    return_ruby_from_soap(action[:name], response, a)
+                  end
+                end
+              else
+                puts "No args with direction 'out'"
+              end
+            end
+          end
         end
       end
 
@@ -131,15 +173,26 @@ module UPnP
 
         #puts "state var: #{state_variable}"
 
-        if state_variable[:dataType] == "ui4"
+        int_types = %w[ui1 ui2 ui4 i1 i2 i4 in]
+        float_types = %w[r4 r8 number fixed.14.4 float]
+        string_types = %w[char string uuid]
+        true_types = %w[1 true yes]
+        false_types = %w[0 false no]
+
+        if int_types.include? state_variable[:dataType]
           {
             out_arg_name.to_sym => soap_response.
               hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_i
           }
-        elsif state_variable[:dataType] == "string"
+        elsif string_types.include? state_variable[:dataType]
           {
             out_arg_name.to_sym => soap_response.
               hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_s
+          }
+        elsif float_types.include? state_variable[:dataType]
+          {
+            out_arg_name.to_sym => soap_response.
+              hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_f
           }
         end
       end

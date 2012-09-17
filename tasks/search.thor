@@ -30,7 +30,7 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
     #---------------------------------------------------------------------------
     # search_and_parse
     #---------------------------------------------------------------------------
-    desc "search_and_fetch TARGET", "Searches for devices, fetches, and parses their DDFs"
+    desc "search_and_parse TARGET", "Searches for devices, fetches, and parses their DDFs"
     method_option :response_wait_time, default: 3
     method_option :ttl, default: 4
     method_option :search_count, default: 2
@@ -38,21 +38,30 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
     method_option :log, type: :boolean
     def search_and_parse(target="upnp:rootdevice")
       responses = invoke :search, target
-      devices = responses.uniq.map { |r| UPnP::ControlPoint::Device.new(r) }
+      devices = responses.uniq.map { |r| UPnP::ControlPoint::Device.new(m_search_response: r) }
+      
       #puts "SERVICES"
       #ap devices.first.services
-      #puts "First Service's ACTIONS"
-      #ap devices.first.services.first.actions
-      #puts "Services state table"
-      #ap devices.first.services.first.service_state_table
-      #puts "id class", devices.first.services.first.GetSystemUpdateID.class
-      puts "id: #{devices.first.services.first.GetSystemUpdateID}"
+      puts "No devices found" && exit if devices.empty?
 
-      puts "Last Service's ACTIONS"
-      ap devices.first.services.last.actions
-      #puts "Services state table"
-      #ap devices.first.services.last.service_state_table
-      puts "protocol info: #{devices.first.services.last.GetProtocolInfo}"
+      #ap devices.first.description
+      puts "child devices: #{devices.first.devices.size}"
+
+      if devices.first.has_services?
+        puts "First Service's ACTIONS"
+        ap devices.first.services.first.actions
+        #puts "Services state table"
+        #ap devices.first.services.first.service_state_table
+        puts "id: #{devices.first.services.first.GetSystemUpdateID}"
+      end
+
+      #if devices.last.has_services?
+      #  puts "Last Service's ACTIONS"
+      #  ap devices.first.services.last.actions
+      #  puts "Services state table"
+      #  ap devices.first.services.last.service_state_table
+      #  puts "protocol info: #{devices.first.services.last.GetProtocolInfo}"
+      #end
     end
   end
 end
