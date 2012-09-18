@@ -55,6 +55,9 @@ module UPnP
           @event_sub_url = build_url(@device_base_url, device_service[:eventSubURL])
         end
 
+        @service_type = device_service[:serviceType]
+        @service_id = device_service[:serviceId]
+
         if device_service[:SCPDURL]
           @scpd_url = build_url(@device_base_url, device_service[:SCPDURL])
 
@@ -79,8 +82,6 @@ module UPnP
           end
         end
 
-        @service_type = device_service[:serviceType]
-        @service_id = device_service[:serviceId]
       end
 
       private
@@ -129,6 +130,7 @@ module UPnP
             define_singleton_method(action[:name].to_sym) do |*params|
               st = @service_type
 
+              ControlPoint.log "soap client: #{@soap_client.inspect}"
               response = @soap_client.request(:u, action[:name], "xmlns:u" => @service_type) do
                 http.headers['SOAPACTION'] = "#{st}##{action[:name]}"
 
