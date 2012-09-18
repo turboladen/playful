@@ -145,8 +145,12 @@ module UPnP
 
       def extract_devices
         device_list = if @description.has_key? :root
-          @description[:root][:device][:deviceList][:device]
-        elsif @description.has_key? :deviceList
+          if @description[:root][:device].has_key? :deviceList
+            @description[:root][:device][:deviceList][:device]
+          else
+            @description[:root][:device]
+          end
+        elsif @description[:deviceList]
           @description[:deviceList][:device]
         end
 
@@ -170,6 +174,7 @@ module UPnP
               @services << Service.new(@url_base, s)
             end
           else
+            ControlPoint.log "service: #{service_list}"
             @services << Service.new(@url_base, service)
           end
         end

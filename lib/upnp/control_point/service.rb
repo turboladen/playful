@@ -46,32 +46,41 @@ module UPnP
 
       def initialize(device_base_url, device_service)
         @device_base_url = device_base_url
-        @scpd_url = build_url(@device_base_url, device_service[:SCPDURL])
-        @control_url = build_url(@device_base_url, device_service[:controlURL])
-        @event_sub_url = build_url(@device_base_url, device_service[:eventSubURL])
+
+        if device_service[:controlURL]
+          @control_url = build_url(@device_base_url, device_service[:controlURL])
+        end
+
+        if device_service[:eventSubURL]
+          @event_sub_url = build_url(@device_base_url, device_service[:eventSubURL])
+        end
+
+        if device_service[:SCPDURL]
+          @scpd_url = build_url(@device_base_url, device_service[:SCPDURL])
+
+          @description = get_description(@scpd_url)
+
+          @service_state_table = if @description[:scpd][:serviceStateTable].is_a? Hash
+            @description[:scpd][:serviceStateTable][:stateVariable]
+          elsif @description[:scpd][:serviceStateTable].is_a? Array
+            @description[:scpd][:serviceStateTable].map do |state|
+              state[:stateVariable]
+            end
+          end
+
+          @actions = []
+          if @description[:scpd][:actionList]
+            define_methods_from_actions(@description[:scpd][:actionList][:action])
+
+            @soap_client = Savon.client do |wsdl|
+              wsdl.endpoint = @control_url
+              wsdl.namespace = @service_type
+            end
+          end
+        end
 
         @service_type = device_service[:serviceType]
         @service_id = device_service[:serviceId]
-
-        @description = get_description(@scpd_url)
-
-        @service_state_table = if @description[:scpd][:serviceStateTable].is_a? Hash
-          @description[:scpd][:serviceStateTable][:stateVariable]
-        elsif @description[:scpd][:serviceStateTable].is_a? Array
-          @description[:scpd][:serviceStateTable].map do |state|
-            state[:stateVariable]
-          end
-        end
-
-        @actions = []
-        if @description[:scpd][:actionList]
-          define_methods_from_actions(@description[:scpd][:actionList][:action])
-
-          @soap_client = Savon.client do |wsdl|
-            wsdl.endpoint = @control_url
-            wsdl.namespace = @service_type
-          end
-        end
       end
 
       private
