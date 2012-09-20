@@ -66,6 +66,13 @@ module UPnP
       end
 
       def fetch
+        if @scpd_url.nil?
+          log "<#{self.class}> NO SCPDURL to get the service description from.  Returning."
+          log "<#{self.class}> Device service info: #{@device_service}"
+          set_deferred_failure
+          return
+        end
+
         description_getter = EventMachine::DefaultDeferrable.new
         log "<#{self.class}> Fetching service description with #{description_getter.object_id}"
         get_description(@scpd_url, description_getter)
