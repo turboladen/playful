@@ -70,8 +70,8 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
 
           device_creator.fetch
         end
-      end
 =end
+      end
 
       puts "No devices found" && exit if devices.empty?
 
