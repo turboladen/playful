@@ -17,6 +17,8 @@ end
 module UPnP
   class ControlPoint
     class Service < Base
+      include EventMachine::Deferrable
+      include LogSwitch::Mixin
 
       # @return [String] UPnP service type, including URN.
       attr_reader :service_type
@@ -46,22 +48,31 @@ module UPnP
 
       def initialize(device_base_url, device_service)
         @device_base_url = device_base_url
+        @device_service = device_service
 
-        if device_service[:controlURL]
-          @control_url = build_url(@device_base_url, device_service[:controlURL])
+        if @device_service[:controlURL]
+          @control_url = build_url(@device_base_url, @device_service[:controlURL])
         end
 
-        if device_service[:eventSubURL]
-          @event_sub_url = build_url(@device_base_url, device_service[:eventSubURL])
+        if @device_service[:eventSubURL]
+          @event_sub_url = build_url(@device_base_url, @device_service[:eventSubURL])
         end
 
-        @service_type = device_service[:serviceType]
-        @service_id = device_service[:serviceId]
+        @service_type = @device_service[:serviceType]
+        @service_id = @device_service[:serviceId]
+        return unless @device_service[:SCPDURL]
 
-        if device_service[:SCPDURL]
-          @scpd_url = build_url(@device_base_url, device_service[:SCPDURL])
+        @scpd_url = build_url(@device_base_url, @device_service[:SCPDURL])
+      end
 
-          @description = get_description(@scpd_url)
+      def fetch
+        description_getter = EventMachine::DefaultDeferrable.new
+        log "<#{self.class}> Fetching service description with #{description_getter.object_id}"
+        get_description(@scpd_url, description_getter)
+
+        description_getter.callback do |description|
+          log "<#{self.class}> Service description received for #{description_getter.object_id}."
+          @description = description
 
           @service_state_table = if @description[:scpd][:serviceStateTable].is_a? Hash
             @description[:scpd][:serviceStateTable][:stateVariable]
@@ -73,6 +84,7 @@ module UPnP
 
           @actions = []
           if @description[:scpd][:actionList]
+            log "<#{self.class}> Defining methods from actions."
             define_methods_from_actions(@description[:scpd][:actionList][:action])
 
             @soap_client = Savon.client do |wsdl|
@@ -80,8 +92,9 @@ module UPnP
               wsdl.namespace = @service_type
             end
           end
-        end
 
+          set_deferred_status(:succeeded, self)
+        end
       end
 
       private

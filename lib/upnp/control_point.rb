@@ -24,13 +24,15 @@ module UPnP
     extend LogSwitch
     include LogSwitch::Mixin
 
-    attr_reader :device
+    attr_reader :devices
 
     # @params [String] search_target The device(s) to control.
     # @params [Fixnum] search_count The number of times to do an SSDP search.
     def initialize(search_target, search_count=2)
       @search_target = search_target
       @search_count = search_count
+      @devices = []
+      @device_queue = EventMachine::Queue.new
 
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
@@ -39,19 +41,28 @@ module UPnP
 
     def start
       @stopping = false
-      response_wait_time = 2
+      response_wait_time = 5
       ttl = 4
 
       starter = -> do
-        do_search(@search_target, response_wait_time, ttl)
+        @search_count.times do
+          do_search(@search_target, response_wait_time, ttl)
+        end
+
+        EM.add_periodic_timer(15) do
+          do_search(@search_target, response_wait_time, ttl)
+        end
+
+        yield @device_queue if block_given?
+
         @running = true
       end
 
       if EM.reactor_running?
-        log "Joining reactor..."
+        log "<#{self.class}> Joining reactor..."
         starter.call
       else
-        log "Starting reactor..."
+        log "<#{self.class}> Starting reactor..."
         EM.run(&starter)
       end
     end
@@ -72,15 +83,24 @@ module UPnP
         response_wait_time: response_wait_time, ttl: ttl
       })
 
-      EventMachine::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
-        ws.onopen {
-          ws.send "device: #{@device}"
-        }
-      end
-
       searcher.callback do
-        searcher.discovery_responses.uniq.each do |response|
-          extract_device response
+        log "<#{self.class}> Unique search responses: #{searcher.discovery_responses.uniq.size}"
+
+        EM::Iterator.new(searcher.discovery_responses.uniq, searcher.discovery_responses.uniq.size).each do |m_search_response|
+          deferred_device = Device.new(m_search_response: m_search_response)
+
+          deferred_device.errback do |message|
+            log "<#{self.class}> #{message}"
+          end
+
+          deferred_device.callback do |built_device|
+            unless @devices.any? { |d| d.usn == built_device.usn }
+              @device_queue.push(built_device)
+              @devices << built_device
+            end
+          end
+
+          deferred_device.fetch
         end
       end
 
@@ -90,9 +110,10 @@ module UPnP
       end
 
       EM.add_periodic_timer(5) do
-        puts "Device: #{@device}"
-        puts "Device devices: #{@device.devices}"
-        puts "Device services: #{@device.services}"
+        log "<#{self.class}> Time since last timer: #{Time.now - @timer_time}" if @timer_time
+        @timer_time = Time.now
+        puts "<#{self.class}> Device count: #{@devices.size}"
+        puts "<#{self.class}> Device unique: #{@devices.uniq.size}"
       end
 
       trap_signals
@@ -101,10 +122,6 @@ module UPnP
     def trap_signals
       trap('INT') { stop }
       trap('TERM') { stop }
-    end
-
-    def extract_device(m_search_response)
-      @device = Device.new(m_search_response: m_search_response)
     end
   end
 end

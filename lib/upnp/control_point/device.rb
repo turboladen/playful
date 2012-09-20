@@ -1,11 +1,14 @@
 require_relative 'base'
 require_relative 'service'
 require 'uri'
+require 'eventmachine'
 
 
 module UPnP
   class ControlPoint
     class Device < Base
+      include EM::Deferrable
+      include LogSwitch::Mixin
 
       attr_reader :m_search_response
       attr_reader :description
@@ -84,11 +87,16 @@ module UPnP
       def initialize(device_info)
         super()
 
+        @device_info = device_info
         @devices = []
         @services = []
+      end
 
-        if device_info.has_key? :m_search_response
-          @m_search_response = device_info[:m_search_response]
+      def fetch
+        description_getter = EventMachine::DefaultDeferrable.new
+
+        if @device_info.has_key? :m_search_response
+          @m_search_response = @device_info[:m_search_response]
 
           @cache_control = @m_search_response[:cache_control]
           @location = m_search_response[:location]
@@ -97,28 +105,83 @@ module UPnP
           @ext = m_search_response[:ext]
           @usn = m_search_response[:usn]
 
-          @description = get_description(@location)
-        elsif device_info.has_key? :device_description
-          @description = device_info[:device_description]
+          if @location
+            get_description(@location, description_getter)
+          else
+            message = "M-SEARCH response is either missing the Location header or has an empty value."
+            message << "Response: #{@m_search_response}"
+            raise message
+          end
+        elsif @device_info.has_key? :device_description
+          description_getter.set_deferred_status(:succeeded, @device_info[:device_description])
+        else
+          description_getter.set_deferred_status(:failed)
         end
 
-        @url_base = if @description[:root] && @description[:root][:URLBase]
+        description_getter.errback do
+          log "<#{self.class}> Failed getting description..."
+        end
+
+        description_getter.callback do |description|
+          log "<#{self.class}> Description received from #{description_getter.object_id}"
+          @description = description
+
+          if @description.nil?
+            log "<#{self.class}> Description is empty."
+            set_deferred_status(:failed, "Got back an empty description...")
+            return
+          end
+
+          @url_base = extract_url_base
+          log "<#{self.class}> Set url_base to #{@url_base}"
+
+          if @device_info[:m_search_response]
+            extract_description(@description[:root][:device])
+          elsif @device_info.has_key? :device_description
+            extract_description(@description)
+          end
+
+          device_extractor = EventMachine::DefaultDeferrable.new
+          extract_devices(device_extractor)
+
+          device_extractor.callback do |device|
+            if device
+              log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
+              @devices << device
+            else
+              log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none was extracted."
+            end
+
+            log "<#{self.class}> Device size is now: #{@devices.size}"
+            services_extractor = EventMachine::DefaultDeferrable.new
+            services_extractor.callback do |services|
+              log "<#{self.class}> Done extracting services."
+              @services = services
+
+              log "<#{self.class}> New service count: #{@services.size}."
+              set_deferred_status :succeeded, self
+            end
+
+            if @description[:serviceList]
+              extract_services(@description[:serviceList], services_extractor)
+            elsif @description[:root][:device][:serviceList]
+              extract_services(@description[:root][:device][:serviceList], services_extractor)
+            end
+          end
+        end
+      end
+
+      def extract_url_base
+        if @description[:root] && @description[:root][:URLBase]
           @description[:root][:URLBase]
-        elsif device_info[:parent_base_url]
-          device_info[:parent_base_url]
+        elsif @device_info[:parent_base_url]
+          @device_info[:parent_base_url]
         else
           tmp_uri = URI(@location)
           "#{tmp_uri.scheme}://#{tmp_uri.host}:#{tmp_uri.port}/"
         end
-
-        if device_info[:m_search_response]
-          extract_description(@description[:root][:device])
-        elsif device_info.has_key? :device_description
-          extract_description(@description)
-        end
-
-        @devices = extract_devices
       end
+
 
       def has_devices?
         !@devices.empty?
@@ -129,6 +192,7 @@ module UPnP
       end
 
       def extract_description(ddf)
+        log "<#{self.class}> Extracting description..."
 
         @friendly_name = ddf[:friendlyName] || ''
         @manufacturer = ddf[:manufacturer] || ''
@@ -140,10 +204,12 @@ module UPnP
         @presentation_url = ddf[:presentationURL] || ''
         @serial_number = ddf[:serialNumber] || ''
 
-        extract_services(ddf[:serviceList]) || []
+        log "<#{self.class}> Description extracted."
       end
 
-      def extract_devices
+      def extract_devices(device_extractor)
+        log "<#{self.class}> Extracting devices..."
+
         device_list = if @description.has_key? :root
           if @description[:root][:device].has_key? :deviceList
             @description[:root][:device][:deviceList][:device]
@@ -152,32 +218,86 @@ module UPnP
           end
         elsif @description[:deviceList]
           @description[:deviceList][:device]
+        else
+          log "<#{self.class}> No devices to extract."
+          device_extractor.set_deferred_status(:succeeded)
         end
 
         return if device_list.nil?
 
+        log "<#{self.class}> device list: #{device_list}"
+
         if device_list.is_a? Hash
-          [Device.new(device_description: device_list, parent_base_url: @url_base)]
+          extract_device(device_list, device_extractor)
         elsif device_list.is_a? Array
           device_list.map do |device|
-            Device.new(device_description: device, parent_base_url: @url_base)
+            extract_device(device, device_extractor)
           end
         end
       end
 
-      def extract_services(service_list)
+      def extract_device(device, device_extractor)
+        deferred_device = Device.new(device_description: device, parent_base_url: @url_base)
+
+        deferred_device.errback do
+          log "<#{self.class}> Couldn't build device!", :error
+        end
+
+        deferred_device.callback do |built_device|
+          log "<#{self.class}> Device created."
+          device_extractor.set_deferred_status(:succeeded, built_device)
+        end
+
+        deferred_device.fetch
+      end
+
+      def extract_services(service_list, group_service_extractor)
+        log "<#{self.class}> Extracting services..."
+
+        log "<#{self.class}> service list: #{service_list}"
         return if service_list.nil?
 
         service_list.each_value do |service|
           if service.is_a? Array
-            service.each do |s|
-              @services << Service.new(@url_base, s)
-            end
+            EM::Iterator.new(service, service.count).map(
+              proc do |s, iter|
+                single_service_extractor = EventMachine::DefaultDeferrable.new
+                single_service_extractor.callback do |service|
+                  iter.return(service)
+                end
+
+                extract_service(s, single_service_extractor)
+              end,
+              proc do |found_services|
+                group_service_extractor.set_deferred_status(:succeeded, found_services)
+              end
+            )
           else
-            ControlPoint.log "service: #{service_list}"
-            @services << Service.new(@url_base, service)
+            single_service_extractor = EventMachine::DefaultDeferrable.new
+            single_service_extractor.callback do |service|
+              service_extractor.set_deferred_status :succeeded, [service]
+            end
+
+            log "<#{self.class}> Extracting single service..."
+            extract_service(service, single_service_extractor)
           end
         end
+      end
+
+      def extract_service(service, single_service_extractor)
+        service_getter = Service.new(@url_base, service)
+        log "<#{self.class}> Extracting service with #{service_getter.object_id}"
+
+        service_getter.errback do
+          log "<#{self.class}> Couldn't build service!", :error
+        end
+
+        service_getter.callback do |built_service|
+          log "<#{self.class}> Service created."
+          single_service_extractor.set_deferred_status(:succeeded, built_service)
+        end
+
+        service_getter.fetch
       end
     end
   end
