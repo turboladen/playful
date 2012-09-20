@@ -41,6 +41,7 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
       responses.uniq!
 
       EM.run do
+        # The evented way...
         EM::Iterator.new(responses, responses.size).map(
           proc do |response, iter|
             device_creator = UPnP::ControlPoint::Device.new(m_search_response: response)
@@ -57,7 +58,20 @@ unique locations: #{results.uniq.map { |r| r[:location] }}
             EM.stop
         end
         )
+=begin
+        # The non-evented way...
+        until responses.empty? do
+          device_creator = UPnP::ControlPoint::Device.new(m_search_response: responses.pop)
+
+          device_creator.callback do |built_device|
+            devices << built_device
+            EM.stop if responses.empty?
+          end
+
+          device_creator.fetch
+        end
       end
+=end
 
       puts "No devices found" && exit if devices.empty?
 
