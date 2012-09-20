@@ -275,7 +275,7 @@ module UPnP
           else
             single_service_extractor = EventMachine::DefaultDeferrable.new
             single_service_extractor.callback do |service|
-              service_extractor.set_deferred_status :succeeded, [service]
+              group_service_extractor.set_deferred_status :succeeded, [service]
             end
 
             log "<#{self.class}> Extracting single service..."
