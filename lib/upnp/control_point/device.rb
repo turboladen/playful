@@ -207,8 +207,8 @@ module UPnP
         log "<#{self.class}> Description extracted."
       end
 
-      def extract_devices(device_extractor)
-        log "<#{self.class}> Extracting devices..."
+      def extract_devices(group_device_extractor)
+        log "<#{self.class}> Extracting child devices for #{self.object_id} using #{group_device_extractor.object_id}"
 
         device_list = if @description.has_key? :root
           if @description[:root][:device].has_key? :deviceList
@@ -220,19 +220,34 @@ module UPnP
           @description[:deviceList][:device]
         else
           log "<#{self.class}> No devices to extract."
-          device_extractor.set_deferred_status(:succeeded)
+          group_device_extractor.set_deferred_status(:succeeded)
         end
 
         return if device_list.nil?
-
         log "<#{self.class}> device list: #{device_list}"
 
-        if device_list.is_a? Hash
-          extract_device(device_list, device_extractor)
-        elsif device_list.is_a? Array
-          device_list.map do |device|
-            extract_device(device, device_extractor)
+        if device_list.is_a? Array
+          EM::Iterator.new(device_list, device_list.count).map(
+            proc do |device, iter|
+              single_device_extractor = EventMachine::DefaultDeferrable.new
+              single_device_extractor.callback do |device|
+                iter.return(device)
+              end
+
+              extract_device(device, single_device_extractor)
+            end,
+            proc do |found_devices|
+              group_device_extractor.set_deferred_status(:succeeded, found_devices)
+            end
+          )
+        else
+          single_device_extractor = EventMachine::DefaultDeferrable.new
+          single_device_extractor.callback do |device|
+            group_device_extractor.set_deferred_status(:succeeded, [device])
           end
+
+          log "<#{self.class}> Extracting single device..."
+          extract_device(device_list, group_device_extractor)
         end
       end
 
