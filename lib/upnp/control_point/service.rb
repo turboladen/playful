@@ -70,7 +70,7 @@ module UPnP
         if @scpd_url.nil?
           log "<#{self.class}> NO SCPDURL to get the service description from.  Returning."
           log "<#{self.class}> Device service info: #{@device_service}"
-          set_deferred_failure
+          set_deferred_success self
           return
         end
 
