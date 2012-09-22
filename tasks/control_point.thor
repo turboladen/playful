@@ -11,9 +11,11 @@ module Upnp
       cp.start do |device_queue|
         EM::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
           ws.onopen do
-            until device_queue.empty?
-              device_queue.pop do |device|
-                ws.send "[#{Time.now}] #{device.friendly_name}: #{device.location}"
+            device_queue.pop do |device|
+              ws.send "[#{Time.now}] #{device.friendly_name}: #{device.device_type}"
+
+              device.services.each do |service|
+                ws.send "----- #{service.service_type}"
               end
             end
           end

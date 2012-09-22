@@ -27,7 +27,7 @@ module UPnP
         }
 
         http.callback {
-          log "<#{self.class}> HTTP callback called..."
+          log "<#{self.class}> HTTP callback called for #{description_getter.object_id}"
           response = Nori.parse(http.response)
           description_getter.set_deferred_status(:succeeded, response)
         }

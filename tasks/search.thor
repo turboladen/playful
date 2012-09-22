@@ -39,31 +39,14 @@ search duration: #{time_after - time_before}
     method_option :log, type: :boolean
     def search_and_parse(target="upnp:rootdevice")
       responses = invoke :search, target
+      return if responses.empty?
+
       devices = []
       responses.uniq!
 
       EM.run do
-        # The evented way...
-        EM::Iterator.new(responses, responses.size).map(
-          proc do |response, iter|
-            device_creator = UPnP::ControlPoint::Device.new(m_search_response: response)
-
-            device_creator.callback do |built_device|
-              puts "Local device creator callback called"
-              iter.return built_device
-            end
-
-            device_creator.fetch
-          end,
-          proc do |found_devices|
-            devices = found_devices
-            EM.stop
-        end
-        )
-=begin
-        # The non-evented way...
         until responses.empty? do
-          device_creator = UPnP::ControlPoint::Device.new(m_search_response: responses.pop)
+          device_creator = UPnP::ControlPoint::Device.new(ssdp_notification: responses.pop)
 
           device_creator.callback do |built_device|
             devices << built_device
@@ -72,7 +55,6 @@ search duration: #{time_after - time_before}
 
           device_creator.fetch
         end
-=end
       end
 
       puts "No devices found" && exit if devices.empty?
@@ -97,6 +79,8 @@ search duration: #{time_after - time_before}
       if first_device.has_devices?
         ap first_device.devices
         ap first_device.devices.first.services
+        puts "First Child Device's Service"
+        ap first_device.devices.first.services.first
         puts "First Child Device's Service's ACTIONS"
         ap first_device.devices.first.services.first.actions
         ap first_device.devices.first.services.first.singleton_methods

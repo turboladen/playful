@@ -20,14 +20,31 @@ module UPnP
     self.logger.datetime_format = "%Y-%m-%d %H:%M:%S "
 
     # Simply open a multicast UDP socket and listen for data.
-    #def self.listen(ttl=TTL)
-    #  EM.run do
-    #    EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT, UPnP::SSDP::Listener, ttl)
-    #    i = 0
-    #    EM.add_periodic_timer(1) { i += 1; print "listening for \b#{i}"}
-    #    trap_signals
-    #  end
-    #end
+    def self.listen(ttl=TTL)
+      responses = []
+
+      listener = proc do
+        l = EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT, UPnP::SSDP::Listener, ttl)
+        i = 0
+        EM.add_periodic_timer(1) { i += 1; print "listening for \b#{i}"}
+        l
+      end
+
+      if EM.reactor_running?
+        return listener.call
+      else
+        EM.run do
+          l = listener.call
+
+          EM.add_shutdown_hook do
+            responses << l.available_responses
+            responses << l.byebye_responses
+          end
+
+          trap_signals
+        end
+      end
+    end
 
     # Opens a UDP socket on 0.0.0.0, on an ephemeral port, has UPnP::SSDP::Searcher
     # build and send the search request, then receives the responses.  The search
@@ -76,16 +93,20 @@ module UPnP
           b = broadcast_searcher.call if do_broadcast_search
 
           EM.add_shutdown_hook do
-            responses << s.discovery_responses
-            responses << b.discovery_responses if do_broadcast_search
+            s.discovery_responses.pop do |notification|
+              responses << notification
+            end
 
-            responses = *responses.flatten
+            if do_broadcast_search
+              b.discovery_responses.pop do |notification|
+                responses << notification
+              end
+            end
           end
 
           EM.add_timer(response_wait_time) { EM.stop }
           trap_signals
         end
-
       end
 
       responses

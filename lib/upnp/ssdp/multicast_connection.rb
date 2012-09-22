@@ -9,7 +9,6 @@ require 'eventmachine'
 module UPnP
   class SSDP
     class MulticastConnection < EventMachine::Connection
-      include EventMachine::Deferrable
       include UPnP::SSDP::NetworkConstants
 
       # @return [Array] The list of responses from the current discovery request.
@@ -20,9 +19,10 @@ module UPnP
 
       def initialize ttl=TTL
         @ttl = ttl
-        @discovery_responses = []
-        @available_responses = []
-        @byebye_responses = []
+
+        @discovery_responses = EM::Queue.new
+        @available_responses = EM::Queue.new
+        @byebye_responses = EM::Queue.new
 
         setup_multicast_socket
       end
@@ -46,7 +46,7 @@ module UPnP
         if parsed_response.has_key? :nts
           if parsed_response[:nts] == "ssdp:alive"
             @available_responses << parsed_response
-          elsif parsed_response[:nts] == "ssdp:bye-bye"
+          elsif parsed_response[:nts] == "ssdp:byebye"
             @byebye_responses << parsed_response
           else
             raise "Unknown NTS value: #{parsed_response[:nts]}"

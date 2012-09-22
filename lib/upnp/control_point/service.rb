@@ -80,7 +80,7 @@ module UPnP
 
         description_getter.errback do
           msg = "Failed getting service description."
-          log "<#{self.class}> #{msg}"
+          log "<#{self.class}> #{msg}", :error
           raise ControlPoint::Error, msg
         end
 
@@ -98,7 +98,7 @@ module UPnP
 
           @actions = []
           if @description[:scpd][:actionList]
-            log "<#{self.class}> Defining methods from actions."
+            log "<#{self.class}> Defining methods from actions [#{description_getter.object_id}]"
             define_methods_from_actions(@description[:scpd][:actionList][:action])
 
             @soap_client = Savon.client do |wsdl|

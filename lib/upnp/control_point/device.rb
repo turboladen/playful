@@ -11,9 +11,10 @@ module UPnP
       include EM::Deferrable
       include LogSwitch::Mixin
 
-      attr_reader :m_search_response
+      attr_reader :ssdp_notification
       attr_reader :description
       attr_reader :cache_control
+      attr_reader :date
       attr_reader :location
       attr_reader :server
       attr_reader :st
@@ -82,41 +83,48 @@ module UPnP
       attr_reader :udn
 
       # @param [Hash] device_info
-      # @option device_info [Hash] m_search_response
+      # @option device_info [Hash] ssdp_notification
       # @option device_info [Hash] device_description
       # @option device_info [Hash] parent_base_url
       def initialize(device_info)
         super()
 
         @device_info = device_info
+        log "<#{self.class}> Got device info: #{@device_info}"
         @devices = []
         @services = []
       end
 
       def fetch
         description_getter = EventMachine::DefaultDeferrable.new
+        done_creating_devices = false
+        done_creating_services = false
 
-        if @device_info.has_key? :m_search_response
-          @m_search_response = @device_info[:m_search_response]
+        if @device_info.has_key? :ssdp_notification
+          log "<#{self.class}> Creating device from SSDP Notification info."
+          @ssdp_notification = @device_info[:ssdp_notification]
 
-          @cache_control = @m_search_response[:cache_control]
-          @location = m_search_response[:location]
-          @server = m_search_response[:server]
-          @st = m_search_response[:st]
-          @ext = m_search_response[:ext]
-          @usn = m_search_response[:usn]
+          @cache_control = @ssdp_notification[:cache_control]
+          @location = ssdp_notification[:location]
+          @server = ssdp_notification[:server]
+          @st = ssdp_notification[:st] || ssdp_notification[:nt]
+          @ext = ssdp_notification.has_key?(:ext) ? true : false
+          @usn = ssdp_notification[:usn]
+          @date = ssdp_notification[:date] || ''
 
           if @location
             get_description(@location, description_getter)
           else
             message = "M-SEARCH response is either missing the Location header or has an empty value."
-            message << "Response: #{@m_search_response}"
+            message << "Response: #{@ssdp_notification}"
             raise ControlPoint::Error, message
           end
         elsif @device_info.has_key? :device_description
-          description_getter.set_deferred_status(:succeeded, @device_info[:device_description])
+          log "<#{self.class}> Creating device from device description file info."
+          description_getter.set_deferred_success @device_info[:device_description]
         else
-          description_getter.set_deferred_status(:failed)
+          log "<#{self.class}> Not sure what to extract from this device's info."
+          description_getter.set_deferred_failure
         end
 
         description_getter.errback do
@@ -130,7 +138,7 @@ module UPnP
           @description = description
 
           if @description.nil?
-            log "<#{self.class}> Description is empty."
+            log "<#{self.class}> Description is empty.", :error
             set_deferred_status(:failed, "Got back an empty description...")
             return
           end
@@ -138,9 +146,11 @@ module UPnP
           @url_base = extract_url_base
           log "<#{self.class}> Set url_base to #{@url_base}"
 
-          if @device_info[:m_search_response]
+          if @device_info[:ssdp_notification]
+            log "<#{self.class}> Extracting description for root device #{description_getter.object_id}"
             extract_description(@description[:root][:device])
           elsif @device_info.has_key? :device_description
+            log "<#{self.class}> Extracting description for non-root device #{description_getter.object_id}"
             extract_description(@description)
           end
 
@@ -158,30 +168,42 @@ module UPnP
               log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
               @devices << device
             else
-              log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none was extracted."
+              log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none were extracted."
             end
 
-            log "<#{self.class}> Device size is now: #{@devices.size}"
-            services_extractor = EventMachine::DefaultDeferrable.new
+            log "<#{self.class}> Child device size is now: #{@devices.size}"
+            done_creating_devices = true
+          end
 
-            services_extractor.errback do
-              msg = "Failed extracting services."
-              log "<#{self.class}> #{msg}", :error
-              raise ControlPoint::Error, msg
-            end
+          services_extractor = EventMachine::DefaultDeferrable.new
 
-            services_extractor.callback do |services|
-              log "<#{self.class}> Done extracting services."
-              @services = services
+          if @description[:serviceList]
+            log "<#{self.class}> Extracting services from non-root device."
+            extract_services(@description[:serviceList], services_extractor)
+          elsif @description[:root][:device][:serviceList]
+            log "<#{self.class}> Extracting services from root device."
+            extract_services(@description[:root][:device][:serviceList], services_extractor)
+          end
 
-              log "<#{self.class}> New service count: #{@services.size}."
+          services_extractor.errback do
+            msg = "Failed extracting services."
+            log "<#{self.class}> #{msg}", :error
+            raise ControlPoint::Error, msg
+          end
+
+          services_extractor.callback do |services|
+            log "<#{self.class}> Done extracting services."
+            @services = services
+
+            log "<#{self.class}> New service count: #{@services.size}."
+            done_creating_services = true
+          end
+
+          EM.tick_loop do
+            if done_creating_devices && done_creating_services
+              log "<#{self.class}> All done creating stuff"
               set_deferred_status :succeeded, self
-            end
-
-            if @description[:serviceList]
-              extract_services(@description[:serviceList], services_extractor)
-            elsif @description[:root][:device][:serviceList]
-              extract_services(@description[:root][:device][:serviceList], services_extractor)
+              :stop
             end
           end
         end
@@ -208,7 +230,7 @@ module UPnP
       end
 
       def extract_description(ddf)
-        log "<#{self.class}> Extracting description..."
+        log "<#{self.class}> Extracting basic attributes from description..."
 
         @friendly_name = ddf[:friendlyName] || ''
         @manufacturer = ddf[:manufacturer] || ''
@@ -220,7 +242,7 @@ module UPnP
         @presentation_url = ddf[:presentationURL] || ''
         @serial_number = ddf[:serialNumber] || ''
 
-        log "<#{self.class}> Description extracted."
+        log "<#{self.class}> Basic attributes extracted."
       end
 
       def extract_devices(group_device_extractor)
@@ -235,7 +257,7 @@ module UPnP
         elsif @description[:deviceList]
           @description[:deviceList][:device]
         else
-          log "<#{self.class}> No devices to extract."
+          log "<#{self.class}> No child devices to extract."
           group_device_extractor.set_deferred_status(:succeeded)
         end
 
@@ -291,7 +313,7 @@ module UPnP
         end
 
         deferred_device.callback do |built_device|
-          log "<#{self.class}> Device created."
+          log "<#{self.class}> Device created: #{built_device.device_type}"
           device_extractor.set_deferred_status(:succeeded, built_device)
         end
 
@@ -312,7 +334,7 @@ module UPnP
 
                 single_service_extractor.errback do
                   msg = "Failed to create service."
-                  log "<#{self.class}> #{msg}"
+                  log "<#{self.class}> #{msg}", :error
                   raise ControlPoint::Error, msg
                 end
 
@@ -331,7 +353,7 @@ module UPnP
 
             single_service_extractor.errback do
               msg = "Failed to create service."
-              log "<#{self.class}> #{msg}"
+              log "<#{self.class}> #{msg}", :error
               raise ControlPoint::Error, msg
             end
 
@@ -356,7 +378,7 @@ module UPnP
         end
 
         service_getter.callback do |built_service|
-          log "<#{self.class}> Service created."
+          log "<#{self.class}> Service created: #{built_service.service_type}"
           single_service_extractor.set_deferred_status(:succeeded, built_service)
         end
 

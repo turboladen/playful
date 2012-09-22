@@ -40,19 +40,16 @@ module UPnP
       end
     end
 
-    def start &blk
+    def start options={}, &blk
       @stopping = false
-      response_wait_time = 5
-      ttl = 4
+
+      options[:response_wait_time] ||= 5
+      options[:m_search_count] ||= @search_count
+      ttl = options[:response_wait_time] || 4
 
       starter = -> do
-        do_search(@search_target, response_wait_time, ttl, @search_count)
-
-        # This should be converted to a listen call.
-        # EM.add_periodic_timer(15) do
-        #   do_search(@search_target, response_wait_time, ttl, @search_count)
-        # end
-
+        do_search(@search_target, options)
+        listen(ttl)
         blk.call(@device_queue)
         @running = true
       end
@@ -66,52 +63,33 @@ module UPnP
       end
     end
 
-    def stop
-      @running = false
-      @stopping = false
+    def listen(ttl)
+      listener = SSDP.listen(ttl)
 
-      EM.stop if EM.reactor_running?
-    end
-
-    def running?
-      @running
-    end
-
-    def do_search(search_for, response_wait_time, ttl, m_search_count)
-      searcher = SSDP.search(search_for, {
-        response_wait_time: response_wait_time, ttl: ttl, m_search_count: m_search_count
-      })
-
-      searcher.errback do
-        msg = "SSDP search failed."
-        log "<#{self.class}> #{msg}"
-        raise ControlPoint::Error, msg
+      listener.available_responses.pop do |advertisement|
+        log "<#{self.class}> Got alive #{advertisement}"
+        create_device(advertisement)
       end
 
-      searcher.callback do
-        log "<#{self.class}> Unique search responses: #{searcher.discovery_responses.uniq.size}"
+      listener.byebye_responses.pop do |advertisement|
+        log "<#{self.class}> Got bye-bye from #{advertisement}"
 
-        EM::Iterator.new(searcher.discovery_responses.uniq, searcher.discovery_responses.uniq.size).each do |m_search_response|
-          deferred_device = Device.new(m_search_response: m_search_response)
-
-          deferred_device.errback do |message|
-            log "<#{self.class}> #{message}"
-            raise ControlPoint::Error, message
-          end
-
-          deferred_device.callback do |built_device|
-            unless @devices.any? { |d| d.usn == built_device.usn }
-              @device_queue.push(built_device)
-              @devices << built_device
-            end
-          end
-
-          deferred_device.fetch
+        @devices.reject! do |device|
+          device.usn == advertisement[:usn]
         end
+
+        @devices.each { |d| @device_queue << d }
+      end
+    end
+
+    def do_search(search_for, options={})
+      searcher = SSDP.search(search_for, options)
+
+      searcher.discovery_responses.pop do |notification|
+        create_device(notification)
       end
 
-      EM.add_timer(response_wait_time) do
-        searcher.set_deferred_status(:succeeded)
+      EM.add_timer(options[:response_wait_time]) do
         searcher.close_connection
       end
 
@@ -123,6 +101,40 @@ module UPnP
       end
 
       trap_signals
+    end
+
+    def create_device(notification)
+      deferred_device = Device.new(ssdp_notification: notification)
+
+      deferred_device.errback do |message|
+        log "<#{self.class}> #{message}"
+        raise ControlPoint::Error, message
+      end
+
+      deferred_device.callback do |built_device|
+        log "<#{self.class}> Device created from #{notification}"
+
+        if @devices.any? { |d| d.usn == built_device.usn }
+          log "<#{self.class}> Newly created device already exists in internal list. Not adding."
+        else
+          log "<#{self.class}> Adding newly created device to internal list.."
+          @device_queue.push(built_device)
+          @devices << built_device
+        end
+      end
+
+      deferred_device.fetch
+    end
+
+    def stop
+      @running = false
+      @stopping = false
+
+      EM.stop if EM.reactor_running?
+    end
+
+    def running?
+      @running
     end
 
     def trap_signals
