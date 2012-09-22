@@ -40,7 +40,7 @@ module UPnP
       end
     end
 
-    def start
+    def start &blk
       @stopping = false
       response_wait_time = 5
       ttl = 4
@@ -49,11 +49,11 @@ module UPnP
         do_search(@search_target, response_wait_time, ttl, @search_count)
 
         # This should be converted to a listen call.
-        EM.add_periodic_timer(15) do
-          do_search(@search_target, response_wait_time, ttl, @search_count)
-        end
+        # EM.add_periodic_timer(15) do
+        #   do_search(@search_target, response_wait_time, ttl, @search_count)
+        # end
 
-        yield @device_queue if block_given?
+        blk.call(@device_queue)
         @running = true
       end
 
