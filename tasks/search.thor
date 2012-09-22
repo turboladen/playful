@@ -8,14 +8,13 @@ module Upnp
     # search
     #---------------------------------------------------------------------------
     desc "search TARGET", "Searches for devices of type TARGET"
-    method_option :response_wait_time, default: 3
+    method_option :response_wait_time, default: 5
     method_option :ttl, default: 4
     method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
     def search(target="upnp:rootdevice")
       UPnP::SSDP.log = options[:log]
-      results = UPnP::SSDP.search(target, options)
-      ap results
+      results = UPnP::SSDP.search(target, options.dup)
 
       puts <<-RESULTS
 size: #{results.size}

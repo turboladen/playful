@@ -46,16 +46,14 @@ module UPnP
       ttl = 4
 
       starter = -> do
-        @search_count.times do
-          do_search(@search_target, response_wait_time, ttl)
-        end
+        do_search(@search_target, response_wait_time, ttl, @search_count)
 
+        # This should be converted to a listen call.
         EM.add_periodic_timer(15) do
-          do_search(@search_target, response_wait_time, ttl)
+          do_search(@search_target, response_wait_time, ttl, @search_count)
         end
 
         yield @device_queue if block_given?
-
         @running = true
       end
 
@@ -79,9 +77,9 @@ module UPnP
       @running
     end
 
-    def do_search(search_for, response_wait_time, ttl)
+    def do_search(search_for, response_wait_time, ttl, m_search_count)
       searcher = SSDP.search(search_for, {
-        response_wait_time: response_wait_time, ttl: ttl
+        response_wait_time: response_wait_time, ttl: ttl, m_search_count: m_search_count
       })
 
       searcher.errback do
