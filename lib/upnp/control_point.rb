@@ -5,6 +5,7 @@ require 'log_switch'
 require_relative 'ssdp'
 require_relative 'control_point/service'
 require_relative 'control_point/device'
+require_relative 'control_point/error'
 
 begin
   require 'nokogiri'
@@ -83,6 +84,12 @@ module UPnP
         response_wait_time: response_wait_time, ttl: ttl
       })
 
+      searcher.errback do
+        msg = "SSDP search failed."
+        log "<#{self.class}> #{msg}"
+        raise ControlPoint::Error, msg
+      end
+
       searcher.callback do
         log "<#{self.class}> Unique search responses: #{searcher.discovery_responses.uniq.size}"
 
@@ -91,6 +98,7 @@ module UPnP
 
           deferred_device.errback do |message|
             log "<#{self.class}> #{message}"
+            raise ControlPoint::Error, message
           end
 
           deferred_device.callback do |built_device|
