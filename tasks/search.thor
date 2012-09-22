@@ -14,13 +14,16 @@ module Upnp
     method_option :log, type: :boolean
     def search(target="upnp:rootdevice")
       UPnP::SSDP.log = options[:log]
+      time_before = Time.now
       results = UPnP::SSDP.search(target, options.dup)
+      time_after = Time.now
 
       puts <<-RESULTS
 size: #{results.size}
 locations: #{results.map { |r| r[:location] }}
 unique size: #{results.uniq.size}
 unique locations: #{results.uniq.map { |r| r[:location] }}
+search duration: #{time_after - time_before}
       RESULTS
 
       results
