@@ -1,5 +1,6 @@
 require 'savon'
 require_relative 'base'
+require_relative 'error'
 
 
 Savon.configure do |c|
@@ -76,6 +77,12 @@ module UPnP
         description_getter = EventMachine::DefaultDeferrable.new
         log "<#{self.class}> Fetching service description with #{description_getter.object_id}"
         get_description(@scpd_url, description_getter)
+
+        description_getter.errback do
+          msg = "Failed getting service description."
+          log "<#{self.class}> #{msg}"
+          raise ControlPoint::Error, msg
+        end
 
         description_getter.callback do |description|
           log "<#{self.class}> Service description received for #{description_getter.object_id}."

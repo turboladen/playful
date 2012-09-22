@@ -1,5 +1,6 @@
 require_relative 'base'
 require_relative 'service'
+require_relative 'error'
 require 'uri'
 require 'eventmachine'
 
@@ -110,7 +111,7 @@ module UPnP
           else
             message = "M-SEARCH response is either missing the Location header or has an empty value."
             message << "Response: #{@m_search_response}"
-            raise message
+            raise ControlPoint::Error, message
           end
         elsif @device_info.has_key? :device_description
           description_getter.set_deferred_status(:succeeded, @device_info[:device_description])
@@ -119,7 +120,9 @@ module UPnP
         end
 
         description_getter.errback do
-          log "<#{self.class}> Failed getting description..."
+          msg = "Failed getting description."
+          log "<#{self.class}> #{msg}", :error
+          raise ControlPoint::Error, msg
         end
 
         description_getter.callback do |description|
@@ -144,6 +147,12 @@ module UPnP
           device_extractor = EventMachine::DefaultDeferrable.new
           extract_devices(device_extractor)
 
+          device_extractor.errback do
+            msg = "Failed extracting device."
+            log "<#{self.class}> #{msg}", :error
+            raise ControlPoint::Error, msg
+          end
+
           device_extractor.callback do |device|
             if device
               log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
@@ -154,6 +163,13 @@ module UPnP
 
             log "<#{self.class}> Device size is now: #{@devices.size}"
             services_extractor = EventMachine::DefaultDeferrable.new
+
+            services_extractor.errback do
+              msg = "Failed extracting services."
+              log "<#{self.class}> #{msg}", :error
+              raise ControlPoint::Error, msg
+            end
+
             services_extractor.callback do |services|
               log "<#{self.class}> Done extracting services."
               @services = services
@@ -230,6 +246,13 @@ module UPnP
           EM::Iterator.new(device_list, device_list.count).map(
             proc do |device, iter|
               single_device_extractor = EventMachine::DefaultDeferrable.new
+
+              single_device_extractor.errback do
+                msg = "Failed extracting device."
+                log "<#{self.class}> #{msg}", :error
+                raise ControlPoint::Error, msg
+              end
+
               single_device_extractor.callback do |device|
                 iter.return(device)
               end
@@ -242,6 +265,13 @@ module UPnP
           )
         else
           single_device_extractor = EventMachine::DefaultDeferrable.new
+
+          single_device_extractor.errback do
+            msg = "Failed extracting device."
+            log "<#{self.class}> #{msg}", :error
+            raise ControlPoint::Error, msg
+          end
+
           single_device_extractor.callback do |device|
             group_device_extractor.set_deferred_status(:succeeded, [device])
           end
@@ -255,7 +285,9 @@ module UPnP
         deferred_device = Device.new(device_description: device, parent_base_url: @url_base)
 
         deferred_device.errback do
-          log "<#{self.class}> Couldn't build device!", :error
+          msg = "Couldn't build device!"
+          log "<#{self.class}> #{msg}", :error
+          raise ControlPoint::Error, msg
         end
 
         deferred_device.callback do |built_device|
@@ -277,6 +309,13 @@ module UPnP
             EM::Iterator.new(service, service.count).map(
               proc do |s, iter|
                 single_service_extractor = EventMachine::DefaultDeferrable.new
+
+                single_service_extractor.errback do
+                  msg = "Failed to create service."
+                  log "<#{self.class}> #{msg}"
+                  raise ControlPoint::Error, msg
+                end
+
                 single_service_extractor.callback do |service|
                   iter.return(service)
                 end
@@ -289,6 +328,13 @@ module UPnP
             )
           else
             single_service_extractor = EventMachine::DefaultDeferrable.new
+
+            single_service_extractor.errback do
+              msg = "Failed to create service."
+              log "<#{self.class}> #{msg}"
+              raise ControlPoint::Error, msg
+            end
+
             single_service_extractor.callback do |service|
               group_service_extractor.set_deferred_status :succeeded, [service]
             end
@@ -303,8 +349,10 @@ module UPnP
         service_getter = Service.new(@url_base, service)
         log "<#{self.class}> Extracting service with #{service_getter.object_id}"
 
-        service_getter.errback do
-          log "<#{self.class}> Couldn't build service!", :error
+        service_getter.errback do |message|
+          msg = "Couldn't build service with info: #{service}"
+          log "<#{self.class}> #{msg}", :error
+          raise ControlPoint::Error, message
         end
 
         service_getter.callback do |built_service|
