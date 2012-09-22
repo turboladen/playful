@@ -15,7 +15,12 @@ module Upnp
               ws.send "[#{Time.now}] #{device.friendly_name}: #{device.device_type}"
 
               device.services.each do |service|
-                ws.send "----- #{service.service_type}"
+                ws.send "-- #{service.service_type}"
+
+                service.actions.each do |action|
+                  ws.send "---- #{action[:name]}"
+                  ws.send "---- #{action[:argumentList]}"
+                end
               end
             end
           end
