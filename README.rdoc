@@ -103,7 +103,7 @@ receive them.
       # SOAP actions are converted to Ruby methods--show those
       p device.services.first.singleton_methods     # [:GetSystemUpdateID, :Search, :GetSearchCapabilities, :GetSortCapabilities, :Browse]
 
-      # Call a SOAP method defined in the service.  This is extracted from the
+      # Call a SOAP method defined in the service.  The response is extracted from the
       # XML SOAP response and the value is converted from the UPnP dataType to
       # the related Ruby type.  Reponses are always contained in a Hash, so as
       # to maintain the relation defined in the service.
@@ -116,7 +116,7 @@ receive them.
     searcher.discovery_responses.pop do |notification|
 
       # UPnP::ControlPoint::Device objects are EventMachine::Deferrables, so you
-      # need to device callback and errback blocks to handle when the Device
+      # need to define callback and errback blocks to handle when the Device
       # object is done being created.
       device_creator = UPnP::ControlPoint::Device.new(ssdp_notification: notification)
 
