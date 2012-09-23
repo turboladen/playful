@@ -5,10 +5,10 @@ require "upnp/version"
 Gem::Specification.new do |s|
   s.name        = "upnp"
   s.version     = UPnP::VERSION
-  s.authors     = ["turboladen"]
-  s.email       = ["steve.loveless@gmail.com"]
+  s.author      = "turboladen"
+  s.email       = "steve.loveless@gmail.com"
   s.homepage    = "http://github.com/turboladen/upnp"
-  s.summary     = %q{Use me to build a UPnP app!}
+  s.summary     = "Use me to build a UPnP app!"
   s.description = %q{upnp provides the tools you need to build an app that runs
 in a UPnP environment.}
 
