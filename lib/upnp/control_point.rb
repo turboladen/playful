@@ -27,8 +27,8 @@ module UPnP
 
     attr_reader :devices
 
-    # @params [String] search_target The device(s) to control.
-    # @params [Fixnum] search_count The number of times to do an SSDP search.
+    # @param [String] search_target The device(s) to control.
+    # @param [Fixnum] search_count The number of times to do an SSDP search.
     def initialize(search_target, search_count=2)
       @search_target = search_target
       @search_count = search_count
