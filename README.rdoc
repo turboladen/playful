@@ -172,6 +172,7 @@ doing `thor -T`.
 
 == Install
 
+  # This won't work yet, as the gem has not yet been released...
   $ gem install upnp
 
 == Copyright
