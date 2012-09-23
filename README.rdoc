@@ -10,6 +10,9 @@ dropped.  This gem intends to fill that void for Ruby >= 1.9 and allow for SSDP
 search, discovery, advertisement, the ability to act as a UPnP control point, as
 well as provide UPnP devices and services.
 
+This uses EventMachine[http://github.com/eventmachine/eventmachine], so if
+you're not already, getting familiar with its concepts will be helpful here.
+
 === Getting Started
 
 I'm still working out the overall design of these components, and thus won't be
