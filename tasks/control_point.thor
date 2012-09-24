@@ -1,5 +1,7 @@
 require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/control_point')
 require 'rack'
+require 'sinatra'
+require 'sinatra/async'
 
 
 module Upnp
@@ -8,27 +10,87 @@ module Upnp
     def test(target="upnp:rootdevice")
       cp = UPnP::ControlPoint.new(target)
 
-      cp.start do |device_queue|
-        EM::WebSocket.start(host: '0.0.0.0', port: 8080, debug: true) do |ws|
-          ws.onopen do
-            device_queue.pop do |device|
-              ws.send "[#{Time.now}] #{device.friendly_name}: #{device.device_type}"
+      cp.start do |new_device_queue, old_device_queue|
+        control_point_web = Class.new(Sinatra::Base) do
+          register Sinatra::Async
 
-              device.services.each do |service|
-                ws.send "-- #{service.service_type}"
+          configure do
+            @@devices = []
+          end
 
-                service.actions.each do |action|
-                  ws.send "---- #{action[:name]}"
-                  ws.send "---- #{action[:argumentList]}"
-                end
+          before do
+            new_device_queue.pop { |d| @@devices << d }
+
+            old_device_queue.pop do |device|
+              @devices.reject! do |d|
+                d.usn == device[:usn]
               end
             end
           end
+
+          get '/' do
+            @devices = @@devices
+
+            code = %Q{
+<html>
+<head>
+</head>
+<body
+<h1><%= Time.now %></h1>
+<% @devices.each do |device| %>
+  <table border="1">
+    <thead>
+      <caption>
+        <strong><%= device.friendly_name %></strong>
+      </caption>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Device type:</td>
+        <td><%= device.device_type %></td>
+      </tr>
+      <tr>
+        <td>Service info:</td>
+        <td>
+          <% device.services.each do |service| %>
+            <table border="2">
+              <tr>
+                <td>Service type:</td>
+                <td><%= service.service_type %>
+              </tr>
+              <tr>
+                <td>Service actions:</td>
+                <td>
+                  <% service.actions.each do |action| %>
+                    <table border="3">
+                      <tr>
+                        <td>Name:</td>
+                        <td><%= action[:name] %></td>
+                      </tr>
+                      <tr>
+                        <td>Arguments:</td>
+                        <td><%= action[:argumentList] %></td>
+                      </tr>
+                    </table>
+                  <% end %>
+                </td>
+              </tr>
+            </table>
+          <% end %>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+<% end %>
+</body>
+</html>
+}
+
+            erb code
+          end
         end
 
-        Rack::Handler::Thin.run(Rack::Builder.new {
-          run Rack::File.new(File.expand_path(File.dirname(__FILE__) + "/control_point.html"))
-        }, Port: 3000)
+        control_point_web.run! port: 3000
       end
     end
   end

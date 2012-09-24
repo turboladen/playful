@@ -33,7 +33,8 @@ module UPnP
       @search_target = search_target
       @search_count = search_count
       @devices = []
-      @device_queue = EventMachine::Queue.new
+      @new_device_queue = EventMachine::Queue.new
+      @old_device_queue = EventMachine::Queue.new
 
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
@@ -50,7 +51,7 @@ module UPnP
       starter = -> do
         do_search(@search_target, options)
         listen(ttl)
-        blk.call(@device_queue)
+        blk.call(@new_device_queue, @old_device_queue)
         @running = true
       end
 
@@ -78,7 +79,7 @@ module UPnP
           device.usn == advertisement[:usn]
         end
 
-        @devices.each { |d| @device_queue << d }
+        @old_device_queue << advertisement
       end
     end
 
@@ -89,6 +90,7 @@ module UPnP
         create_device(notification)
       end
 
+      # Do I need to do this?
       EM.add_timer(options[:response_wait_time]) do
         searcher.close_connection
       end
@@ -118,7 +120,7 @@ module UPnP
           log "<#{self.class}> Newly created device already exists in internal list. Not adding."
         else
           log "<#{self.class}> Adding newly created device to internal list.."
-          @device_queue.push(built_device)
+          @new_device_queue.push(built_device)
           @devices << built_device
         end
       end
