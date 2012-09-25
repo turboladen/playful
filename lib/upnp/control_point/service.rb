@@ -50,6 +50,7 @@ module UPnP
       def initialize(device_base_url, device_service)
         @device_base_url = device_base_url
         @device_service = device_service
+        @actions = []
 
         if @device_service[:controlURL]
           @control_url = build_url(@device_base_url, @device_service[:controlURL])
@@ -100,7 +101,6 @@ module UPnP
             end
           end
 
-          @actions = []
           if @description[:scpd][:actionList]
             log "<#{self.class}> Defining methods from actions [#{description_getter.object_id}]"
             define_methods_from_actions(@description[:scpd][:actionList][:action])
