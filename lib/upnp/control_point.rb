@@ -55,7 +55,7 @@ module UPnP
 
       options[:response_wait_time] ||= 5
       options[:m_search_count] ||= @search_count
-      ttl = options[:response_wait_time] || 4
+      options[:ttl] ||= 4
 
       starter = -> do
         ssdp_search_and_listen(@search_target, options)
