@@ -97,8 +97,8 @@ module UPnP
 
       def fetch
         description_getter = EventMachine::DefaultDeferrable.new
-        done_creating_devices = false
-        done_creating_services = false
+        @done_creating_devices = false
+        @done_creating_services = false
 
         description_getter.errback do
           msg = "Failed getting description."
@@ -161,61 +161,8 @@ module UPnP
             extract_description(@description)
           end
 
-          device_extractor = EventMachine::DefaultDeferrable.new
-          extract_devices(device_extractor)
-
-          device_extractor.errback do
-            msg = "Failed extracting device."
-            log "<#{self.class}> #{msg}", :error
-            done_creating_devices = true
-
-            if ControlPoint.raise_on_remote_error
-              raise ControlPoint::Error, msg
-            end
-          end
-
-          device_extractor.callback do |device|
-            if device
-              log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
-              @devices << device
-            else
-              log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none were extracted."
-            end
-
-            log "<#{self.class}> Child device size is now: #{@devices.size}"
-            done_creating_devices = true
-          end
-
-          services_extractor = EventMachine::DefaultDeferrable.new
-
-          if @description[:serviceList]
-            log "<#{self.class}> Extracting services from non-root device."
-            extract_services(@description[:serviceList], services_extractor)
-          elsif @description[:root][:device][:serviceList]
-            log "<#{self.class}> Extracting services from root device."
-            extract_services(@description[:root][:device][:serviceList], services_extractor)
-          end
-
-          services_extractor.errback do
-            msg = "Failed extracting services."
-            log "<#{self.class}> #{msg}", :error
-            done_creating_services = true
-
-            if ControlPoint.raise_on_remote_error
-              raise ControlPoint::Error, msg
-            end
-          end
-
-          services_extractor.callback do |services|
-            log "<#{self.class}> Done extracting services."
-            @services = services
-
-            log "<#{self.class}> New service count: #{@services.size}."
-            done_creating_services = true
-          end
-
           EM.tick_loop do
-            if done_creating_devices && done_creating_services
+            if @done_creating_devices && @done_creating_services
               log "<#{self.class}> All done creating stuff"
               set_deferred_status :succeeded, self
               :stop
@@ -262,15 +209,66 @@ module UPnP
         @presentation_url = ddf[:presentationURL] || ''
 
         log "<#{self.class}> Basic attributes extracted."
+
+        device_extractor = EventMachine::DefaultDeferrable.new
+        extract_devices(device_extractor)
+
+        device_extractor.errback do
+          msg = "Failed extracting device."
+          log "<#{self.class}> #{msg}", :error
+          @done_creating_devices = true
+
+          if ControlPoint.raise_on_remote_error
+            raise ControlPoint::Error, msg
+          end
+        end
+
+        device_extractor.callback do |device|
+          if device
+            log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
+            @devices << device
+          else
+            log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none were extracted."
+          end
+
+          log "<#{self.class}> Child device size is now: #{@devices.size}"
+          @done_creating_devices = true
+        end
+
+        services_extractor = EventMachine::DefaultDeferrable.new
+
+        if @description[:serviceList]
+          log "<#{self.class}> Extracting services from non-root device."
+          extract_services(@description[:serviceList], services_extractor)
+        elsif @description[:root][:device][:serviceList]
+          log "<#{self.class}> Extracting services from root device."
+          extract_services(@description[:root][:device][:serviceList], services_extractor)
+        end
+
+        services_extractor.errback do
+          msg = "Failed extracting services."
+          log "<#{self.class}> #{msg}", :error
+          @done_creating_services = true
+
+          if ControlPoint.raise_on_remote_error
+            raise ControlPoint::Error, msg
+          end
+        end
+
+        services_extractor.callback do |services|
+          log "<#{self.class}> Done extracting services."
+          @services = services
+
+          log "<#{self.class}> New service count: #{@services.size}."
+          @done_creating_services = true
+        end
+
       end
 
       # @return [Array<Hash>]
       def extract_icons(ddf_icon_list)
         ddf_icon_list.map do |icon, values|
-          values[:url] = unless URI(values[:url]).scheme
-            @url_base + values[:url]
-          end
-          puts "values url #{values[:url]}"
+          values[:url] = build_url(@url_base, values[:url])
           values
         end || []
       end
@@ -280,10 +278,12 @@ module UPnP
 
         device_list = if @description.has_key? :root
           log "<#{self.class}> Description has a :root key..."
+
           if @description[:root][:device].has_key? :deviceList
             @description[:root][:device][:deviceList][:device]
           else
-            @description[:root][:device]
+            log "<#{self.class}> No child devices to extract."
+            group_device_extractor.set_deferred_status(:succeeded)
           end
         elsif @description[:deviceList]
           log "<#{self.class}> Description does not have a :root key..."
