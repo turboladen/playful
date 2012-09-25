@@ -49,8 +49,7 @@ module UPnP
       ttl = options[:response_wait_time] || 4
 
       starter = -> do
-        do_search(@search_target, options)
-        listen(ttl)
+        ssdp_search_and_listen(@search_target, options)
         blk.call(@new_device_queue, @old_device_queue)
         @running = true
       end
@@ -83,7 +82,7 @@ module UPnP
       end
     end
 
-    def do_search(search_for, options={})
+    def ssdp_search_and_listen(search_for, options={})
       searcher = SSDP.search(search_for, options)
 
       searcher.discovery_responses.pop do |notification|
@@ -93,6 +92,7 @@ module UPnP
       # Do I need to do this?
       EM.add_timer(options[:response_wait_time]) do
         searcher.close_connection
+        listen(options[:ttl])
       end
 
       EM.add_periodic_timer(5) do
