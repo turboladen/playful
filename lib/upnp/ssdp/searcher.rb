@@ -14,7 +14,7 @@ module UPnP
   #   urn:[custom-schema]:service:[serviceType-version]
   class SSDP::Searcher < SSDP::MulticastConnection
     DEFAULT_RESPONSE_WAIT_TIME = 5
-    DEFAUTL_M_SEARCH_COUNT = 2
+    DEFAULT_M_SEARCH_COUNT = 2
 
     # @param [String] search_target
     # @param [Hash] options
@@ -23,13 +23,13 @@ module UPnP
     # @option options [Fixnum] m_search_count The number of times to send the
     #   M-SEARCH.  UPnP 1.0 suggests to send the request more than once.
     def initialize(search_target, options={})
-      ttl = options[:ttl] || TTL
-      response_wait_time = options[:response_wait_time] || DEFAULT_RESPONSE_WAIT_TIME
-      @m_search_count = options[:m_search_count] || DEFAUTL_M_SEARCH_COUNT
+      options[:ttl] ||= TTL
+      options[:response_wait_time] ||= DEFAULT_RESPONSE_WAIT_TIME
+      @m_search_count = options[:m_search_count] ||= DEFAULT_M_SEARCH_COUNT
 
-      @search = m_search(search_target, response_wait_time)
+      @search = m_search(search_target, options[:response_wait_time])
 
-      super ttl
+      super options[:ttl]
     end
 
     # Sends the M-SEARCH that was built during init.  Logs what was sent if the
