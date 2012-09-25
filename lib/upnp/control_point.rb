@@ -97,6 +97,7 @@ module UPnP
 
       EM.add_periodic_timer(5) do
         log "<#{self.class}> Time since last timer: #{Time.now - @timer_time}" if @timer_time
+        log "<#{self.class}> Connections: #{EM.connection_count}"
         @timer_time = Time.now
         puts "<#{self.class}> Device count: #{@devices.size}"
         puts "<#{self.class}> Device unique: #{@devices.uniq.size}"
