@@ -8,6 +8,8 @@ module Upnp
   class ControlPoint < Thor
     desc "test TARGET", "Make a control point"
     def test(target="upnp:rootdevice")
+      UPnP::ControlPoint.config { |c| c.raise_on_remote_errors = false }
+
       cp = UPnP::ControlPoint.new(target)
 
       cp.start do |new_device_queue, old_device_queue|

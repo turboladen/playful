@@ -100,6 +100,16 @@ module UPnP
         done_creating_devices = false
         done_creating_services = false
 
+        description_getter.errback do
+          msg = "Failed getting description."
+          log "<#{self.class}> #{msg}", :error
+          set_deferred_status(:failed, msg)
+
+          if ControlPoint.raise_on_remote_error
+            raise ControlPoint::Error, msg
+          end
+        end
+
         if @device_info.has_key? :ssdp_notification
           log "<#{self.class}> Creating device from SSDP Notification info."
           @ssdp_notification = @device_info[:ssdp_notification]
@@ -117,7 +127,10 @@ module UPnP
           else
             message = "M-SEARCH response is either missing the Location header or has an empty value."
             message << "Response: #{@ssdp_notification}"
-            raise ControlPoint::Error, message
+
+            if ControlPoint.raise_on_remote_error
+              raise ControlPoint::Error, message
+            end
           end
         elsif @device_info.has_key? :device_description
           log "<#{self.class}> Creating device from device description file info."
@@ -125,12 +138,6 @@ module UPnP
         else
           log "<#{self.class}> Not sure what to extract from this device's info."
           description_getter.set_deferred_failure
-        end
-
-        description_getter.errback do
-          msg = "Failed getting description."
-          log "<#{self.class}> #{msg}", :error
-          raise ControlPoint::Error, msg
         end
 
         description_getter.callback do |description|
@@ -160,7 +167,11 @@ module UPnP
           device_extractor.errback do
             msg = "Failed extracting device."
             log "<#{self.class}> #{msg}", :error
-            raise ControlPoint::Error, msg
+            done_creating_devices = true
+
+            if ControlPoint.raise_on_remote_error
+              raise ControlPoint::Error, msg
+            end
           end
 
           device_extractor.callback do |device|
@@ -188,7 +199,11 @@ module UPnP
           services_extractor.errback do
             msg = "Failed extracting services."
             log "<#{self.class}> #{msg}", :error
-            raise ControlPoint::Error, msg
+            done_creating_services = true
+
+            if ControlPoint.raise_on_remote_error
+              raise ControlPoint::Error, msg
+            end
           end
 
           services_extractor.callback do |services|
@@ -264,19 +279,25 @@ module UPnP
         log "<#{self.class}> Extracting child devices for #{self.object_id} using #{group_device_extractor.object_id}"
 
         device_list = if @description.has_key? :root
+          log "<#{self.class}> Description has a :root key..."
           if @description[:root][:device].has_key? :deviceList
             @description[:root][:device][:deviceList][:device]
           else
             @description[:root][:device]
           end
         elsif @description[:deviceList]
+          log "<#{self.class}> Description does not have a :root key..."
           @description[:deviceList][:device]
         else
           log "<#{self.class}> No child devices to extract."
           group_device_extractor.set_deferred_status(:succeeded)
         end
 
-        return if device_list.nil?
+        if device_list.nil? || device_list.empty?
+          group_device_extractor.set_deferred_status(:succeeded)
+          return
+        end
+
         log "<#{self.class}> device list: #{device_list}"
 
         if device_list.is_a? Array
@@ -287,7 +308,10 @@ module UPnP
               single_device_extractor.errback do
                 msg = "Failed extracting device."
                 log "<#{self.class}> #{msg}", :error
-                raise ControlPoint::Error, msg
+
+                if ControlPoint.raise_on_remote_error
+                  raise ControlPoint::Error, msg
+                end
               end
 
               single_device_extractor.callback do |device|
@@ -306,7 +330,11 @@ module UPnP
           single_device_extractor.errback do
             msg = "Failed extracting device."
             log "<#{self.class}> #{msg}", :error
-            raise ControlPoint::Error, msg
+            group_device_extractor.set_deferred_status(:failed, msg)
+
+            if ControlPoint.raise_on_remote_error
+              raise ControlPoint::Error, msg
+            end
           end
 
           single_device_extractor.callback do |device|
@@ -324,7 +352,11 @@ module UPnP
         deferred_device.errback do
           msg = "Couldn't build device!"
           log "<#{self.class}> #{msg}", :error
-          raise ControlPoint::Error, msg
+          device_extractor.set_deferred_status(:failed, msg)
+
+          if ControlPoint.raise_on_remote_error
+            raise ControlPoint::Error, msg
+          end
         end
 
         deferred_device.callback do |built_device|
@@ -350,7 +382,10 @@ module UPnP
                 single_service_extractor.errback do
                   msg = "Failed to create service."
                   log "<#{self.class}> #{msg}", :error
-                  raise ControlPoint::Error, msg
+
+                  if ControlPoint.raise_on_remote_error
+                    raise ControlPoint::Error, msg
+                  end
                 end
 
                 single_service_extractor.callback do |service|
@@ -369,7 +404,11 @@ module UPnP
             single_service_extractor.errback do
               msg = "Failed to create service."
               log "<#{self.class}> #{msg}", :error
-              raise ControlPoint::Error, msg
+              group_service_extractor.set_deferred_status :failed, msg
+
+              if ControlPoint.raise_on_remote_error
+                raise ControlPoint::Error, msg
+              end
             end
 
             single_service_extractor.callback do |service|
@@ -389,7 +428,11 @@ module UPnP
         service_getter.errback do |message|
           msg = "Couldn't build service with info: #{service}"
           log "<#{self.class}> #{msg}", :error
-          raise ControlPoint::Error, message
+          single_service_extractor.set_deferred_status(:failed, msg)
+
+          if ControlPoint.raise_on_remote_error
+            raise ControlPoint::Error, message
+          end
         end
 
         service_getter.callback do |built_service|

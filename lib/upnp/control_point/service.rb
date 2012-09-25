@@ -81,7 +81,11 @@ module UPnP
         description_getter.errback do
           msg = "Failed getting service description."
           log "<#{self.class}> #{msg}", :error
-          raise ControlPoint::Error, msg
+          set_deferred_status(:failed, msg)
+
+          if ControlPoint.raise_on_remote_error
+            raise ControlPoint::Error, msg
+          end
         end
 
         description_getter.callback do |description|

@@ -25,6 +25,14 @@ module UPnP
     extend LogSwitch
     include LogSwitch::Mixin
 
+    def self.config
+      yield self
+    end
+
+    class << self
+      attr_accessor :raise_on_remote_errors
+    end
+
     attr_reader :devices
 
     # @param [String] search_target The device(s) to control.
@@ -35,6 +43,7 @@ module UPnP
       @devices = []
       @new_device_queue = EventMachine::Queue.new
       @old_device_queue = EventMachine::Queue.new
+      @raise_on_remote_errors = true
 
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
@@ -111,7 +120,10 @@ module UPnP
 
       deferred_device.errback do |message|
         log "<#{self.class}> #{message}"
-        raise ControlPoint::Error, message
+
+        if self.class.raise_on_remote_errors
+          raise ControlPoint::Error, message
+        end
       end
 
       deferred_device.callback do |built_device|

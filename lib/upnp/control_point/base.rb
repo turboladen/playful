@@ -22,8 +22,12 @@ module UPnP
         http.errback {
           log "<#{self.class}> Unable to retrieve DDF from #{location}", :error
           log "<#{self.class}> Connection count: #{EM.connection_count}"
-          log "<#{self.class}> Error from request: #{http.error}"
-          raise ControlPoint::Error, "Unable to retrieve DDF from #{location}"
+          log "<#{self.class}> Request error: #{http.error}"
+          log "<#{self.class}> Response status: #{http.response_header.status}"
+
+          if ControlPoint.raise_on_remote_errors
+            raise ControlPoint::Error, "Unable to retrieve DDF from #{location}"
+          end
         }
 
         http.callback {
