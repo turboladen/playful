@@ -36,10 +36,14 @@ module UPnP
     attr_reader :devices
 
     # @param [String] search_target The device(s) to control.
-    # @param [Fixnum] search_count The number of times to do an SSDP search.
-    def initialize(search_target, search_count=2)
+    # @param [Hash] search_options Options to pass on to SSDP search and listen calls.
+    # @option options [Fixnum] response_wait_time
+    # @option options [Fixnum] m_search_count
+    # @option options [Fixnum] ttl
+    def initialize(search_target, search_options={})
       @search_target = search_target
-      @search_count = search_count
+      @search_options = search_options
+      @search_options[:ttl] ||= 4
       @devices = []
       @new_device_queue = EventMachine::Queue.new
       @old_device_queue = EventMachine::Queue.new
@@ -50,15 +54,20 @@ module UPnP
       end
     end
 
-    def start options={}, &blk
+    # Starts the ControlPoint.  If an EventMachine reactor is running already,
+    # it'll join that reactor, otherwise it'll start the reactor.
+    #
+    # @yieldparam [EventMachine::Queue] new_device_queue The list of devices
+    #   that have been discovered either through SSDP searching or from an
+    #   +ssdp:alive+ notification.
+    # @yieldparam [EventMachine::Queue] old_device_queue The list of devices
+    #   that have sent out a +ssdp:byebye+ notification.  This queue exists so
+    #   clients/consumers can remove these devices off of their internal queue.
+    def start &blk
       @stopping = false
 
-      options[:response_wait_time] ||= 5
-      options[:m_search_count] ||= @search_count
-      options[:ttl] ||= 4
-
       starter = -> do
-        ssdp_search_and_listen(@search_target, options)
+        ssdp_search_and_listen(@search_target, @search_options)
         blk.call(@new_device_queue, @old_device_queue)
         @running = true
       end
