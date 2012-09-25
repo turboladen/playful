@@ -232,6 +232,7 @@ module UPnP
       def extract_description(ddf)
         log "<#{self.class}> Extracting basic attributes from description..."
 
+        @device_type = ddf[:deviceType] || ''
         @friendly_name = ddf[:friendlyName] || ''
         @manufacturer = ddf[:manufacturer] || ''
         @manufacturer_url = ddf[:manufacturerURL] || ''
@@ -239,10 +240,24 @@ module UPnP
         @model_name = ddf[:modelName] || ''
         @model_number = ddf[:modelNumber] || ''
         @model_url = ddf[:modelURL] || ''
-        @presentation_url = ddf[:presentationURL] || ''
         @serial_number = ddf[:serialNumber] || ''
+        @udn = ddf[:UDN] || ''
+        @upc = ddf[:UPC] || ''
+        @icon_list = extract_icons(ddf[:iconList])
+        @presentation_url = ddf[:presentationURL] || ''
 
         log "<#{self.class}> Basic attributes extracted."
+      end
+
+      # @return [Array<Hash>]
+      def extract_icons(ddf_icon_list)
+        ddf_icon_list.map do |icon, values|
+          values[:url] = unless URI(values[:url]).scheme
+            @url_base + values[:url]
+          end
+          puts "values url #{values[:url]}"
+          values
+        end || []
       end
 
       def extract_devices(group_device_extractor)
