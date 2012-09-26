@@ -3,6 +3,8 @@ require_relative 'base'
 require_relative 'error'
 
 
+HTTPI.adapter = :em_http
+
 Savon.configure do |c|
   c.env_namespace = :s
 end
