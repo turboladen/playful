@@ -47,11 +47,21 @@ module Rack
       @cp = ::UPnP::ControlPoint.new(search_type, options)
 
       @cp.start do |new_device_queue, old_device_queue|
-        new_device_queue.pop { |new_device| @devices << new_device }
-
-        old_device_queue.pop do |old_device|
-          @devices.reject! { |d| d.usn == old_device[:usn] }
+        add_new_devices = proc do
+          new_device_queue.pop do |notification|
+            @devices << notification
+            EM.next_tick &add_new_devices
+          end
         end
+        EM.next_tick &add_new_devices
+
+        remove_old_devices = proc do
+          old_device_queue.pop do |old_device|
+            @devices.reject! { |d| d.usn == old_device[:usn] }
+            EM.next_tick &remove_old_devices
+          end
+        end
+        EM.next_tick &remove_old_devices
       end
     end
 
@@ -60,6 +70,7 @@ module Rack
     #
     # @param [Hash] env The Rack environment.
     def call(env)
+      puts "Rack::UPnPControlPoint: devices size: #{@devices.size}"
       env['upnp.devices'] = @devices
       @app.call(env)
     end

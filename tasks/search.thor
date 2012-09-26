@@ -42,23 +42,40 @@ search duration: #{time_after - time_before}
       return if responses.empty?
 
       devices = []
+      successful_devices = 0
+      failed_devices = 0
       responses.uniq!
 
       EM.run do
-        until responses.empty? do
-          device_creator = UPnP::ControlPoint::Device.new(ssdp_notification: responses.pop)
+        responses.each_with_index do |response, i|
+          device_creator = UPnP::ControlPoint::Device.new(ssdp_notification: response)
 
           device_creator.errback do
             puts "<#{self.class}> Failed creating device."
+            failed_devices += 1
           end
 
           device_creator.callback do |built_device|
             devices << built_device
+            successful_devices += 1
           end
 
           device_creator.fetch
-          EM.stop if responses.empty?
         end
+
+        tickloop = EM.tick_loop do
+          if (successful_devices + failed_devices) == responses.size
+            :stop
+          end
+        end
+
+        EM.add_periodic_timer(1) do
+          puts "successful devices: #{successful_devices}/#{responses.size}"
+          puts "failed devices: #{failed_devices}/#{responses.size}"
+          puts "Connections: #{EM.connection_count}"
+        end
+
+        tickloop.on_stop { EM.stop }
       end
 
       puts "No devices found" && exit if devices.empty?

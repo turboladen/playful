@@ -85,28 +85,41 @@ module UPnP
     def listen(ttl)
       listener = SSDP.listen(ttl)
 
-      listener.available_responses.pop do |advertisement|
-        log "<#{self.class}> Got alive #{advertisement}"
-        create_device(advertisement)
-      end
-
-      listener.byebye_responses.pop do |advertisement|
-        log "<#{self.class}> Got bye-bye from #{advertisement}"
-
-        @devices.reject! do |device|
-          device.usn == advertisement[:usn]
+      create_devices = proc do
+        listener.available_responses.pop do |advertisement|
+          log "<#{self.class}> Got alive #{advertisement}"
+          create_device(advertisement)
+          EM.next_tick &create_devices
         end
-
-        @old_device_queue << advertisement
       end
+      EM.next_tick &create_devices
+
+      remove_devices = proc do
+        listener.byebye_responses.pop do |advertisement|
+          log "<#{self.class}> Got bye-bye from #{advertisement}"
+
+          @devices.reject! do |device|
+            device.usn == advertisement[:usn]
+          end
+
+          @old_device_queue << advertisement
+
+          EM.next_tick &remove_devices
+        end
+      end
+      EM.next_tick &remove_devices
     end
 
     def ssdp_search_and_listen(search_for, options={})
       searcher = SSDP.search(search_for, options)
 
-      searcher.discovery_responses.pop do |notification|
-        create_device(notification)
+      create_devices = proc do
+        searcher.discovery_responses.pop do |notification|
+          create_device(notification)
+          EM.next_tick &create_devices
+        end
       end
+      EM.next_tick &create_devices
 
       # Do I need to do this?
       EM.add_timer(options[:response_wait_time]) do

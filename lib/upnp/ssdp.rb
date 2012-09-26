@@ -89,22 +89,29 @@ module UPnP
         return multicast_searcher.call
       else
         EM.run do
-          s = multicast_searcher.call
-          b = broadcast_searcher.call if do_broadcast_search
+          ms = multicast_searcher.call
+          if do_broadcast_search
+            bs = broadcast_searcher.call
 
-          EM.add_shutdown_hook do
-            s.discovery_responses.pop do |notification|
-              responses << notification
-            end
-
-            if do_broadcast_search
-              b.discovery_responses.pop do |notification|
+            get_broadcasts = proc do
+              bs.discovery_responses.pop do |notification|
                 responses << notification
+                EM.next_tick &get_broadcasts
               end
             end
+            EM.next_tick &get_broadcasts
           end
 
+          get_notifications = proc do
+            ms.discovery_responses.pop do |notification|
+              responses << notification
+              EM.next_tick &get_notifications
+            end
+          end
+          EM.next_tick &get_notifications
+
           EM.add_timer(response_wait_time) { EM.stop }
+
           trap_signals
         end
       end
