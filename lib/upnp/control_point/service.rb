@@ -3,8 +3,6 @@ require_relative 'base'
 require_relative 'error'
 
 
-HTTPI.adapter = :em_http
-
 Savon.configure do |c|
   c.env_namespace = :s
 end
@@ -13,6 +11,7 @@ begin
   require 'em-http'
   HTTPI.adapter = :em_http
 rescue ArgumentError
+  puts "Couldn't load HTTPI :em_http adapter."
   # Fail silently
 end
 
