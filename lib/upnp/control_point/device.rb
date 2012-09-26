@@ -269,10 +269,18 @@ module UPnP
 
       # @return [Array<Hash>]
       def extract_icons(ddf_icon_list)
-        ddf_icon_list.map do |icon, values|
-          values[:url] = build_url(@url_base, values[:url])
-          values
-        end || []
+        return [] unless ddf_icon_list
+        log "<#{self.class}> Icon list: #{ddf_icon_list}"
+
+        if ddf_icon_list[:icon].is_a? Array
+          ddf_icon_list[:icon].map do |values|
+            values[:url] = build_url(@url_base, values[:url])
+            values
+          end
+        else
+          ddf_icon_list[:url] = build_url(@url_base, ddf_icon_list[:url])
+          [ddf_icon_list]
+        end
       end
 
       def extract_devices(group_device_extractor)
