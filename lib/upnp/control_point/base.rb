@@ -24,6 +24,7 @@ module UPnP
           log "<#{self.class}> Connection count: #{EM.connection_count}"
           log "<#{self.class}> Request error: #{http.error}"
           log "<#{self.class}> Response status: #{http.response_header.status}"
+          description_getter.set_deferred_status(:failed)
 
           if ControlPoint.raise_on_remote_error
             raise ControlPoint::Error, "Unable to retrieve DDF from #{location}"
