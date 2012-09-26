@@ -33,6 +33,8 @@ module UPnP
       attr_accessor :raise_on_remote_error
     end
 
+    @@raise_on_remote_error ||= true
+
     attr_reader :devices
 
     # @param [String] search_target The device(s) to control.
@@ -47,7 +49,6 @@ module UPnP
       @devices = []
       @new_device_queue = EventMachine::Queue.new
       @old_device_queue = EventMachine::Queue.new
-      self.class.raise_on_remote_error = true
 
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
