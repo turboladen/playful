@@ -93,12 +93,12 @@ module UPnP
         log "<#{self.class}> Got device info: #{@device_info}"
         @devices = []
         @services = []
+        @done_creating_devices = false
+        @done_creating_services = false
       end
 
       def fetch
         description_getter = EventMachine::DefaultDeferrable.new
-        @done_creating_devices = false
-        @done_creating_services = false
 
         description_getter.errback do
           msg = "Failed getting description."
