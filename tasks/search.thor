@@ -54,10 +54,10 @@ search duration: #{time_after - time_before}
 
           device_creator.callback do |built_device|
             devices << built_device
-            EM.stop if responses.empty?
           end
 
           device_creator.fetch
+          EM.stop if responses.empty?
         end
       end
 
@@ -73,6 +73,7 @@ search duration: #{time_after - time_before}
         puts "First Service's ACTIONS"
         pp first_device.services.first.actions
         pp first_device.services.first.methods
+        pp first_device.services.first.singleton_methods
         #puts "Services state table"
         #pp devices.first.services.first.service_state_table
         puts "id: #{devices.first.services.first.GetSystemUpdateID}"
