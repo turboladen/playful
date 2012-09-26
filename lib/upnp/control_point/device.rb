@@ -162,6 +162,7 @@ module UPnP
             log "<#{self.class}> Extracting description for non-root device #{description_getter.object_id}"
             extract_description(@description)
           end
+        end
 
         tickloop = EM.tick_loop do
           if @done_creating_devices && @done_creating_services
@@ -212,31 +213,11 @@ module UPnP
 
         log "<#{self.class}> Basic attributes extracted."
 
-        device_extractor = EventMachine::DefaultDeferrable.new
-        extract_devices(device_extractor)
+        start_device_extraction
+        start_service_extraction
+      end
 
-        device_extractor.errback do
-          msg = "Failed extracting device."
-          log "<#{self.class}> #{msg}", :error
-          @done_creating_devices = true
-
-          if ControlPoint.raise_on_remote_error
-            raise ControlPoint::Error, msg
-          end
-        end
-
-        device_extractor.callback do |device|
-          if device
-            log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
-            @devices << device
-          else
-            log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none were extracted."
-          end
-
-          log "<#{self.class}> Child device size is now: #{@devices.size}"
-          @done_creating_devices = true
-        end
-
+      def start_service_extraction
         services_extractor = EventMachine::DefaultDeferrable.new
 
         if @description[:serviceList]
@@ -264,7 +245,33 @@ module UPnP
           log "<#{self.class}> New service count: #{@services.size}."
           @done_creating_services = true
         end
+      end
 
+      def start_device_extraction
+        device_extractor = EventMachine::DefaultDeferrable.new
+        extract_devices(device_extractor)
+
+        device_extractor.errback do
+          msg = "Failed extracting device."
+          log "<#{self.class}> #{msg}", :error
+          @done_creating_devices = true
+
+          if ControlPoint.raise_on_remote_error
+            raise ControlPoint::Error, msg
+          end
+        end
+
+        device_extractor.callback do |device|
+          if device
+            log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
+            @devices << device
+          else
+            log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none were extracted."
+          end
+
+          log "<#{self.class}> Child device size is now: #{@devices.size}"
+          @done_creating_devices = true
+        end
       end
 
       # @return [Array<Hash>]
