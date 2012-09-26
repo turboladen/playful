@@ -36,10 +36,21 @@ module UPnP
         EM.run do
           l = listener.call
 
-          EM.add_shutdown_hook do
-            responses << l.available_responses
-            responses << l.byebye_responses
+          add_alives = proc do
+            l.available_responses.pop do |notification|
+              responses << notification
+              EM.next_tick &add_alives
+            end
           end
+          EM.next_tick &add_alives
+
+          add_byebyes = proc do
+            l.byebye_responses.pop do |notification|
+              responses << notification
+              EM.next_tick &add_byebyes
+            end
+          end
+          EM.next_tick &add_byebyes
 
           trap_signals
         end
