@@ -38,12 +38,12 @@ module UPnP
         }
       end
 
-      def build_url(url_base, scpdurl)
-        if url_base.end_with?('/') && scpdurl.start_with?('/')
-          scpdurl.sub!('/', '')
+      def build_url(url_base, rest_of_url)
+        if url_base.end_with?('/') && rest_of_url.start_with?('/')
+          rest_of_url.sub!('/', '')
         end
 
-        url_base + scpdurl
+        url_base + rest_of_url
       end
     end
   end
