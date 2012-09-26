@@ -285,8 +285,13 @@ module UPnP
             values
           end
         else
-          ddf_icon_list[:url] = build_url(@url_base, ddf_icon_list[:url])
-          [ddf_icon_list]
+          [{
+            mimetype: ddf_icon_list[:icon][:mimetype],
+            width: ddf_icon_list[:icon][:width],
+            height: ddf_icon_list[:icon][:height],
+            depth: ddf_icon_list[:icon][:depth],
+            url: build_url(@url_base, ddf_icon_list[:icon][:url])
+          }]
         end
       end
 
