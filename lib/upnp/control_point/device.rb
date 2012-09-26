@@ -103,6 +103,8 @@ module UPnP
         description_getter.errback do
           msg = "Failed getting description."
           log "<#{self.class}> #{msg}", :error
+          @done_creating_devices = true
+          @done_creating_services = true
           set_deferred_status(:failed, msg)
 
           if ControlPoint.raise_on_remote_error
