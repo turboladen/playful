@@ -56,7 +56,7 @@ module UPnP
       attr_reader :service_list
 
       # Devices embedded directly into this device.
-      attr_reader :devices
+      attr_reader :device_list
 
       # Services provided directly by this device.
       attr_reader :services
@@ -91,7 +91,7 @@ module UPnP
 
         @device_info = device_info
         log "<#{self.class}> Got device info: #{@device_info}"
-        @devices = []
+        @device_list = []
         @services = []
         @done_creating_devices = false
         @done_creating_services = false
@@ -187,7 +187,7 @@ module UPnP
 
 
       def has_devices?
-        !@devices.empty?
+        !@device_list.empty?
       end
 
       def has_services?
@@ -264,12 +264,12 @@ module UPnP
         device_extractor.callback do |device|
           if device
             log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
-            @devices << device
+            @device_list << device
           else
             log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none were extracted."
           end
 
-          log "<#{self.class}> Child device size is now: #{@devices.size}"
+          log "<#{self.class}> Child device size is now: #{@device_list.size}"
           @done_creating_devices = true
         end
       end
@@ -293,7 +293,7 @@ module UPnP
       def extract_devices(group_device_extractor)
         log "<#{self.class}> Extracting child devices for #{self.object_id} using #{group_device_extractor.object_id}"
 
-        device_list = if @description.has_key? :root
+        device_list_hash = if @description.has_key? :root
           log "<#{self.class}> Description has a :root key..."
 
           if @description[:root][:device].has_key? :deviceList
@@ -310,15 +310,15 @@ module UPnP
           group_device_extractor.set_deferred_status(:succeeded)
         end
 
-        if device_list.nil? || device_list.empty?
+        if device_list_hash.nil? || device_list_hash.empty?
           group_device_extractor.set_deferred_status(:succeeded)
           return
         end
 
-        log "<#{self.class}> device list: #{device_list}"
+        log "<#{self.class}> device list: #{device_list_hash}"
 
-        if device_list.is_a? Array
-          EM::Iterator.new(device_list, device_list.count).map(
+        if device_list_hash.is_a? Array
+          EM::Iterator.new(device_list_hash, device_list_hash.count).map(
             proc do |device, iter|
               single_device_extractor = EventMachine::DefaultDeferrable.new
 
@@ -359,7 +359,7 @@ module UPnP
           end
 
           log "<#{self.class}> Extracting single device..."
-          extract_device(device_list, group_device_extractor)
+          extract_device(device_list_hash, group_device_extractor)
         end
       end
 

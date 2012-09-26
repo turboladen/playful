@@ -11,7 +11,7 @@ When /^tell it to find all services$/ do
 end
 
 Then /^it gets a list of root devices$/ do
-  @control_point.devices.should_not be_empty
+  @control_point.device_list.should_not be_empty
 end
 
 Then /^it gets a list of services$/ do

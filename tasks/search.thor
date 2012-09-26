@@ -82,7 +82,7 @@ search duration: #{time_after - time_before}
 
       first_device = devices.first
 
-      puts "First device's devices count: #{first_device.devices.size}"
+      puts "First device's devices count: #{first_device.device_list.size}"
       puts "First device's services count: #{first_device.services.size}"
 
       if first_device.has_services?

@@ -14,9 +14,9 @@ describe UPnP::ControlPoint do
         @cp.should_receive(:get_description).exactly(3).times.and_return ""
       end
 
-      it "gets all device types to @devices" do
+      it "gets all device types to @device_list" do
         @cp.find_devices("ssdp:all")
-        @cp.devices.should == [
+        @cp.device_list.should == [
           { :cache_control=>"max-age=1200", :date=>"Mon, 26 Sep 2011 06:40:19 GMT", :location=>"http://192.168.10.3:5001/description/fetch", :server=>"Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1", :st=>"upnp:rootdevice", :ext=>nil, :usn=>"uuid:3c202906-992d-3f0f-b94c-90e1902a136d::upnp:rootdevice", :content_length=>0, :description=>"" },
           { :cache_control=>"max-age=1200", :date=>"Mon, 26 Sep 2011 06:40:20 GMT", :location=>"http://192.168.10.4:5001/description/fetch", :server=>"Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1", :st=>"upnp:rootdevice", :ext=>nil, :usn=>"uuid:3c202906-992d-3f0f-b94c-90e1902a136e::upnp:rootdevice", :content_length=>0, :description=>"" },
           { :cache_control=>"max-age=1200", :date=>"Mon, 26 Sep 2011 06:40:21 GMT", :location=>"http://192.168.10.3:5001/description/fetch", :server=>"Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1", :st=>"urn:schemas-upnp-org:device:MediaServer:1", :ext=>nil, :usn=>"uuid:3c202906-992d-3f0f-b94c-90e1902a136d::urn:schemas-upnp-org:device:MediaServer:1", :content_length=>0, :description=>"" }
@@ -36,9 +36,9 @@ describe UPnP::ControlPoint do
         @cp.should_receive(:get_description).exactly(2).times.and_return ""
       end
 
-      it "gets all device types to @devices" do
+      it "gets all device types to @device_list" do
         @cp.find_devices("upnp:rootdevice")
-        @cp.devices.should == [
+        @cp.device_list.should == [
           { :cache_control=>"max-age=1200", :date=>"Mon, 26 Sep 2011 06:40:19 GMT", :location=>"http://192.168.10.3:5001/description/fetch", :server=>"Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1", :st=>"upnp:rootdevice", :ext=>nil, :usn=>"uuid:3c202906-992d-3f0f-b94c-90e1902a136d::upnp:rootdevice", :content_length=>0, :description=>"" },
           { :cache_control=>"max-age=1200", :date=>"Mon, 26 Sep 2011 06:40:20 GMT", :location=>"http://192.168.10.4:5001/description/fetch", :server=>"Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1", :st=>"upnp:rootdevice", :ext=>nil, :usn=>"uuid:3c202906-992d-3f0f-b94c-90e1902a136e::upnp:rootdevice", :content_length=>0, :description=>"" }
         ]
@@ -47,7 +47,7 @@ describe UPnP::ControlPoint do
   end
 
   describe "#find_services" do
-    it "sets @services to an empty Array if @devices is empty" do
+    it "sets @services to an empty Array if @device_list is empty" do
       cp = UPnP::ControlPoint.new
       cp.find_services
       cp.services.should be_empty
