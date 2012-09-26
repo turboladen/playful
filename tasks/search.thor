@@ -1,6 +1,6 @@
+require 'pp'
 require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/ssdp')
 require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/control_point/device')
-require 'ap'
 
 module Upnp
   class Ssdp < Thor
@@ -65,37 +65,36 @@ search duration: #{time_after - time_before}
       puts "First device's services count: #{first_device.services.size}"
 
       if first_device.has_services?
-        ap first_device.services
+        pp first_device.services
         puts "First Service's ACTIONS"
-        ap first_device.services.first.actions
-        ap first_device.services.first.methods
-        ap first_device.services.first.singleton_methods
+        pp first_device.services.first.actions
+        pp first_device.services.first.methods
         #puts "Services state table"
-        #ap devices.first.services.first.service_state_table
+        #pp devices.first.services.first.service_state_table
         puts "id: #{devices.first.services.first.GetSystemUpdateID}"
       end
 
-      ap first_device
+      pp first_device
       if first_device.has_devices?
-        ap first_device.devices
-        ap first_device.devices.first.services
+        pp first_device.devices
+        pp first_device.devices.first.services
         puts "First Child Device's Service"
-        ap first_device.devices.first.services.first
+        pp first_device.devices.first.services.first
         puts "First Child Device's Service's ACTIONS"
-        ap first_device.devices.first.services.first.actions
-        ap first_device.devices.first.services.first.singleton_methods
+        pp first_device.devices.first.services.first.actions
+        pp first_device.devices.first.services.first.singleton_methods
         #puts "Services state table"
-        #ap devices.first.services.first.service_state_table
+        #pp devices.first.services.first.service_state_table
         modules = first_device.devices.first.services.first.GetModules
-        ap modules
+        pp modules
 
       end
 
       #if devices.last.has_services?
       #  puts "Last Service's ACTIONS"
-      #  ap devices.first.services.last.actions
+      #  pp devices.first.services.last.actions
       #  puts "Services state table"
-      #  ap devices.first.services.last.service_state_table
+      #  pp devices.first.services.last.service_state_table
       #  puts "protocol info: #{devices.first.services.last.GetProtocolInfo}"
       #end
     end
