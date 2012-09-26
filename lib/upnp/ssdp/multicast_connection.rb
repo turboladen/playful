@@ -51,8 +51,10 @@ module UPnP
           else
             raise "Unknown NTS value: #{parsed_response[:nts]}"
           end
+        elsif parsed_response[:man] && parsed_response[:man] =~ /ssdp:discover/
         else
           @discovery_responses << parsed_response
+          SSDP.log "<#{self.class}> discovery_responses size: #{@discovery_responses.size}"
         end
       end
 
