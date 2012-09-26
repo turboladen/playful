@@ -161,14 +161,14 @@ module UPnP
             extract_description(@description)
           end
 
-          EM.tick_loop do
-            if @done_creating_devices && @done_creating_services
-              log "<#{self.class}> All done creating stuff"
-              set_deferred_status :succeeded, self
-              :stop
-            end
+        tickloop = EM.tick_loop do
+          if @done_creating_devices && @done_creating_services
+            log "<#{self.class}> All done creating stuff"
+            :stop
           end
         end
+
+        tickloop.on_stop { set_deferred_status :succeeded, self }
       end
 
       def extract_url_base
