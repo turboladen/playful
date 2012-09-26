@@ -48,6 +48,10 @@ search duration: #{time_after - time_before}
         until responses.empty? do
           device_creator = UPnP::ControlPoint::Device.new(ssdp_notification: responses.pop)
 
+          device_creator.errback do
+            puts "<#{self.class}> Failed creating device."
+          end
+
           device_creator.callback do |built_device|
             devices << built_device
             EM.stop if responses.empty?
