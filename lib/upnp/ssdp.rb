@@ -36,21 +36,17 @@ module UPnP
         EM.run do
           l = listener.call
 
-          add_alives = proc do
-            l.available_responses.pop do |notification|
-              responses << notification
-              EM.next_tick &add_alives
-            end
+          alive_getter = Proc.new do |notification|
+            responses << notification
+            EM.next_tick { l.available_responses.pop(&alive_getter) }
           end
-          EM.next_tick &add_alives
+          l.available_responses.pop(&alive_getter)
 
-          add_byebyes = proc do
-            l.byebye_responses.pop do |notification|
-              responses << notification
-              EM.next_tick &add_byebyes
-            end
+          byebye_getter = Proc.new do |notification|
+            responses << notification
+            EM.next_tick { l.byebye_responses.pop(&byebye_getter) }
           end
-          EM.next_tick &add_byebyes
+          l.byebye_responses.pop(&byebye_getter)
 
           trap_signals
         end
@@ -101,25 +97,22 @@ module UPnP
       else
         EM.run do
           ms = multicast_searcher.call
+
           if do_broadcast_search
             bs = broadcast_searcher.call
 
-            get_broadcasts = proc do
-              bs.discovery_responses.pop do |notification|
-                responses << notification
-                EM.next_tick &get_broadcasts
-              end
+            broadcast_notification_getter = Proc.new do |notification|
+              responses << notification
+              EM.next_tick { bs.discovery_responses.pop(&broadcast_notification_getter) }
             end
-            EM.next_tick &get_broadcasts
+            bs.discovery_responses.pop(&broadcast_notification_getter)
           end
 
-          get_notifications = proc do
-            ms.discovery_responses.pop do |notification|
-              responses << notification
-              EM.next_tick &get_notifications
-            end
+          multicast_notification_getter = Proc.new do |notification|
+            responses << notification
+            EM.next_tick { ms.discovery_responses.pop(&multicast_notification_getter) }
           end
-          EM.next_tick &get_notifications
+          ms.discovery_responses.pop(&multicast_notification_getter)
 
           EM.add_timer(response_wait_time) { EM.stop }
 

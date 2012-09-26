@@ -47,21 +47,17 @@ module Rack
       @cp = ::UPnP::ControlPoint.new(search_type, options)
 
       @cp.start do |new_device_queue, old_device_queue|
-        add_new_devices = proc do
-          new_device_queue.pop do |notification|
-            @devices << notification
-            EM.next_tick &add_new_devices
-          end
+        device_adder = Proc.new do |notification|
+          @devices << notification
+          EM.next_tick { new_device_queue.pop(&device_adder) }
         end
-        EM.next_tick &add_new_devices
+        new_device_queue.pop(&device_adder)
 
-        remove_old_devices = proc do
-          old_device_queue.pop do |old_device|
-            @devices.reject! { |d| d.usn == old_device[:usn] }
-            EM.next_tick &remove_old_devices
-          end
+        device_remover = Proc.new do |old_device|
+          @devices.reject! { |d| d.usn == old_device[:usn] }
+          EM.next_tick { old_device_queue.pop(&device_remover) }
         end
-        EM.next_tick &remove_old_devices
+        old_device_queue.pop(&device_remover)
       end
     end
 

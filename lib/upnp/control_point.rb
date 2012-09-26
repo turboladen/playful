@@ -85,41 +85,42 @@ module UPnP
     def listen(ttl)
       listener = SSDP.listen(ttl)
 
-      create_devices = proc do
-        listener.available_responses.pop do |advertisement|
-          log "<#{self.class}> Got alive #{advertisement}"
+      device_creator = Proc.new do |advertisement|
+        log "<#{self.class}> Got alive #{advertisement}"
+
+        if @devices.any? { |d| d.usn == advertisement[:usn] }
+          log "<#{self.class}> Device with USN #{advertisement[:usn]} already exists."
+        else
+          log "<#{self.class}> Device with USN #{advertisement[:usn]} not found. Creating..."
           create_device(advertisement)
-          EM.next_tick &create_devices
         end
+
+        EM.next_tick { listener.available_responses.pop(&device_creator) }
       end
-      EM.next_tick &create_devices
+      listener.available_responses.pop(&device_creator)
 
-      remove_devices = proc do
-        listener.byebye_responses.pop do |advertisement|
-          log "<#{self.class}> Got bye-bye from #{advertisement}"
+      device_remover = Proc.new do |advertisement|
+        log "<#{self.class}> Got bye-bye from #{advertisement}"
 
-          @devices.reject! do |device|
-            device.usn == advertisement[:usn]
-          end
-
-          @old_device_queue << advertisement
-
-          EM.next_tick &remove_devices
+        @devices.reject! do |device|
+          device.usn == advertisement[:usn]
         end
+
+        @old_device_queue << advertisement
+
+        EM.next_tick { listener.byebye_responses.pop(&device_remover) }
       end
-      EM.next_tick &remove_devices
+      listener.byebye_responses.pop(&device_remover)
     end
 
     def ssdp_search_and_listen(search_for, options={})
       searcher = SSDP.search(search_for, options)
 
-      create_devices = proc do
-        searcher.discovery_responses.pop do |notification|
-          create_device(notification)
-          EM.next_tick &create_devices
-        end
+      device_creator = Proc.new do |notification|
+        create_device(notification)
+        EM.next_tick { searcher.discovery_responses.pop(&device_creator) }
       end
-      EM.next_tick &create_devices
+      searcher.discovery_responses.pop(&device_creator)
 
       # Do I need to do this?
       EM.add_timer(options[:response_wait_time]) do
