@@ -25,7 +25,7 @@ module UPnP
           log "<#{self.class}> Request error: #{http.error}"
           log "<#{self.class}> Response status: #{http.response_header.status}"
 
-          if ControlPoint.raise_on_remote_errors
+          if ControlPoint.raise_on_remote_error
             raise ControlPoint::Error, "Unable to retrieve DDF from #{location}"
           end
         }

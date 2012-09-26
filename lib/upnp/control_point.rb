@@ -30,7 +30,7 @@ module UPnP
     end
 
     class << self
-      attr_accessor :raise_on_remote_errors
+      attr_accessor :raise_on_remote_error
     end
 
     attr_reader :devices
@@ -47,7 +47,7 @@ module UPnP
       @devices = []
       @new_device_queue = EventMachine::Queue.new
       @old_device_queue = EventMachine::Queue.new
-      @raise_on_remote_errors = true
+      self.class.raise_on_remote_error = true
 
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
@@ -130,7 +130,7 @@ module UPnP
       deferred_device.errback do |message|
         log "<#{self.class}> #{message}"
 
-        if self.class.raise_on_remote_errors
+        if self.class.raise_on_remote_error
           raise ControlPoint::Error, message
         end
       end
