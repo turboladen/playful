@@ -1,11 +1,3 @@
-GIT
-  remote: git://github.com/rubiii/httpi.git
-  revision: 539000d4c5b18f40ad02e52bee2f75d9cb05965c
-  branch: em_http
-  specs:
-    httpi (1.1.1)
-      rack
-
 PATH
   remote: .
   specs:
@@ -16,8 +8,14 @@ PATH
       eventmachine (>= 1.0.0)
       log_switch (>= 0.1.4)
       nori (>= 1.0.2)
-      savon (>= 0.9.7)
+      savon (>= 1.0.0)
       thin
+
+PATH
+  remote: ../httpi
+  specs:
+    httpi (1.1.2)
+      rack
 
 GEM
   remote: http://rubygems.org/
@@ -74,7 +72,7 @@ GEM
     rspec-core (2.11.1)
     rspec-expectations (2.11.3)
       diff-lcs (~> 1.1.3)
-    rspec-mocks (2.11.2)
+    rspec-mocks (2.11.3)
     savon (1.2.0)
       akami (~> 1.2.0)
       builder (>= 2.1.2)
@@ -94,7 +92,7 @@ GEM
       text-table (>= 1.2.2)
     term-ansicolor (1.0.7)
     text-table (1.2.2)
-    thin (1.4.1)
+    thin (1.5.0)
       daemons (>= 1.0.9)
       eventmachine (>= 0.12.6)
       rack (>= 1.0.0)
@@ -111,7 +109,7 @@ DEPENDENCIES
   bundler
   code_statistics (>= 0.2.13)
   cucumber (>= 1.0.0)
-  httpi!
+  httpi (= 1.1.2)!
   pry
   rspec (>= 2.6)
   simplecov (>= 0.4.2)
