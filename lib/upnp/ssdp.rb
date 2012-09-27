@@ -148,13 +148,9 @@ module UPnP
 
     # Traps INT and TERM signals and stops the reactor.
     def self.trap_signals
-      trap 'INT' do
-        EM.stop
-      end
-
-      trap 'TERM' do
-        EM.stop
-      end
+      trap('INT') { EM.stop }
+      trap('TERM') { EM.stop }
+      trap("HUP")  { EM.stop } if RUBY_PLATFORM !~ /mswin|mingw/
     end
   end
 end
