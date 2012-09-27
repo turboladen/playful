@@ -3,13 +3,10 @@ PATH
   specs:
     upnp (0.0.1)
       em-http-request (>= 1.0.2)
-      em-synchrony
-      em-websocket (>= 0.3.6)
       eventmachine (>= 1.0.0)
       log_switch (>= 0.1.4)
       nori (>= 1.0.2)
       savon (>= 1.0.0)
-      thin
 
 PATH
   remote: ../httpi
@@ -43,8 +40,6 @@ GEM
       http_parser.rb (>= 0.5.3)
     em-socksify (0.2.1)
       eventmachine (>= 1.0.0.beta.4)
-    em-synchrony (1.0.2)
-      eventmachine (>= 1.0.0.beta.1)
     em-websocket (0.3.8)
       addressable (>= 2.1.1)
       eventmachine (>= 0.12.9)
@@ -109,11 +104,13 @@ DEPENDENCIES
   bundler
   code_statistics (>= 0.2.13)
   cucumber (>= 1.0.0)
+  em-websocket (>= 0.3.6)
   httpi (= 1.1.2)!
   pry
   rspec (>= 2.6)
   simplecov (>= 0.4.2)
   tailor (>= 1.1.1)
+  thin
   thor (>= 0.1.6)
   upnp!
   yard (>= 0.7.0)
