@@ -98,24 +98,19 @@ module UPnP
         EM.run do
           ms = multicast_searcher.call
 
+          ms.discovery_responses.subscribe do |notification|
+            responses << notification
+          end
+
           if do_broadcast_search
             bs = broadcast_searcher.call
 
-            broadcast_notification_getter = Proc.new do |notification|
+            bs.discovery_responses.subscribe do |notification|
               responses << notification
-              EM.next_tick { bs.discovery_responses.pop(&broadcast_notification_getter) }
             end
-            bs.discovery_responses.pop(&broadcast_notification_getter)
           end
-
-          multicast_notification_getter = Proc.new do |notification|
-            responses << notification
-            EM.next_tick { ms.discovery_responses.pop(&multicast_notification_getter) }
-          end
-          ms.discovery_responses.pop(&multicast_notification_getter)
 
           EM.add_timer(response_wait_time) { EM.stop }
-
           trap_signals
         end
       end

@@ -1,6 +1,5 @@
 require 'open-uri'
 require 'nori'
-require 'em-websocket'
 require 'log_switch'
 require_relative 'ssdp'
 require_relative 'control_point/service'
@@ -47,8 +46,8 @@ module UPnP
       @search_options = search_options
       @search_options[:ttl] ||= 4
       @devices = []
-      @new_device_queue = EventMachine::Queue.new
-      @old_device_queue = EventMachine::Queue.new
+      @new_device_channel = EventMachine::Channel.new
+      @old_device_channel = EventMachine::Channel.new
 
       Nori.configure do |config|
         config.convert_tags_to { |tag| tag.to_sym }
@@ -58,18 +57,18 @@ module UPnP
     # Starts the ControlPoint.  If an EventMachine reactor is running already,
     # it'll join that reactor, otherwise it'll start the reactor.
     #
-    # @yieldparam [EventMachine::Queue] new_device_queue The list of devices
-    #   that have been discovered either through SSDP searching or from an
-    #   +ssdp:alive+ notification.
-    # @yieldparam [EventMachine::Queue] old_device_queue The list of devices
-    #   that have sent out a +ssdp:byebye+ notification.  This queue exists so
-    #   clients/consumers can remove these devices off of their internal queue.
+    # @yieldparam [EventMachine::Channel] new_device_channel The means through
+    #   which clients can get notified when a new device has been discovered
+    #   either through SSDP searching or from an +ssdp:alive+ notification.
+    # @yieldparam [EventMachine::Channel] old_device_channel The means through
+    #   which clients can get notified when a device has gone offline (have sent
+    #   out a +ssdp:byebye+ notification).
     def start &blk
       @stopping = false
 
       starter = -> do
         ssdp_search_and_listen(@search_target, @search_options)
-        blk.call(@new_device_queue, @old_device_queue)
+        blk.call(@new_device_channel, @old_device_channel)
         @running = true
       end
 
@@ -83,44 +82,38 @@ module UPnP
     end
 
     def listen(ttl)
-      listener = SSDP.listen(ttl)
+      EM.defer do
+        listener = SSDP.listen(ttl)
 
-      device_creator = Proc.new do |advertisement|
-        log "<#{self.class}> Got alive #{advertisement}"
+        listener.available_responses.subscribe do |advertisement|
+          log "<#{self.class}> Got alive #{advertisement}"
 
-        if @devices.any? { |d| d.usn == advertisement[:usn] }
-          log "<#{self.class}> Device with USN #{advertisement[:usn]} already exists."
-        else
-          log "<#{self.class}> Device with USN #{advertisement[:usn]} not found. Creating..."
-          create_device(advertisement)
+          if @devices.any? { |d| d.usn == advertisement[:usn] }
+            log "<#{self.class}> Device with USN #{advertisement[:usn]} already exists."
+          else
+            log "<#{self.class}> Device with USN #{advertisement[:usn]} not found. Creating..."
+            create_device(advertisement)
+          end
         end
 
-        EM.next_tick { listener.available_responses.pop(&device_creator) }
-      end
-      listener.available_responses.pop(&device_creator)
+        listener.byebye_responses.subscribe do |advertisement|
+          log "<#{self.class}> Got bye-bye from #{advertisement}"
 
-      device_remover = Proc.new do |advertisement|
-        log "<#{self.class}> Got bye-bye from #{advertisement}"
+          @devices.reject! do |device|
+            device.usn == advertisement[:usn]
+          end
 
-        @devices.reject! do |device|
-          device.usn == advertisement[:usn]
+          @old_device_channel << advertisement
         end
-
-        @old_device_queue << advertisement
-
-        EM.next_tick { listener.byebye_responses.pop(&device_remover) }
       end
-      listener.byebye_responses.pop(&device_remover)
     end
 
     def ssdp_search_and_listen(search_for, options={})
       searcher = SSDP.search(search_for, options)
 
-      device_creator = Proc.new do |notification|
+      searcher.discovery_responses.subscribe do |notification|
         create_device(notification)
-        EM.next_tick { searcher.discovery_responses.pop(&device_creator) }
       end
-      searcher.discovery_responses.pop(&device_creator)
 
       # Do I need to do this?
       EM.add_timer(options[:response_wait_time]) do
@@ -157,7 +150,7 @@ module UPnP
           log "<#{self.class}> Newly created device already exists in internal list. Not adding."
         else
           log "<#{self.class}> Adding newly created device to internal list.."
-          @new_device_queue.push(built_device)
+          @new_device_channel << built_device
           @devices << built_device
         end
       end

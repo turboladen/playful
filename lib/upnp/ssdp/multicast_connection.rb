@@ -20,9 +20,9 @@ module UPnP
       def initialize ttl=TTL
         @ttl = ttl
 
-        @discovery_responses = EM::Queue.new
-        @available_responses = EM::Queue.new
-        @byebye_responses = EM::Queue.new
+        @discovery_responses = EM::Channel.new
+        @available_responses = EM::Channel.new
+        @byebye_responses = EM::Channel.new
 
         setup_multicast_socket
       end
@@ -54,7 +54,6 @@ module UPnP
         elsif parsed_response[:man] && parsed_response[:man] =~ /ssdp:discover/
         else
           @discovery_responses << parsed_response
-          SSDP.log "<#{self.class}> discovery_responses size: #{@discovery_responses.size}"
         end
       end
 

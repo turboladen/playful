@@ -46,19 +46,16 @@ module Rack
     def start_control_point(search_type, options)
       @cp = ::UPnP::ControlPoint.new(search_type, options)
 
-      @cp.start do |new_device_queue, old_device_queue|
-        device_adder = Proc.new do |notification|
+      @cp.start do |new_device_channel, old_device_channel|
+        new_device_channel.subscribe do |notification|
           @devices << notification
-          EM.next_tick { new_device_queue.pop(&device_adder) }
         end
-        new_device_queue.pop(&device_adder)
 
-        device_remover = Proc.new do |old_device|
+        old_device_channel.subscribe do |old_device|
           @devices.reject! { |d| d.usn == old_device[:usn] }
-          EM.next_tick { old_device_queue.pop(&device_remover) }
         end
-        old_device_queue.pop(&device_remover)
       end
+
     end
 
     # Adds the whole list of devices to +env['upnp.devices']+ so that that list
