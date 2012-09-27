@@ -146,7 +146,8 @@ module UPnP
       deferred_device.callback do |built_device|
         log "<#{self.class}> Device created from #{notification}"
 
-        if @devices.any? { |d| d.usn == built_device.usn }
+        if (@devices.any? { |d| d.usn == built_device.usn }) ||
+          (@devices.any? { |d| d.udn == built_device.udn })
           log "<#{self.class}> Newly created device already exists in internal list. Not adding."
         else
           log "<#{self.class}> Adding newly created device to internal list.."
