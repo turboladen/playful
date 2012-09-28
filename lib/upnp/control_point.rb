@@ -135,8 +135,9 @@ module UPnP
     def create_device(notification)
       deferred_device = Device.new(ssdp_notification: notification)
 
-      deferred_device.errback do |message|
+      deferred_device.errback do |partially_built_device, message|
         log "<#{self.class}> #{message}"
+        #add_device(partially_built_device)
 
         if self.class.raise_on_remote_error
           raise ControlPoint::Error, message
@@ -145,18 +146,23 @@ module UPnP
 
       deferred_device.callback do |built_device|
         log "<#{self.class}> Device created from #{notification}"
-
-        if (@devices.any? { |d| d.usn == built_device.usn }) ||
-          (@devices.any? { |d| d.udn == built_device.udn })
-          log "<#{self.class}> Newly created device already exists in internal list. Not adding."
-        else
-          log "<#{self.class}> Adding newly created device to internal list.."
-          @new_device_channel << built_device
-          @devices << built_device
-        end
+        add_device(built_device)
       end
 
       deferred_device.fetch
+    end
+
+    def add_device(built_device)
+      if (@devices.any? { |d| d.usn == built_device.usn }) ||
+        (@devices.any? { |d| d.udn == built_device.udn })
+        log "<#{self.class}> Newly created device already exists in internal list. Not adding."
+      #if @devices.any? { |d| d.usn == built_device.usn }
+      #  log "<#{self.class}> Newly created device (#{built_device.usn}) already exists in internal list. Not adding."
+      else
+        log "<#{self.class}> Adding newly created device to internal list.."
+        @new_device_channel << built_device
+        @devices << built_device
+      end
     end
 
     def stop
