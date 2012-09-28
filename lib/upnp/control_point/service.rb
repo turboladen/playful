@@ -119,38 +119,6 @@ module UPnP
         extract_service_list_info(device_base_url)
       end
 
-      # Extracts all of the basic service information from the information
-      # handed over from the device description about the service.  The actual
-      # service description info gathering is *not* done here.
-      #
-      # @param [String] device_base_url The URLBase from the device.  Used to
-      #   build absolute URLs for the service.
-      def extract_service_list_info(device_base_url)
-        @control_url = if @service_list_info[:controlURL]
-          build_url(device_base_url, @service_list_info[:controlURL])
-        else
-          log "<#{self.class}> Required controlURL attribute is blank."
-          ""
-        end
-
-        @event_sub_url = if @service_list_info[:eventSubURL]
-          build_url(device_base_url, @service_list_info[:eventSubURL])
-        else
-          log "<#{self.class}> Required eventSubURL attribute is blank."
-          ""
-        end
-
-        @service_type = @service_list_info[:serviceType]
-        @service_id = @service_list_info[:serviceId]
-
-        @scpd_url = if @service_list_info[:SCPDURL]
-          build_url(device_base_url, @service_list_info[:SCPDURL])
-        else
-          log "<#{self.class}> Required SCPDURL attribute is blank."
-          ""
-        end
-      end
-
       # Fetches the service description file, parses it, extracts attributes
       # into accessors, and defines Ruby methods from SOAP actions.  Since this
       # is a long-ish process, this is done using EventMachine Deferrable
@@ -195,6 +163,38 @@ module UPnP
 
       private
 
+      # Extracts all of the basic service information from the information
+      # handed over from the device description about the service.  The actual
+      # service description info gathering is *not* done here.
+      #
+      # @param [String] device_base_url The URLBase from the device.  Used to
+      #   build absolute URLs for the service.
+      def extract_service_list_info(device_base_url)
+        @control_url = if @service_list_info[:controlURL]
+          build_url(device_base_url, @service_list_info[:controlURL])
+        else
+          log "<#{self.class}> Required controlURL attribute is blank."
+          ""
+        end
+
+        @event_sub_url = if @service_list_info[:eventSubURL]
+          build_url(device_base_url, @service_list_info[:eventSubURL])
+        else
+          log "<#{self.class}> Required eventSubURL attribute is blank."
+          ""
+        end
+
+        @service_type = @service_list_info[:serviceType]
+        @service_id = @service_list_info[:serviceId]
+
+        @scpd_url = if @service_list_info[:SCPDURL]
+          build_url(device_base_url, @service_list_info[:SCPDURL])
+        else
+          log "<#{self.class}> Required SCPDURL attribute is blank."
+          ""
+        end
+      end
+
       def extract_spec_version
         "#{@description[:scpd][:specVersion][:major]}.#{@description[:scpd][:specVersion][:minor]}"
       end
@@ -209,10 +209,27 @@ module UPnP
         end
       end
 
-      def configure_savon
-        @soap_client = Savon.client do |wsdl|
-          wsdl.endpoint = @control_url
-          wsdl.namespace = @service_type
+      # Determines if <actionList> from the service description contains a
+      # single action or multiple actions and delegates to create Ruby methods
+      # accordingly.
+      #
+      # @param [Hash,Array] action_list The value from <scpd><actionList><action>
+      #   from the service description.
+      def define_methods_from_actions(action_list)
+        if action_list.is_a? Hash
+          @action_list << action_list
+          define_method_from_action(action_list[:name].to_sym,
+            action_list[:argumentList][:argument])
+        elsif action_list.is_a? Array
+          action_list.each do |action|
+=begin
+        in_args_count = action[:argumentList][:argument].find_all do |arg|
+          arg[:direction] == 'in'
+        end.size
+=end
+            @action_list << action
+            define_method_from_action(action[:name].to_sym, action[:argumentList][:argument])
+          end
         end
       end
 
@@ -262,30 +279,6 @@ HTTP body as Hash: #{hash}
             end
           else
             log "<#{self.class}> No args with direction 'out'"
-          end
-        end
-      end
-
-      # Determines if <actionList> from the service description contains a
-      # single action or multiple actions and delegates to create Ruby methods
-      # accordingly.
-      #
-      # @param [Hash,Array] action_list The value from <scpd><actionList><action>
-      #   from the service description.
-      def define_methods_from_actions(action_list)
-        if action_list.is_a? Hash
-          @action_list << action_list
-          define_method_from_action(action_list[:name].to_sym,
-            action_list[:argumentList][:argument])
-        elsif action_list.is_a? Array
-          action_list.each do |action|
-=begin
-        in_args_count = action[:argumentList][:argument].find_all do |arg|
-          arg[:direction] == 'in'
-        end.size
-=end
-            @action_list << action
-            define_method_from_action(action[:name].to_sym, action[:argumentList][:argument])
           end
         end
       end
@@ -340,6 +333,14 @@ HTTP body as Hash: #{hash}
           log "<#{self.class}> Got SOAP response that I dunno what to do with: #{soap_response.hash}"
         end
       end
+
+      def configure_savon
+        @soap_client = Savon.client do |wsdl|
+          wsdl.endpoint = @control_url
+          wsdl.namespace = @service_type
+        end
+      end
+
     end
   end
 end
