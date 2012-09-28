@@ -12,14 +12,43 @@ module UPnP
       include LogSwitch::Mixin
 
       attr_reader :ssdp_notification
-      attr_reader :description
+
+      #vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      # Passed in as part of +device_info+; given by the SSDP search response.
+      #
       attr_reader :cache_control
       attr_reader :date
+      attr_reader :ext
       attr_reader :location
       attr_reader :server
       attr_reader :st
-      attr_reader :ext
       attr_reader :usn
+      #
+      # DONE +device_info+
+      #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+      # @return [Hash] The whole parsed description... just in case.
+      attr_reader :description
+
+      #vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      # Determined by device description file.
+      #
+
+      #------- <root> elements -------
+
+      # @return [String] The xmlns attribute of the device from the description file.
+      attr_reader :xmlns
+
+      # @return [Hash] :major and :minor revisions of the UPnP spec this device adheres to.
+      attr_reader :spec_version
+
+      # @return [String] URLBase from the device's description file.
+      attr_reader :url_base
+
+      #------- <root><device> elements -------
+
+      # @return [String] The type of UPnP device (URN) from the description file.
+      attr_reader :device_type
 
       # @return [String] Short device description for the end user.
       attr_reader :friendly_name
@@ -42,45 +71,30 @@ module UPnP
       # @return [String] Web site for model of this device.
       attr_reader :model_url
 
-      # Unique Device Name (UDN), a universally unique identifier for the device
-      # whether root or embedded.
-      #attr_reader :name
-
-      # @return [String] URL for device control via a browser.
-      attr_reader :presentation_url
-
       # @return [String] The serial number from the description file.
       attr_reader :serial_number
 
-      # All services provided by this device and its sub-devices.
+      # @return [String] The UDN for the device, from the description file.
+      attr_reader :udn
+
+      # @return [String] The UPC of the device from the description file.
+      attr_reader :upc
+
+      # @return [Array<Hash>] An Array where each element is a Hash that describes an icon.
+      attr_reader :icon_list
+
+      # Services provided directly by this device.
       attr_reader :service_list
 
       # Devices embedded directly into this device.
       attr_reader :device_list
 
-      # Services provided directly by this device.
-      attr_reader :services
+      # @return [String] URL for device control via a browser.
+      attr_reader :presentation_url
 
-      # @return [String] The type of UPnP device (URN) from the description file.
-      attr_reader :device_type
-
-      # @return [String] The UPC of the device from the description file.
-      attr_reader :upc
-
-      # @return [String] URLBase from the device's description file.
-      attr_reader :url_base
-
-      # @return [Hash] :major and :minor revisions of the UPnP spec this device adheres to.
-      attr_reader :spec_version
-
-      # @return [Array<Hash>] An Array where each element is a Hash that describes an icon.
-      attr_reader :icon_list
-
-      # @return [String] The xmlns attribute of the device from the description file.
-      attr_reader :xmlns
-
-      # @return [String] The UDN for the device, from the description file.
-      attr_reader :udn
+      #
+      # DONE description file
+      #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
       # @param [Hash] device_info
       # @option device_info [Hash] ssdp_notification
@@ -92,7 +106,9 @@ module UPnP
         @device_info = device_info
         log "<#{self.class}> Got device info: #{@device_info}"
         @device_list = []
-        @services = []
+        @service_list = []
+        @icon_list = []
+        @xmlns = ""
         @done_creating_devices = false
         @done_creating_services = false
       end
@@ -158,6 +174,7 @@ module UPnP
           log "<#{self.class}> Set url_base to #{@url_base}"
 
           if @device_info[:ssdp_notification]
+            @xmlns = @description[:root][:@xmlns]
             log "<#{self.class}> Extracting description for root device #{description_getter.object_id}"
             extract_description(@description[:root][:device])
           elsif @device_info.has_key? :device_description
@@ -192,7 +209,7 @@ module UPnP
       end
 
       def has_services?
-        !@services.empty?
+        !@service_list.empty?
       end
 
       def extract_description(ddf)
@@ -243,9 +260,9 @@ module UPnP
 
         services_extractor.callback do |services|
           log "<#{self.class}> Done extracting services."
-          @services = services
+          @service_list = services
 
-          log "<#{self.class}> New service count: #{@services.size}."
+          log "<#{self.class}> New service count: #{@service_list.size}."
           @done_creating_services = true
         end
       end

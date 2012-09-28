@@ -83,41 +83,40 @@ search duration: #{time_after - time_before}
       first_device = devices.first
 
       puts "First device's devices count: #{first_device.device_list.size}"
-      puts "First device's services count: #{first_device.services.size}"
+      puts "First device's service_list count: #{first_device.service_list.size}"
 
       if first_device.has_services?
-        pp first_device.services
+        pp first_device.service_list
         puts "First Service's ACTIONS"
-        pp first_device.services.first.action_list
-        pp first_device.services.first.methods
-        pp first_device.services.first.singleton_methods
+        pp first_device.service_list.first.action_list
+        pp first_device.service_list.first.singleton_methods
         #puts "Services state table"
-        #pp devices.first.services.first.service_state_table
-        puts "id: #{devices.first.services.first.GetSystemUpdateID}"
+        #pp devices.first.service_list.first.service_state_table
+        puts "id: #{devices.first.service_list.first.GetSystemUpdateID}"
       end
 
       pp first_device
       if first_device.has_devices?
         pp first_device.devices
-        pp first_device.devices.first.services
+        pp first_device.devices.first.service_list
         puts "First Child Device's Service"
-        pp first_device.devices.first.services.first
+        pp first_device.devices.first.service_list.first
         puts "First Child Device's Service's ACTIONS"
-        pp first_device.devices.first.services.first.action_list
-        pp first_device.devices.first.services.first.singleton_methods
+        pp first_device.devices.first.service_list.first.action_list
+        pp first_device.devices.first.service_list.first.singleton_methods
         #puts "Services state table"
-        #pp devices.first.services.first.service_state_table
-        modules = first_device.devices.first.services.first.GetModules
+        #pp devices.first.service_list.first.service_state_table
+        modules = first_device.devices.first.service_list.first.GetModules
         pp modules
 
       end
 
       #if devices.last.has_services?
       #  puts "Last Service's ACTIONS"
-      #  pp devices.first.services.last.action_list
+      #  pp devices.first.service_list.last.action_list
       #  puts "Services state table"
-      #  pp devices.first.services.last.service_state_table
-      #  puts "protocol info: #{devices.first.services.last.GetProtocolInfo}"
+      #  pp devices.first.service_list.last.service_state_table
+      #  puts "protocol info: #{devices.first.service_list.last.GetProtocolInfo}"
       #end
     end
   end

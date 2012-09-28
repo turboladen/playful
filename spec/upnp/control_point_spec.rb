@@ -47,7 +47,7 @@ describe UPnP::ControlPoint do
   end
 
   describe "#find_services" do
-    it "sets @services to an empty Array if @device_list is empty" do
+    it "sets @service_list to an empty Array if @device_list is empty" do
       cp = UPnP::ControlPoint.new
       cp.find_services
       cp.services.should be_empty
