@@ -228,6 +228,7 @@ module UPnP
               hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_i
           }
         elsif string_types.include? state_variable[:dataType]
+          return {} if soap_response.hash.empty?
           {
             out_arg_name.to_sym => soap_response.
               hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_s
@@ -237,6 +238,8 @@ module UPnP
             out_arg_name.to_sym => soap_response.
               hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_f
           }
+        else
+          log "<#{self.class}> Got SOAP response that I dunno what to do with: #{soap_response.hash}"
         end
       end
     end
