@@ -152,6 +152,8 @@ module UPnP
             return
           end
 
+          extract_spec_version
+
           @url_base = extract_url_base
           log "<#{self.class}> Set url_base to #{@url_base}"
 
@@ -185,7 +187,6 @@ module UPnP
         end
       end
 
-
       def has_devices?
         !@device_list.empty?
       end
@@ -215,6 +216,8 @@ module UPnP
 
         start_device_extraction
         start_service_extraction
+      def extract_spec_version
+        "#{@description[:root][:specVersion][:major]}.#{@description[:root][:specVersion][:minor]}"
       end
 
       def start_service_extraction
