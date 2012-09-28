@@ -271,7 +271,7 @@ HTTP body as Hash: #{hash}
             raise(ActionError, msg) if ControlPoint.raise_on_remote_error
 
             log "<#{self.class}> #{msg}"
-            return hash
+            return hash[:Envelope][:Body]
           end
 
           if argument_info.is_a?(Hash) && argument_info[:direction] == "out"
