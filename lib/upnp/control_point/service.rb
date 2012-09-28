@@ -118,38 +118,57 @@ module UPnP
 
       private
 
-      def define_methods_from_actions(action_list)
-        if action_list.is_a? Hash
-          action = action_list
+      # @param [Symbol] action_name The extracted value from <actionList>
+      #   <action><name> from the spec.
+      # @param [Hash,Array] argument_info The extracted values from
+      #   <actionList><action><argumentList><argument> from the spec.
+      def define_method_from_action(action_name, argument_info)
+        define_singleton_method(action_name) do |*params|
+          st = @service_type
 
-          define_singleton_method(action[:name].to_sym) do |*params|
-            st = @service_type
-
-            response = @soap_client.request(:u, action[:name], "xmlns:u" => @service_type) do
-              http.headers['SOAPACTION'] = "#{st}##{action[:name]}"
+          begin
+            response = @soap_client.request(:u, action_name, "xmlns:u" => @service_type) do
+              http.headers['SOAPACTION'] = "#{st}##{action_name}"
 
               soap.body = params.inject({}) do |result, arg|
-                puts "arg: #{arg}"
+                log "<#{self.class}> arg: #{arg}"
                 result[:argument_name] = arg
 
                 result
               end
             end
-
-            argument = action[:argumentList][:argument]
-
-            if argument.is_a?(Hash) && argument[:direction] == "out"
-              return_ruby_from_soap(action[:name], response, argument)
-            elsif argument.is_a? Array
-              argument.map do |a|
-                if a[:direction] == "out"
-                  return_ruby_from_soap(action[:name], response, a)
-                end
-              end
+          rescue Savon::SOAP::Fault => ex
+            # Should raise an ActionError or something that relates to the
+            # spec
+            hash = Nori.parse(ex.http.body)
+            msg = "Received bad HTTP response code (#{ex.http.code})\n" +
+              "#{ex.http.headers}\n#{ex.http.body}\n#{hash}"
+            if ControlPoint.raise_on_remote_error
+              raise Error, msg
             else
-              puts "No args with direction 'out'"
+              log "<#{self.class}> #{msg}"
+              return hash
             end
           end
+
+          if argument_info.is_a?(Hash) && argument_info[:direction] == "out"
+            return_ruby_from_soap(action_name, response, argument_info)
+          elsif argument.is_a? Array
+            argument_info.map do |a|
+              if a[:direction] == "out"
+                return_ruby_from_soap(action_name, response, a)
+              end
+            end
+          else
+            puts "No args with direction 'out'"
+          end
+        end
+      end
+
+      def define_methods_from_actions(action_list)
+        if action_list.is_a? Hash
+          action = action_list
+          define_method_from_action(action[:name].to_sym, action[:argumentList][:argument])
         elsif action_list.is_a? Array
           action_list.each do |action|
 =begin
@@ -158,36 +177,7 @@ module UPnP
         end.size
 =end
             @actions << action
-
-            define_singleton_method(action[:name].to_sym) do |*params|
-              st = @service_type
-
-              ControlPoint.log "soap client: #{@soap_client.inspect}"
-              response = @soap_client.request(:u, action[:name], "xmlns:u" => @service_type) do
-                http.headers['SOAPACTION'] = "#{st}##{action[:name]}"
-
-                soap.body = params.inject({}) do |result, arg|
-                  puts "arg: #{arg}"
-                  result[:argument_name] = arg
-
-                  result
-                end
-              end
-
-              argument = action[:argumentList][:argument]
-
-              if argument.is_a?(Hash) && argument[:direction] == "out"
-                return_ruby_from_soap(action[:name], response, argument)
-              elsif argument.is_a? Array
-                argument.map do |a|
-                  if a[:direction] == "out"
-                    return_ruby_from_soap(action[:name], response, a)
-                  end
-                end
-              else
-                puts "No args with direction 'out'"
-              end
-            end
+            define_method_from_action(action[:name].to_sym, action[:argumentList][:argument])
           end
         end
       end
