@@ -94,6 +94,9 @@ module UPnP
       #
 
       # @return [String]
+      attr_reader :xmlns
+
+      # @return [String]
       attr_reader :spec_version
 
       # @return [Hash<String,Array<String>>]
@@ -116,6 +119,7 @@ module UPnP
       def initialize(device_base_url, service_list_info)
         @service_list_info = service_list_info
         @action_list = []
+        @xmlns = ""
         extract_service_list_info(device_base_url)
       end
 
@@ -148,6 +152,7 @@ module UPnP
         description_getter.callback do |description|
           log "<#{self.class}> Service description received for #{description_getter.object_id}."
           @description = description
+          @xmlns = @description[:scpd][:@xmlns]
           extract_spec_version
           extract_service_state_table
 
@@ -340,7 +345,6 @@ HTTP body as Hash: #{hash}
           wsdl.namespace = @service_type
         end
       end
-
     end
   end
 end
