@@ -18,9 +18,57 @@ end
 
 module UPnP
   class ControlPoint
+
+    # An object of this type functions as somewhat of a proxy to a UPnP device's
+    # service.  The object sort of defines itself when you call #fetch; it
+    # gets the description file from the device, parses it, populates its
+    # attributes (as accessors) and defines singleton methods from the list of
+    # actions that the service defines.
+    #
+    # After the fetch is done, you can call Ruby methods on the service and
+    # expect a Ruby Hash back as a return value.  The methods will look just
+    # the SOAP actions and will always return a Hash, where key/value pairs are
+    # converted from the SOAP response; values are converted to the according
+    # Ruby type based on <dataType> in the <serviceStateTable>.
+    #
+    # Types map like:
+    #   * Integer
+    #     * ui1
+    #     * ui2
+    #     * ui4
+    #     * i1
+    #     * i2
+    #     * i4
+    #     * int
+    #   * Float
+    #     * r4
+    #     * r8
+    #     * number
+    #     * fixed.14.4
+    #     * float
+    #   * String
+    #     * char
+    #     * string
+    #     * uuid
+    #   * TrueClass
+    #     * 1
+    #     * true
+    #     * yes
+    #   * FalseClass
+    #     * 0
+    #     * false
+    #     * no
+    #
+    # @example No "in" params
+    #   my_service.GetSystemUpdateID    # => { "Id" => 1 }
+    #
     class Service < Base
       include EventMachine::Deferrable
       include LogSwitch::Mixin
+
+      #vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      # Passed in by +service_list_info+
+      #
 
       # @return [String] UPnP service type, including URN.
       attr_reader :service_type
@@ -37,41 +85,79 @@ module UPnP
       # @return [URI::HTTP] Eventing URL.
       attr_reader :event_sub_url
 
+      #
+      # DONE +service_list_info+
+      #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+      #vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      # Determined by service description file
+      #
+
+      # @return [String]
+      attr_reader :spec_version
+
       # @return [Hash<String,Array<String>>]
-      attr_reader :actions
-
-      # @return [URI::HTTP] Base URL for this service's device.
-      attr_reader :device_base_url
-
-      attr_reader :description
+      attr_reader :action_list
 
       # Probably don't need to keep this long-term; just adding for testing.
       attr_reader :service_state_table
 
-      def initialize(device_base_url, device_service)
-        @device_base_url = device_base_url
-        @device_service = device_service
-        @actions = []
+      #
+      # DONE description
+      #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        if @device_service[:controlURL]
-          @control_url = build_url(@device_base_url, @device_service[:controlURL])
-        end
+      # @return [Hash] The whole description... just in case.
+      attr_reader :description
 
-        if @device_service[:eventSubURL]
-          @event_sub_url = build_url(@device_base_url, @device_service[:eventSubURL])
-        end
-
-        @service_type = @device_service[:serviceType]
-        @service_id = @device_service[:serviceId]
-        return unless @device_service[:SCPDURL]
-
-        @scpd_url = build_url(@device_base_url, @device_service[:SCPDURL])
+      # @param [String] device_base_url URL given (or otherwise determined) by
+      #   <URLBase> from the device that owns the service.
+      # @param [Hash] service_list_info Info given in the <serviceList> section
+      #   of the device description.
+      def initialize(device_base_url, service_list_info)
+        @service_list_info = service_list_info
+        @action_list = []
+        extract_service_list_info(device_base_url)
       end
 
+      # Extracts all of the basic service information from the information
+      # handed over from the device description about the service.  The actual
+      # service description info gathering is *not* done here.
+      #
+      # @param [String] device_base_url The URLBase from the device.  Used to
+      #   build absolute URLs for the service.
+      def extract_service_list_info(device_base_url)
+        @control_url = if @service_list_info[:controlURL]
+          build_url(device_base_url, @service_list_info[:controlURL])
+        else
+          log "<#{self.class}> Required controlURL attribute is blank."
+          ""
+        end
+
+        @event_sub_url = if @service_list_info[:eventSubURL]
+          build_url(device_base_url, @service_list_info[:eventSubURL])
+        else
+          log "<#{self.class}> Required eventSubURL attribute is blank."
+          ""
+        end
+
+        @service_type = @service_list_info[:serviceType]
+        @service_id = @service_list_info[:serviceId]
+
+        @scpd_url = if @service_list_info[:SCPDURL]
+          build_url(device_base_url, @service_list_info[:SCPDURL])
+        else
+          log "<#{self.class}> Required SCPDURL attribute is blank."
+          ""
+        end
+      end
+
+      # Fetches the service description file, parses it, extracts attributes
+      # into accessors, and defines Ruby methods from SOAP actions.  Since this
+      # is a long-ish process, this is done using EventMachine Deferrable
+      # behavior.
       def fetch
-        if @scpd_url.nil?
+        if @scpd_url.empty?
           log "<#{self.class}> NO SCPDURL to get the service description from.  Returning."
-          log "<#{self.class}> Device service info: #{@device_service}"
           set_deferred_success self
           return
         end
@@ -83,6 +169,7 @@ module UPnP
         description_getter.errback do
           msg = "Failed getting service description."
           log "<#{self.class}> #{msg}", :error
+          # @todo Should this return self? or should it succeed?
           set_deferred_status(:failed, msg)
 
           if ControlPoint.raise_on_remote_error
@@ -93,23 +180,13 @@ module UPnP
         description_getter.callback do |description|
           log "<#{self.class}> Service description received for #{description_getter.object_id}."
           @description = description
-
-          @service_state_table = if @description[:scpd][:serviceStateTable].is_a? Hash
-            @description[:scpd][:serviceStateTable][:stateVariable]
-          elsif @description[:scpd][:serviceStateTable].is_a? Array
-            @description[:scpd][:serviceStateTable].map do |state|
-              state[:stateVariable]
-            end
-          end
+          extract_spec_version
+          extract_service_state_table
 
           if @description[:scpd][:actionList]
-            log "<#{self.class}> Defining methods from actions [#{description_getter.object_id}]"
+            log "<#{self.class}> Defining methods from action_list [#{description_getter.object_id}]"
             define_methods_from_actions(@description[:scpd][:actionList][:action])
-
-            @soap_client = Savon.client do |wsdl|
-              wsdl.endpoint = @control_url
-              wsdl.namespace = @service_type
-            end
+            configure_savon
           end
 
           set_deferred_status(:succeeded, self)
@@ -118,6 +195,32 @@ module UPnP
 
       private
 
+      def extract_spec_version
+        "#{@description[:scpd][:specVersion][:major]}.#{@description[:scpd][:specVersion][:minor]}"
+      end
+
+      def extract_service_state_table
+        @service_state_table = if @description[:scpd][:serviceStateTable].is_a? Hash
+          @description[:scpd][:serviceStateTable][:stateVariable]
+        elsif @description[:scpd][:serviceStateTable].is_a? Array
+          @description[:scpd][:serviceStateTable].map do |state|
+            state[:stateVariable]
+          end
+        end
+      end
+
+      def configure_savon
+        @soap_client = Savon.client do |wsdl|
+          wsdl.endpoint = @control_url
+          wsdl.namespace = @service_type
+        end
+      end
+
+      # Defines a Ruby method from the SOAP action.  When called, the method
+      # will return a key/value pair defined by the "out" argument name and
+      # value.  The Ruby type of each value is determined from the
+      # serviceStateTable.
+      #
       # @param [Symbol] action_name The extracted value from <actionList>
       #   <action><name> from the spec.
       # @param [Hash,Array] argument_info The extracted values from
@@ -129,45 +232,51 @@ module UPnP
               http.headers['SOAPACTION'] = "#{@service_type}##{action_name}"
 
               soap.body = params.inject({}) do |result, arg|
-                log "<#{self.class}> arg: #{arg}"
                 result[:argument_name] = arg
-
                 result
               end
             end
           rescue Savon::SOAP::Fault => ex
-            # Should raise an ActionError or something that relates to the
-            # spec
             hash = Nori.parse(ex.http.body)
-            msg = "Received bad HTTP response code (#{ex.http.code})\n" +
-              "#{ex.http.headers}\n#{ex.http.body}\n#{hash}"
+            msg = <<-MSG
+SOAP request failure!
+HTTP response code: #{ex.http.code}
+HTTP headers: #{ex.http.headers}
+HTTP body: #{ex.http.body}
+HTTP body as Hash: #{hash}
+            MSG
 
-            if ControlPoint.raise_on_remote_error
-              raise ActionError, msg
-            else
-              log "<#{self.class}> #{msg}"
-              return hash
-            end
+            raise(ActionError, msg) if ControlPoint.raise_on_remote_error
+
+            log "<#{self.class}> #{msg}"
+            return hash
           end
 
           if argument_info.is_a?(Hash) && argument_info[:direction] == "out"
             return_ruby_from_soap(action_name, response, argument_info)
           elsif argument.is_a? Array
-            argument_info.map do |a|
-              if a[:direction] == "out"
-                return_ruby_from_soap(action_name, response, a)
+            argument_info.map do |arg|
+              if arg[:direction] == "out"
+                return_ruby_from_soap(action_name, response, arg)
               end
             end
           else
-            puts "No args with direction 'out'"
+            log "<#{self.class}> No args with direction 'out'"
           end
         end
       end
 
+      # Determines if <actionList> from the service description contains a
+      # single action or multiple actions and delegates to create Ruby methods
+      # accordingly.
+      #
+      # @param [Hash,Array] action_list The value from <scpd><actionList><action>
+      #   from the service description.
       def define_methods_from_actions(action_list)
         if action_list.is_a? Hash
-          action = action_list
-          define_method_from_action(action[:name].to_sym, action[:argumentList][:argument])
+          @action_list << action_list
+          define_method_from_action(action_list[:name].to_sym,
+            action_list[:argumentList][:argument])
         elsif action_list.is_a? Array
           action_list.each do |action|
 =begin
@@ -175,7 +284,7 @@ module UPnP
           arg[:direction] == 'in'
         end.size
 =end
-            @actions << action
+            @action_list << action
             define_method_from_action(action[:name].to_sym, action[:argumentList][:argument])
           end
         end
@@ -205,7 +314,7 @@ module UPnP
 
         #puts "state var: #{state_variable}"
 
-        int_types = %w[ui1 ui2 ui4 i1 i2 i4 in]
+        int_types = %w[ui1 ui2 ui4 i1 i2 i4 int]
         float_types = %w[r4 r8 number fixed.14.4 float]
         string_types = %w[char string uuid]
         true_types = %w[1 true yes]
