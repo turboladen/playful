@@ -121,7 +121,7 @@ module UPnP
         when :off then "\000"
         when "\000" then "\000"
         else raise SSDP::Error, "Can't switch IP_MULTICAST_LOOP to '#{on_off}'"
-                    end
+        end
 
         set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, hex_value)
       end
