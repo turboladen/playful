@@ -276,7 +276,7 @@ HTTP body as Hash: #{hash}
 
           if argument_info.is_a?(Hash) && argument_info[:direction] == "out"
             return_ruby_from_soap(action_name, response, argument_info)
-          elsif argument.is_a? Array
+          elsif argument_info.is_a? Array
             argument_info.map do |arg|
               if arg[:direction] == "out"
                 return_ruby_from_soap(action_name, response, arg)
