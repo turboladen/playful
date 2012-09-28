@@ -141,8 +141,9 @@ module UPnP
             hash = Nori.parse(ex.http.body)
             msg = "Received bad HTTP response code (#{ex.http.code})\n" +
               "#{ex.http.headers}\n#{ex.http.body}\n#{hash}"
+
             if ControlPoint.raise_on_remote_error
-              raise Error, msg
+              raise ActionError, msg
             else
               log "<#{self.class}> #{msg}"
               return hash
