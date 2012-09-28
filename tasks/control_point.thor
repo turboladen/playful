@@ -21,7 +21,7 @@ module Upnp
                 device.services.each do |service|
                   ws.send "-- #{service.service_type}"
 
-                  service.actions.each do |action|
+                  service.action_list.each do |action|
                     ws.send "---- #{action[:name]}"
                     ws.send "---- #{action[:argumentList]}"
                   end

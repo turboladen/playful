@@ -88,7 +88,7 @@ search duration: #{time_after - time_before}
       if first_device.has_services?
         pp first_device.services
         puts "First Service's ACTIONS"
-        pp first_device.services.first.actions
+        pp first_device.services.first.action_list
         pp first_device.services.first.methods
         pp first_device.services.first.singleton_methods
         #puts "Services state table"
@@ -103,7 +103,7 @@ search duration: #{time_after - time_before}
         puts "First Child Device's Service"
         pp first_device.devices.first.services.first
         puts "First Child Device's Service's ACTIONS"
-        pp first_device.devices.first.services.first.actions
+        pp first_device.devices.first.services.first.action_list
         pp first_device.devices.first.services.first.singleton_methods
         #puts "Services state table"
         #pp devices.first.services.first.service_state_table
@@ -114,7 +114,7 @@ search duration: #{time_after - time_before}
 
       #if devices.last.has_services?
       #  puts "Last Service's ACTIONS"
-      #  pp devices.first.services.last.actions
+      #  pp devices.first.services.last.action_list
       #  puts "Services state table"
       #  pp devices.first.services.last.service_state_table
       #  puts "protocol info: #{devices.first.services.last.GetProtocolInfo}"
