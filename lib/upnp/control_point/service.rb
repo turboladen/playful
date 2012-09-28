@@ -124,11 +124,9 @@ module UPnP
       #   <actionList><action><argumentList><argument> from the spec.
       def define_method_from_action(action_name, argument_info)
         define_singleton_method(action_name) do |*params|
-          st = @service_type
-
           begin
             response = @soap_client.request(:u, action_name, "xmlns:u" => @service_type) do
-              http.headers['SOAPACTION'] = "#{st}##{action_name}"
+              http.headers['SOAPACTION'] = "#{@service_type}##{action_name}"
 
               soap.body = params.inject({}) do |result, arg|
                 log "<#{self.class}> arg: #{arg}"
