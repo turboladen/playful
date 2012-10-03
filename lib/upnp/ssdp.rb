@@ -12,6 +12,25 @@ require_relative 'ssdp/notifier'
 require_relative 'ssdp/broadcast_searcher'
 
 module UPnP
+
+  # This is the main class for doing SSDP stuff.  You can have a look at child
+  # classes, but you'll probably want to just use these methods here.
+  #
+  # SSDP is "Simple Service Discovery Protocol", which lets you find and learn
+  # about UPnP devices on your network.  Of the six "steps" of UPnP (given in
+  # the UPnP spec--that's counting step 0), SSDP is what provides step 1, or the
+  # "discovery" step.
+  #
+  # Before you can do anything with any of the UPnP devices on your network, you
+  # need to +search+ your network to see what devices are available.  Once you've
+  # found what's available, you can then decide device(s) you'd like to control
+  # (that's where Control Points come in; take a look at UPnP::ControlPoint).
+  # After searching, you should then +listen+ to the activity on your network.
+  # New devices on your network may come online (via +ssdp:alive+) and devices
+  # that you care about may go offline (via +ssdp:byebye+), in which case you
+  # probably shouldn't try to talk to them anymore.
+  #
+  # @todo Add docs for UPnP::Device perspective.
   class SSDP
     extend LogSwitch
     include LogSwitch::Mixin
@@ -133,6 +152,8 @@ module UPnP
       responses.flatten
     end
 
+    # @todo This is for UPnP::Devices, which aren't implemented yet, and thus
+    #   this may not be working.
     def self.notify(notification_type, usn, ddf_url, valid_for_duration=1800)
       responses = []
       notification_type = notification_type.to_upnp_s unless notification_type.is_a? String
@@ -151,6 +172,8 @@ module UPnP
       responses
     end
 
+    # @todo This is for UPnP::Devices, which aren't implemented yet, and thus
+    #   this may not be working.
     def self.send_notification(notification_type, usn, ddf_url, valid_for_duration)
       EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Notifier, notification_type,
         usn, ddf_url, valid_for_duration)
@@ -158,7 +181,7 @@ module UPnP
 
     private
 
-    # Traps INT and TERM signals and stops the reactor.
+    # Traps INT, TERM, and HUP signals and stops the reactor.
     def self.trap_signals
       trap('INT') { EM.stop }
       trap('TERM') { EM.stop }
