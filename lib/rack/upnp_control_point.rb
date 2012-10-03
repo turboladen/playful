@@ -27,9 +27,8 @@ module Rack
   class UPnPControlPoint
 
     # @param [Rack::Builder] app Your Rack application.
-    # @param [Symbol,String] search_type The device(s) you want to search for
-    #   and control.  See docs for UPnP::SSDP::Searcher.
     # @param [Hash] options Options to pass to the UPnP::SSDP::Searcher.
+    # @see UPnP::SSDP::Searcher
     def initialize(app, options={})
       @app = app
       @devices = []
