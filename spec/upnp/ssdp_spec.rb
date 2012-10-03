@@ -2,15 +2,6 @@ require 'spec_helper'
 require 'upnp/ssdp'
 
 describe UPnP::SSDP do
-=begin
-  around(:each) do |example|
-    EM.run do
-      example.run
-      EM.stop
-    end
-  end
-=end
-
   subject { UPnP::SSDP }
 
   describe '.listen' do
