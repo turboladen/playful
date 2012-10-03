@@ -100,11 +100,13 @@ module UPnP
     #   a M-SEARCH over 255.255.255.255.  This is *NOT* part of the UPnP spec;
     #   it's merely a hack for working with some types of devices that don't
     #   properly implement the UPnP spec.
-    # @return [Array<Hash>,UPnP::SSDP::Searcher] Returns a Hash that represents the headers from the
-    #   M-SEARCH response.  Each one of these can be passed in to UPnP::ControlPoint::Device.new
-    #   to download the device's description file, parse it, and interact with
-    #   the device's devices and/or services.  If the reactor is already running
-    #   this will return a Proc that can be used as a callback.
+    # @return [Array<Hash>,UPnP::SSDP::Searcher] Returns a Hash that represents
+    #   the headers from the M-SEARCH response.  Each one of these can be passed
+    #   in to UPnP::ControlPoint::Device.new to download the device's
+    #   description file, parse it, and interact with the device's devices
+    #   and/or services.  If the reactor is already running this will return a
+    #   a UPnP::SSDP::Searcher which will make its accessors available so you
+    #   can get responses in real time.
     def self.search(search_target=:all, options={})
       response_wait_time = options[:response_wait_time] || 5
       ttl = options[:ttl] || TTL
