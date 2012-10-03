@@ -115,7 +115,7 @@ module UPnP
         end
       end
 
-      responses
+      responses.flatten
     end
 
     def self.notify(notification_type, usn, ddf_url, valid_for_duration=1800)
@@ -140,6 +140,8 @@ module UPnP
       EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Notifier, notification_type,
         usn, ddf_url, valid_for_duration)
     end
+
+    private
 
     # Traps INT and TERM signals and stops the reactor.
     def self.trap_signals

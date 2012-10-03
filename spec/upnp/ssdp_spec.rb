@@ -1,6 +1,18 @@
 require 'spec_helper'
+require 'upnp/ssdp'
 
-describe SSDP do
+describe UPnP::SSDP do
+=begin
+  around(:each) do |example|
+    EM.run do
+      example.run
+      EM.stop
+    end
+  end
+=end
+
+  subject { UPnP::SSDP }
+
   #describe '.listen' do
   #  it 'starts the EM reactor' do
   #    begin
@@ -14,67 +26,86 @@ describe SSDP do
   #end
 
   describe '.search' do
-    describe "when to call #to_upnp_s" do
-      before { EM.stub(:run) }
+    let(:multicast_searcher) do
+      searcher = double "UPnP::SSDP::Searcher"
+      searcher.stub_chain(:discovery_responses, :subscribe).and_yield(%w[one two])
 
-      it "tries when it is not a String" do
-        search_target = []
-        search_target.should_receive(:to_upnp_s)
-        UPnP::SSDP.search(search_target)
-      end
+      searcher
+    end
 
-      it "does not try when it is a String" do
-        search_target = "a string"
-        search_target.should_not_receive(:to_upnp_s)
-        UPnP::SSDP.search(search_target)
-      end
+    let(:broadcast_searcher) do
+      searcher = double "UPnP::SSDP::BroadcastSearcher"
+      searcher.stub_chain(:discovery_responses, :subscribe).and_yield(%w[three four])
+
+      searcher
     end
 
     before do
       EM.stub(:run).and_yield
       EM.stub(:add_timer)
-      searcher = double "Searcher"
-      searcher.stub(:discovery_responses).and_return(["one", "two"])
-      EM.stub(:open_datagram_socket).and_return searcher
+      EM.stub(:open_datagram_socket).and_return multicast_searcher
     end
 
-    it "opens a UDP socket on '0.0.0.0', port 0" do
-      EM.stub(:add_shutdown_hook)
-      EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, UPnP::SSDP::Searcher,
-        "ssdp:all", 3, 4)
-      UPnP::SSDP.search
+    context "when search_target is not a String" do
+      it "calls #to_upnp_s on search_target" do
+        search_target = double("search_target")
+        search_target.should_receive(:to_upnp_s)
+        subject.search(search_target)
+      end
     end
 
-    it "returns an Array of responses" do
-      EM.stub(:add_shutdown_hook).and_yield
-      UPnP::SSDP.search.should == ["one", "two", "one", "two"]
+    context "when search_target is a String" do
+      it "does not call #to_upnp_s on search_target" do
+        search_target = "I'm a string"
+        search_target.should_not_receive(:to_upnp_s)
+        subject.search(search_target)
+      end
     end
 
-    describe '.trap_signals' do
-      it "stops the reactor on INT" do
-        EM.should_receive(:stop)
-        UPnP::SSDP.trap_signals
+    context "reactor is already running" do
+      it "returns a UPnP::SSDP::Searcher" do
+        EM.stub(:reactor_running?).and_return true
+        subject.search.should == multicast_searcher
+      end
+    end
 
-        fork do
-          UPnP::SSDP.search
+    context "reactor is not already running" do
+      context "options hash includes do_broadcast_search" do
+        before do
+          EM.stub(:open_datagram_socket).
+            and_return(multicast_searcher, broadcast_searcher)
         end
 
-        Process.kill("INT", $$)
+        it "returns an Array of responses" do
+          EM.stub(:add_shutdown_hook).and_yield
+          subject.search(:all, do_broadcast_search: true).should == %w[one two three four]
+        end
+
+        it "opens 2 UDP sockets on '0.0.0.0', port 0" do
+          EM.stub(:add_shutdown_hook)
+          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, UPnP::SSDP::Searcher,
+            "ssdp:all", {})
+          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, UPnP::SSDP::BroadcastSearcher,
+            "ssdp:all", 5, 4)
+          subject.search(:all, do_broadcast_search: true)
+        end
       end
 
-      it "stops the reactor on TERM" do
-        EM.should_receive(:stop)
-        UPnP::SSDP.trap_signals
-
-        fork do
-          UPnP::SSDP.search
+      context "options hash does not include do_broadcast_search" do
+        it "returns an Array of responses" do
+          EM.stub(:add_shutdown_hook).and_yield
+          subject.search.should == %w[one two]
         end
 
-        Process.kill("TERM", $$)
+        it "opens a UDP socket on '0.0.0.0', port 0" do
+          EM.stub(:add_shutdown_hook)
+          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, UPnP::SSDP::Searcher,
+            "ssdp:all", {})
+          subject.search
+        end
       end
     end
   end
-
 
 =begin
     context "by default" do
