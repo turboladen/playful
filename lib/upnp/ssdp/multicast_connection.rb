@@ -35,17 +35,6 @@ module UPnP
         setup_multicast_socket
       end
 
-      # Gets the IP and port from the peer that just sent data.
-      #
-      # @return [Array<String,Fixnum>] The IP and port.
-      def peer_info
-        peer_bytes = get_peername[2, 6].unpack("nC4")
-        port = peer_bytes.first.to_i
-        ip = peer_bytes[1, 4].join(".")
-
-        [ip, port]
-      end
-
       # This is the callback called by EventMachine when it receives data on the
       # socket that's been opened for this connection.  In this case, the method
       # parses the SSDP responses/notifications into Hashes and adds them to the
@@ -71,6 +60,17 @@ module UPnP
         else
           @discovery_responses << parsed_response
         end
+      end
+
+      # Gets the IP and port from the peer that just sent data.
+      #
+      # @return [Array<String,Fixnum>] The IP and port.
+      def peer_info
+        peer_bytes = get_peername[2, 6].unpack("nC4")
+        port = peer_bytes.first.to_i
+        ip = peer_bytes[1, 4].join(".")
+
+        [ip, port]
       end
 
       # Converts the headers to a set of key-value pairs.
