@@ -7,8 +7,8 @@ describe UPnP::SSDP do
   describe '.listen' do
     let(:listener) do
       searcher = double "UPnP::SSDP::Listener"
-      searcher.stub_chain(:available_responses, :pop).and_yield(%w[one two])
-      searcher.stub_chain(:byebye_responses, :pop).and_yield(%w[three four])
+      searcher.stub_chain(:alive_notifications, :pop).and_yield(%w[one two])
+      searcher.stub_chain(:byebye_notifications, :pop).and_yield(%w[three four])
 
       searcher
     end
@@ -30,8 +30,8 @@ describe UPnP::SSDP do
       it "returns a Hash of available and byebye responses" do
         EM.stub(:add_shutdown_hook).and_yield
         subject.listen.should == {
-          available_responses: %w[one two],
-          byebye_responses: %w[three four]
+          alive_notifications: %w[one two],
+          byebye_notifications: %w[three four]
         }
       end
 

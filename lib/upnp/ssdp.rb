@@ -67,15 +67,15 @@ module UPnP
 
           alive_getter = Proc.new do |notification|
             alive_notifications << notification
-            EM.next_tick { l.available_responses.pop(&alive_getter) }
+            EM.next_tick { l.alive_notifications.pop(&alive_getter) }
           end
-          l.available_responses.pop(&alive_getter)
+          l.alive_notifications.pop(&alive_getter)
 
           byebye_getter = Proc.new do |notification|
             byebye_notifications << notification
-            EM.next_tick { l.byebye_responses.pop(&byebye_getter) }
+            EM.next_tick { l.byebye_notifications.pop(&byebye_getter) }
           end
-          l.byebye_responses.pop(&byebye_getter)
+          l.byebye_notifications.pop(&byebye_getter)
 
           trap_signals
         end

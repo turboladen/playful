@@ -85,7 +85,7 @@ module UPnP
       EM.defer do
         listener = SSDP.listen(ttl)
 
-        listener.available_responses.subscribe do |advertisement|
+        listener.alive_notifications.subscribe do |advertisement|
           log "<#{self.class}> Got alive #{advertisement}"
 
           if @devices.any? { |d| d.usn == advertisement[:usn] }
@@ -96,7 +96,7 @@ module UPnP
           end
         end
 
-        listener.byebye_responses.subscribe do |advertisement|
+        listener.byebye_notifications.subscribe do |advertisement|
           log "<#{self.class}> Got bye-bye from #{advertisement}"
 
           @devices.reject! do |device|

@@ -17,11 +17,11 @@ module UPnP
 
       # @return [EventMachine::Channel] Provides subscribers with notifications
       #   from devices that have come online (sent +ssdp:alive+ notifications).
-      attr_reader :available_responses
+      attr_reader :alive_notifications
 
       # @return [EventMachine::Channel] Provides subscribers with notifications
       #   from devices that have gone offline (sent +ssd:byebye+ notifications).
-      attr_reader :byebye_responses
+      attr_reader :byebye_notifications
 
       # @param [Fixnum] ttl The TTL value to use when opening the UDP socket
       #   required for SSDP actions.
@@ -29,8 +29,8 @@ module UPnP
         @ttl = ttl
 
         @discovery_responses = EM::Channel.new
-        @available_responses = EM::Channel.new
-        @byebye_responses = EM::Channel.new
+        @alive_notifications = EM::Channel.new
+        @byebye_notifications = EM::Channel.new
 
         setup_multicast_socket
       end
@@ -50,9 +50,9 @@ module UPnP
 
         if parsed_response.has_key? :nts
           if parsed_response[:nts] == "ssdp:alive"
-            @available_responses << parsed_response
+            @alive_notifications << parsed_response
           elsif parsed_response[:nts] == "ssdp:byebye"
-            @byebye_responses << parsed_response
+            @byebye_notifications << parsed_response
           else
             raise "Unknown NTS value: #{parsed_response[:nts]}"
           end

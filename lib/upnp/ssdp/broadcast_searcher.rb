@@ -21,8 +21,8 @@ module UPnP
       def initialize(search_target, response_wait_time, ttl=TTL)
         @ttl = ttl
         @discovery_responses = []
-        @available_responses = []
-        @byebye_responses = []
+        @alive_notifications = []
+        @byebye_notifications = []
 
         setup_broadcast_socket
 
@@ -64,9 +64,9 @@ ST: #{search_target}\r
 
         if parsed_response.has_key? :nts
           if parsed_response[:nts] == "ssdp:alive"
-            @available_responses << parsed_response
+            @alive_notifications << parsed_response
           elsif parsed_response[:nts] == "ssdp:bye-bye"
-            @byebye_responses << parsed_response
+            @byebye_notifications << parsed_response
           else
             raise "Unknown NTS value: #{parsed_response[:nts]}"
           end
