@@ -79,8 +79,8 @@ more on the options here.
 
 If you do the search inside of an EventMachine reactor, as the
 UPnP::SSDP::Searcher receives and parses responses, it adds them to the accessor
-#discovery_responses, which is an EventMachine::Queue.  This lets you pop off
-the responses and do what you want with them (most likely you'll want to create
+#discovery_responses, which is an EventMachine::Channel.  This lets you subscribe
+to the resposnes and do what you want with them (most likely you'll want to create
 UPnP::ControlPoint::Device objects so you can control your device) as you
 receive them.
 
@@ -110,8 +110,8 @@ receive them.
       p device.services.first.GetSystemUpdateID     # { :Id => 1 }
     end
 
-    # Note that you don't have to check for items in the Queue or for when the
-    # Queue is empty: EventMachine will pop objects off the Queue as soon as
+    # Note that you don't have to check for items in the Channel or for when the
+    # Channel is empty: EventMachine will pop objects off the Channel as soon as
     # they're put there and stop when there are none left.
     searcher.discovery_responses.pop do |notification|
 
