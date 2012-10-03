@@ -30,6 +30,8 @@ module UPnP
       # @return [Hash] The whole parsed description... just in case.
       attr_reader :description
 
+      attr_reader :expiration
+
       #vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
       # Determined by device description file.
       #
@@ -139,6 +141,11 @@ module UPnP
           @ext = ssdp_notification.has_key?(:ext) ? true : false
           @usn = ssdp_notification[:usn]
           @date = ssdp_notification[:date] || ''
+          @expiration = if @date.empty?
+            Time.now + @cache_control
+          else
+            @date + @cache_control
+          end
 
           if @location
             get_description(@location, description_getter)
@@ -202,6 +209,12 @@ module UPnP
           tmp_uri = URI(@location)
           "#{tmp_uri.scheme}://#{tmp_uri.host}:#{tmp_uri.port}/"
         end
+      end
+
+      # True if the device hasn't received an alive notification since it last
+      # told its max age.
+      def expired?
+        Time.now > @expiration if @expiration
       end
 
       def has_devices?
