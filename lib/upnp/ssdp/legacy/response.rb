@@ -1,5 +1,6 @@
 require_relative 'advertisement'
 
+# @private
 class SSDP
   
   # Holds information about a M-SEARCH response

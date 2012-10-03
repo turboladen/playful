@@ -1,5 +1,7 @@
 # Abstract class for SSDP advertisements
+# @private
 class SSDP
+# @private
   class Advertisement
 
     # Expiration time of this advertisement.rb
