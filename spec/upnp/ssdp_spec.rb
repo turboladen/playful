@@ -13,17 +13,45 @@ describe UPnP::SSDP do
 
   subject { UPnP::SSDP }
 
-  #describe '.listen' do
-  #  it 'starts the EM reactor' do
-  #    begin
-  #      Thread.new { SSDP.listen }
-  #      sleep 1
-  #      EM.reactor_running?.should be_true
-  #    ensure
-  #      EM.stop if EM.reactor_running?
-  #    end
-  #  end
-  #end
+  describe '.listen' do
+    let(:listener) do
+      searcher = double "UPnP::SSDP::Listener"
+      searcher.stub_chain(:available_responses, :pop).and_yield(%w[one two])
+      searcher.stub_chain(:byebye_responses, :pop).and_yield(%w[three four])
+
+      searcher
+    end
+
+    before do
+      EM.stub(:run).and_yield
+      EM.stub(:add_timer)
+      EM.stub(:open_datagram_socket).and_return listener
+    end
+
+    context "reactor is already running" do
+      it "returns a UPnP::SSDP::Listener" do
+        EM.stub(:reactor_running?).and_return true
+        subject.listen.should == listener
+      end
+    end
+
+    context "reactor is not already running" do
+      it "returns a Hash of available and byebye responses" do
+        EM.stub(:add_shutdown_hook).and_yield
+        subject.listen.should == {
+          available_responses: %w[one two],
+          byebye_responses: %w[three four]
+        }
+      end
+
+      it "opens a UDP socket on '239.255.255.250', port 1900" do
+        EM.stub(:add_shutdown_hook)
+        EM.should_receive(:open_datagram_socket).with('239.255.255.250', 1900,
+          UPnP::SSDP::Listener, 4)
+        subject.listen
+      end
+    end
+  end
 
   describe '.search' do
     let(:multicast_searcher) do

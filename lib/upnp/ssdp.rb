@@ -19,9 +19,19 @@ module UPnP
 
     self.logger.datetime_format = "%Y-%m-%d %H:%M:%S "
 
-    # Simply open a multicast UDP socket and listen for data.
+    # Opens a multicast UDP socket on 239.255.255.250:1900 and listens for
+    # alive and byebye notifications from devices.
+    #
+    # @param [Fixnum] ttl The TTL to use on the UDP socket.
+    # @return [Hash<Array>,UPnP::SSDP::Listener] If the EventMachine reactor is
+    #   _not_ running, it returns two key/value pairs--one for
+    #   alive_notifications, one for byebye_notifications.  If the reactor _is_
+    #   running, it returns a UPnP::SSDP::Listener so that that object can be
+    #   used however desired.  The latter method is used in UPnP::ControlPoints
+    #   so that an object of that type can keep track of devices it cares about.
     def self.listen(ttl=TTL)
-      responses = []
+      alive_notifications = Set.new
+      byebye_notifications = Set.new
 
       listener = proc do
         l = EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT, UPnP::SSDP::Listener, ttl)
@@ -37,13 +47,13 @@ module UPnP
           l = listener.call
 
           alive_getter = Proc.new do |notification|
-            responses << notification
+            alive_notifications << notification
             EM.next_tick { l.available_responses.pop(&alive_getter) }
           end
           l.available_responses.pop(&alive_getter)
 
           byebye_getter = Proc.new do |notification|
-            responses << notification
+            byebye_notifications << notification
             EM.next_tick { l.byebye_responses.pop(&byebye_getter) }
           end
           l.byebye_responses.pop(&byebye_getter)
@@ -51,6 +61,11 @@ module UPnP
           trap_signals
         end
       end
+
+      {
+        alive_notifications: alive_notifications.to_a.flatten,
+        byebye_notifications: byebye_notifications.to_a.flatten
+      }
     end
 
     # Opens a UDP socket on 0.0.0.0, on an ephemeral port, has UPnP::SSDP::Searcher
