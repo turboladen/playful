@@ -132,32 +132,7 @@ module UPnP
         end
 
         if @device_info.has_key? :ssdp_notification
-          log "<#{self.class}> Creating device from SSDP Notification info."
-          @ssdp_notification = @device_info[:ssdp_notification]
-
-          @cache_control = @ssdp_notification[:cache_control]
-          @location = ssdp_notification[:location]
-          @server = ssdp_notification[:server]
-          @st = ssdp_notification[:st] || ssdp_notification[:nt]
-          @ext = ssdp_notification.has_key?(:ext) ? true : false
-          @usn = ssdp_notification[:usn]
-          @date = ssdp_notification[:date] || ''
-          @expiration = if @date.empty?
-            Time.now + @cache_control.match(/\d+/)[0].to_i
-          else
-            Time.at(Time.parse(@date).to_i + @cache_control.match(/\d+/)[0].to_i)
-          end
-
-          if @location
-            get_description(@location, description_getter)
-          else
-            message = "M-SEARCH response is either missing the Location header or has an empty value."
-            message << "Response: #{@ssdp_notification}"
-
-            if ControlPoint.raise_on_remote_error
-              raise ControlPoint::Error, message
-            end
-          end
+          extract_from_ssdp_notification(description_getter)
         elsif @device_info.has_key? :device_description
           log "<#{self.class}> Creating device from device description file info."
           description_getter.set_deferred_success @device_info[:device_description]
@@ -199,6 +174,35 @@ module UPnP
         end
 
         tickloop.on_stop { set_deferred_status :succeeded, self }
+      end
+
+      def extract_from_ssdp_notification(callback)
+        log "<#{self.class}> Creating device from SSDP Notification info."
+        @ssdp_notification = @device_info[:ssdp_notification]
+
+        @cache_control = @ssdp_notification[:cache_control]
+        @location = ssdp_notification[:location]
+        @server = ssdp_notification[:server]
+        @st = ssdp_notification[:st] || ssdp_notification[:nt]
+        @ext = ssdp_notification.has_key?(:ext) ? true : false
+        @usn = ssdp_notification[:usn]
+        @date = ssdp_notification[:date] || ''
+        @expiration = if @date.empty?
+          Time.now + @cache_control.match(/\d+/)[0].to_i
+        else
+          Time.at(Time.parse(@date).to_i + @cache_control.match(/\d+/)[0].to_i)
+        end
+
+        if @location
+          get_description(@location, callback)
+        else
+          message = "M-SEARCH response is either missing the Location header or has an empty value."
+          message << "Response: #{@ssdp_notification}"
+
+          if ControlPoint.raise_on_remote_error
+            raise ControlPoint::Error, message
+          end
+        end
       end
 
       def extract_url_base
