@@ -142,9 +142,9 @@ module UPnP
           @usn = ssdp_notification[:usn]
           @date = ssdp_notification[:date] || ''
           @expiration = if @date.empty?
-            Time.now + @cache_control
+            Time.now + @cache_control.match(/\d+/)[0].to_i
           else
-            @date + @cache_control
+            Time.at(Time.parse(@date).to_i + @cache_control.match(/\d+/)[0].to_i)
           end
 
           if @location
