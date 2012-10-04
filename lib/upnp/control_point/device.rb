@@ -3,6 +3,7 @@ require_relative 'service'
 require_relative 'error'
 require 'uri'
 require 'eventmachine'
+require 'time'
 
 
 module UPnP
