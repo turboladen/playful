@@ -3,8 +3,8 @@ require_relative 'base'
 require_relative 'error'
 
 
-Savon.configure do |c|
-  c.env_namespace = :s
+Savon.configure do |config|
+  #config.log = true
 end
 
 begin
@@ -121,6 +121,7 @@ module UPnP
         @action_list = []
         @xmlns = ""
         extract_service_list_info(device_base_url)
+        configure_savon
       end
 
       # Fetches the service description file, parses it, extracts attributes
@@ -159,7 +160,6 @@ module UPnP
           if @description[:scpd][:actionList]
             log "<#{self.class}> Defining methods from action_list using [#{description_getter.object_id}]"
             define_methods_from_actions(@description[:scpd][:actionList][:action])
-            configure_savon
           end
 
           set_deferred_status(:succeeded, self)
@@ -221,6 +221,8 @@ module UPnP
       # @param [Hash,Array] action_list The value from <scpd><actionList><action>
       #   from the service description.
       def define_methods_from_actions(action_list)
+        log "<#{self.class}> Defining methods; action list: #{action_list}"
+
         if action_list.is_a? Hash
           @action_list << action_list
           define_method_from_action(action_list[:name].to_sym,
@@ -250,16 +252,22 @@ module UPnP
       # @param [Hash,Array] argument_info The extracted values from
       #   <actionList><action><argumentList><argument> from the spec.
       def define_method_from_action(action_name, argument_info)
+        # Do this here because, for some reason, @service_type is out of scope
+        # in the #request block below.
+        st = @service_type
+
         define_singleton_method(action_name) do |*params|
           begin
-            response = @soap_client.request(:u, action_name, "xmlns:u" => @service_type) do
-              http.headers['SOAPACTION'] = "#{@service_type}##{action_name}"
+            response = @soap_client.request(:u, action_name.to_s, "xmlns:u" => @service_type) do
+              http.headers['SOAPACTION'] = "#{st}##{action_name}"
+              soap.namespaces["s:encodingStyle"] = "http://schemas.xmlsoap.org/soap/encoding/"
 
               soap.body = params.inject({}) do |result, arg|
                 result[:argument_name] = arg
                 result
               end
             end
+
           rescue Savon::SOAP::Fault => ex
             hash = Nori.parse(ex.http.body)
             msg = <<-MSG
@@ -331,7 +339,6 @@ HTTP body as Hash: #{hash}
               hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_i
           }
         elsif string_types.include? state_variable[:dataType]
-          return {} if soap_response.hash.empty?
           {
             out_arg_name.to_sym => soap_response.
               hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_s
@@ -351,6 +358,8 @@ HTTP body as Hash: #{hash}
           wsdl.endpoint = @control_url
           wsdl.namespace = @service_type
         end
+
+        @soap_client.config.env_namespace = :s
       end
     end
   end
