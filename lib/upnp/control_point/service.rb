@@ -353,6 +353,14 @@ HTTP body as Hash: #{hash}
             out_arg_name.to_sym => soap_response.
               hash[:Envelope][:Body]["#{action_name}Response".to_sym][out_arg_name.to_sym].to_f
           }
+        elsif true_types.include? state_variable[:dataType]
+          {
+            out_arg_name.to_sym => true
+          }
+        elsif false_types.include? state_variable[:dataType]
+          {
+            out_arg_name.to_sym => false
+          }
         else
           log "<#{self.class}> Got SOAP response that I dunno what to do with: #{soap_response.hash}"
         end
