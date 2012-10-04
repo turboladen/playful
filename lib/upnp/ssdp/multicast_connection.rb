@@ -11,18 +11,6 @@ module UPnP
     class MulticastConnection < EventMachine::Connection
       include UPnP::SSDP::NetworkConstants
 
-      # @return [EventMachine::Channel] Provides subscribers with responses from
-      #   their search request.
-      attr_reader :discovery_responses
-
-      # @return [EventMachine::Channel] Provides subscribers with notifications
-      #   from devices that have come online (sent +ssdp:alive+ notifications).
-      attr_reader :alive_notifications
-
-      # @return [EventMachine::Channel] Provides subscribers with notifications
-      #   from devices that have gone offline (sent +ssd:byebye+ notifications).
-      attr_reader :byebye_notifications
-
       # @param [Fixnum] ttl The TTL value to use when opening the UDP socket
       #   required for SSDP actions.
       def initialize ttl=TTL
@@ -33,33 +21,6 @@ module UPnP
         @byebye_notifications = EM::Channel.new
 
         setup_multicast_socket
-      end
-
-      # This is the callback called by EventMachine when it receives data on the
-      # socket that's been opened for this connection.  In this case, the method
-      # parses the SSDP responses/notifications into Hashes and adds them to the
-      # appropriate EventMachine::Channel (provided as accessor methods).  This
-      # effectively means that in each Channel, you get a Hash that represents
-      # the headers for each response/notification that comes in on the socket.
-      #
-      # @param [String] response The data received on this connection's socket.
-      def receive_data(response)
-        ip, port = peer_info
-        SSDP.log "<#{self.class}> Response from #{ip}:#{port}:\n#{response}\n"
-        parsed_response = parse(response)
-
-        if parsed_response.has_key? :nts
-          if parsed_response[:nts] == "ssdp:alive"
-            @alive_notifications << parsed_response
-          elsif parsed_response[:nts] == "ssdp:byebye"
-            @byebye_notifications << parsed_response
-          else
-            raise "Unknown NTS value: #{parsed_response[:nts]}"
-          end
-        elsif parsed_response[:man] && parsed_response[:man] =~ /ssdp:discover/
-        else
-          @discovery_responses << parsed_response
-        end
       end
 
       # Gets the IP and port from the peer that just sent data.

@@ -2,23 +2,22 @@ require 'spec_helper'
 require 'upnp/ssdp/multicast_connection'
 
 describe UPnP::SSDP::MulticastConnection do
-  def prepped_connection
-    UPnP::SSDP::MulticastConnection.any_instance.stub(:set_sock_opt)
-    UPnP::SSDP::MulticastConnection.new(1)
+  around(:each) do |example|
+    EM.run do
+      example.run
+      EM.stop
+    end
   end
 
-  subject { prepped_connection }
+  subject { UPnP::SSDP::MulticastConnection.new(1) }
 
-  before { UPnP::SSDP.log = false }
-
-  it "lets you read its responses" do
-    responses = double 'responses'
-    subject.instance_variable_set(:@discovery_responses, responses)
-    subject.discovery_responses.should == responses
+  before do
+    UPnP::SSDP.log = false
   end
 
   describe "#peer_info" do
     before do
+      UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
       subject.stub_chain(:get_peername, :[], :unpack).and_return(["1234",
         "1", "2", "3", "4"])
     end
@@ -36,21 +35,11 @@ describe UPnP::SSDP::MulticastConnection do
     end
   end
 
-  describe "#receive_data" do
-    it "takes a response and adds it to the list of responses" do
-      response = double 'response'
-      parsed_response = double 'parsed response'
-      parsed_response.should_receive(:has_key?).with(:nts).and_return false
-      subject.should_receive(:parse).with(response).exactly(1).times.
-        and_return(parsed_response)
-      subject.should_receive(:peer_info).at_least(:once).
-        and_return(['0.0.0.0', 4567])
-      subject.receive_data(response)
-      subject.discovery_responses.should == [parsed_response]
-    end
-  end
-
   describe "#parse" do
+    before do
+      UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+    end
+
     it "turns headers into Hash keys" do
       result = subject.parse ROOT_DEVICE1
       result.should have_key :cache_control
@@ -91,6 +80,13 @@ describe UPnP::SSDP::MulticastConnection do
   end
 
   describe "#setup_multicast_socket" do
+    before do
+      UPnP::SSDP::MulticastConnection.any_instance.stub(:set_membership)
+      UPnP::SSDP::MulticastConnection.any_instance.stub(:switch_multicast_loop)
+      UPnP::SSDP::MulticastConnection.any_instance.stub(:set_multicast_ttl)
+      UPnP::SSDP::MulticastConnection.any_instance.stub(:set_ttl)
+    end
+
     it "adds 0.0.0.0 and 239.255.255.250 to the membership group" do
       subject.should_receive(:set_membership).with(
         IPAddr.new('239.255.255.250').hton + IPAddr.new('0.0.0.0').hton
@@ -120,6 +116,10 @@ describe UPnP::SSDP::MulticastConnection do
   end
 
   describe "#switch_multicast_loop" do
+    before do
+      UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+    end
+
     it "passes '\\001' to the socket option call when param == :on" do
       subject.should_receive(:set_sock_opt).with(
         0, 11, "\001"

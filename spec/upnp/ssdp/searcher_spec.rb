@@ -2,16 +2,27 @@ require 'spec_helper'
 require 'upnp/ssdp/searcher'
 
 describe UPnP::SSDP::Searcher do
-  def prepped_searcher
-    UPnP::SSDP::Searcher.any_instance.stub(:set_sock_opt)
-    UPnP::SSDP::Searcher.any_instance.should_receive(:setup_multicast_socket)
-    UPnP::SSDP::Searcher.any_instance.stub(:send_datagram).and_return(1)
-    UPnP::SSDP::Searcher.new(1, "ssdp:all", 5, 4)
+  around(:each) do |example|
+    EM.run do
+      example.run
+      EM.stop
+    end
   end
 
-  subject { prepped_searcher }
+  before do
+    UPnP::SSDP.log = false
+    UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+  end
 
-  before { UPnP::SSDP.log = false }
+  subject do
+    UPnP::SSDP::Searcher.new(1, "ssdp:all", {})
+  end
+
+  it "lets you read its responses" do
+    responses = double 'responses'
+    subject.instance_variable_set(:@discovery_responses, responses)
+    subject.discovery_responses.should == responses
+  end
 
   describe "#initialize" do
     it "does an #m_search" do
@@ -28,16 +39,37 @@ ST: ssdp:all\r
     end
   end
 
+  describe "#receive_data" do
+    let(:parsed_response) do
+      parsed_response = double 'parsed response'
+      parsed_response.should_receive(:has_key?).with(:nts).and_return false
+      parsed_response.should_receive(:[]).and_return false
+
+      parsed_response
+    end
+
+    it "takes a response and adds it to the list of responses" do
+      response = double 'response'
+      subject.stub(:peer_info).and_return(['0.0.0.0', 4567])
+
+      subject.should_receive(:parse).with(response).exactly(1).times.
+        and_return(parsed_response)
+      subject.instance_variable_get(:@discovery_responses).should_receive(:<<).
+        with(parsed_response)
+
+      subject.receive_data(response)
+    end
+  end
+
   describe "#post_init" do
     before { UPnP::SSDP::Searcher.any_instance.stub(:m_search).and_return("hi") }
 
     it "sends an M-SEARCH as a datagram over 239.255.255.250:1900" do
-      subject.should_receive(:send_datagram).with("hi", '239.255.255.250', 1900)
-      subject.post_init
-    end
-
-    it "logs the M-SEARCH that it sent" do
-      UPnP::SSDP.should_receive(:log).with("Sent datagram search:\nhi").at_least(:once)
+      m_search_count_times = subject.instance_variable_get(:@m_search_count)
+      subject.should_receive(:send_datagram).
+        with("hi", '239.255.255.250', 1900).
+        exactly(m_search_count_times).times.
+        and_return 0
       subject.post_init
     end
   end
