@@ -157,7 +157,7 @@ module UPnP
           extract_service_state_table
 
           if @description[:scpd][:actionList]
-            log "<#{self.class}> Defining methods from action_list [#{description_getter.object_id}]"
+            log "<#{self.class}> Defining methods from action_list using [#{description_getter.object_id}]"
             define_methods_from_actions(@description[:scpd][:actionList][:action])
             configure_savon
           end
@@ -235,6 +235,8 @@ module UPnP
             @action_list << action
             define_method_from_action(action[:name].to_sym, action[:argumentList][:argument])
           end
+        else
+          log "<#{self.class}> Got actionList that's not an Array or Hash."
         end
       end
 
@@ -286,6 +288,8 @@ HTTP body as Hash: #{hash}
             log "<#{self.class}> No args with direction 'out'"
           end
         end
+
+        log "<#{self.class}> Defined method: #{action_name}"
       end
 
       # Uses the serviceStateTable to look up the output from the SOAP response
