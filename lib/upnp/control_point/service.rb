@@ -99,7 +99,7 @@ module UPnP
       # @return [String]
       attr_reader :spec_version
 
-      # @return [Hash<String,Array<String>>]
+      # @return [Array<Hash>]
       attr_reader :action_list
 
       # Probably don't need to keep this long-term; just adding for testing.
