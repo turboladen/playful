@@ -276,7 +276,7 @@ HTTP body as Hash: #{hash}
             return hash[:Envelope][:Body]
           end
 
-          if argument_info.is_a?(Hash) && argument_info[:direction] == "out"
+          return_value = if argument_info.is_a?(Hash) && argument_info[:direction] == "out"
             return_ruby_from_soap(action_name, response, argument_info)
           elsif argument_info.is_a? Array
             argument_info.map do |arg|
@@ -286,7 +286,10 @@ HTTP body as Hash: #{hash}
             end
           else
             log "<#{self.class}> No args with direction 'out'"
+            {}
           end
+
+          return_value
         end
 
         log "<#{self.class}> Defined method: #{action_name}"
