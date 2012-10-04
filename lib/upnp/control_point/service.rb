@@ -333,6 +333,11 @@ HTTP body as Hash: #{hash}
         true_types = %w[1 true yes]
         false_types = %w[0 false no]
 
+        if soap_response.success? && soap_response.to_xml.empty?
+          log "<#{self.class}> Got successful but empty soap response!"
+          return {}
+        end
+
         if int_types.include? state_variable[:dataType]
           {
             out_arg_name.to_sym => soap_response.
