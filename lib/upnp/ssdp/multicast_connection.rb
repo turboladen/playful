@@ -88,7 +88,7 @@ module UPnP
         end
 
         data.each_line do |line|
-          line =~ /(\w+):(.*)/
+          line =~ /(\S+):(.*)/
 
           unless $1.nil?
             key = $1
