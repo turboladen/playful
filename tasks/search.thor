@@ -86,16 +86,21 @@ search duration: #{time_after - time_before}
       puts "First device's service_list count: #{first_device.service_list.size}"
 
       if first_device.has_services?
-        pp first_device.service_list
         puts "First Service's ACTIONS"
         pp first_device.service_list.first.action_list
+
+        puts "First Service's ACTIONS as methods"
         pp first_device.service_list.first.singleton_methods
-        #puts "Services state table"
-        #pp devices.first.service_list.first.service_state_table
-        puts "id: #{devices.first.service_list.first.GetSystemUpdateID}"
+
+        if devices.first.service_list.first.respond_to? :GetCurrentConnectionIDs
+          puts "Current connection IDs: #{devices.first.service_list.first.GetCurrentConnectionIDs}"
+        end
+
+        if devices.first.service_list.first.respond_to? :GetSystemUpdateID
+          puts "System update id: #{devices.first.service_list.first.GetSystemUpdateID}"
+        end
       end
 
-      pp first_device
       if first_device.has_devices?
         pp first_device.devices
         pp first_device.devices.first.service_list
