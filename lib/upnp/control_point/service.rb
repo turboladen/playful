@@ -294,7 +294,7 @@ module UPnP
                 soap.body = params.symbolize_keys!
               end
             end
-          rescue Savon::SOAP::Fault => ex
+          rescue Savon::SOAP::Fault, Savon::HTTP::Error => ex
             hash = Nori.parse(ex.http.body)
             msg = <<-MSG
 SOAP request failure!
@@ -304,10 +304,14 @@ HTTP body: #{ex.http.body}
 HTTP body as Hash: #{hash}
             MSG
 
+            log "<#{self.class}> #{msg}"
             raise(ActionError, msg) if ControlPoint.raise_on_remote_error
 
-            log "<#{self.class}> #{msg}"
-            return hash[:Envelope][:Body]
+            if hash.empty?
+              return ex.http.body
+            else
+              return hash[:Envelope][:Body]
+            end
           end
 
           return_value = if argument_info.is_a?(Hash) && argument_info[:direction] == "out"
