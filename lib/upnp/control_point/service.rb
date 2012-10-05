@@ -1,6 +1,7 @@
 require 'savon'
 require_relative 'base'
 require_relative 'error'
+require_relative '../../core_ext/hash_patch'
 
 
 Savon.configure do |config|
@@ -242,10 +243,35 @@ module UPnP
         end
       end
 
-      # Defines a Ruby method from the SOAP action.  When called, the method
-      # will return a key/value pair defined by the "out" argument name and
-      # value.  The Ruby type of each value is determined from the
-      # serviceStateTable.
+      # Defines a Ruby method from the SOAP action.
+      #
+      # All resulting methods will either take no arguments or a single Hash as
+      # an argument, whatever the SOAP action describes as its "in" arguments.
+      # If the action describes "in" arguments, then you must provide a Hash
+      # where keys are argument names and values are the values for those
+      # arguments.
+      #
+      # For example, the GetCurrentConnectionInfo action from the
+      # "ConnectionManager:1" service describes an "in" argument named
+      # "ConnectionID" whose dataType is "i4".  To call this action via the
+      # Ruby method, it'd look like:
+      #
+      #   connection_manager.GetCurrentConnectionInfo({ "ConnectionID" => 42 })
+      #
+      # There is currently no type checking for these "in" arguments.
+      #
+      # Calling that Ruby method will, in turn, call the SOAP action by the same
+      # name, with the body set to:
+      #
+      #   <connectionID>42</connectionID>
+      #
+      # The UPnP device providing the service will reply with a SOAP
+      # response--either a fault or with good data--and that will get converted
+      # to a Hash. This Hash will contain key/value pairs defined by the "out"
+      # argument names and values.  Each value is converted to an associated
+      # Ruby type, determined from the serviceStateTable.  If no return data
+      # is relevant for the request you made, some devices may return an empty
+      # body.
       #
       # @param [Symbol] action_name The extracted value from <actionList>
       #   <action><name> from the spec.
@@ -256,18 +282,18 @@ module UPnP
         # in the #request block below.
         st = @service_type
 
-        define_singleton_method(action_name) do |*params|
+        define_singleton_method(action_name) do |params|
           begin
             response = @soap_client.request(:u, action_name.to_s, "xmlns:u" => @service_type) do
               http.headers['SOAPACTION'] = "#{st}##{action_name}"
               soap.namespaces["s:encodingStyle"] = "http://schemas.xmlsoap.org/soap/encoding/"
 
-              soap.body = params.inject({}) do |result, arg|
-                result[:argument_name] = arg
-                result
+              unless params.nil?
+                raise ArgumentError,
+                  "Method only accepts Hashes" unless params.is_a? Hash
+                soap.body = params.symbolize_keys!
               end
             end
-
           rescue Savon::SOAP::Fault => ex
             hash = Nori.parse(ex.http.body)
             msg = <<-MSG
