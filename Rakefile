@@ -13,8 +13,8 @@ RSpec::Core::RakeTask.new(:rcov) do |spec|
   spec.rcov = true
 end
 
-task default: :install
-
 # Alias for rubygems-test
 task test: :spec
+
+task default: :test
 
