@@ -123,28 +123,28 @@ describe UPnP::SSDP::MulticastConnection do
 
     it "passes '\\001' to the socket option call when param == :on" do
       subject.should_receive(:set_sock_opt).with(
-        0, 11, "\001"
+        Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\001"
       )
       subject.switch_multicast_loop :on
     end
 
     it "passes '\\001' to the socket option call when param == '\\001'" do
       subject.should_receive(:set_sock_opt).with(
-        0, 11, "\001"
+       Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\001"
       )
       subject.switch_multicast_loop "\001"
     end
 
     it "passes '\\000' to the socket option call when param == :off" do
       subject.should_receive(:set_sock_opt).with(
-        0, 11, "\000"
+        Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000"
       )
       subject.switch_multicast_loop :off
     end
 
     it "passes '\\000' to the socket option call when param == '\\000'" do
       subject.should_receive(:set_sock_opt).with(
-        0, 11, "\000"
+        Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000"
       )
       subject.switch_multicast_loop "\000"
     end
