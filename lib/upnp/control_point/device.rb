@@ -251,6 +251,8 @@ module UPnP
 
         start_device_extraction
         start_service_extraction
+      end
+
       def extract_spec_version
         "#{@description[:root][:specVersion][:major]}.#{@description[:root][:specVersion][:minor]}"
       end
