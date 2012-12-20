@@ -3,6 +3,8 @@
 * {Homepage}[http://github.com/turboladen/upnp]
 * {UPnP Device Architecture Documentation}[http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf]
 
+{<img src="https://travis-ci.org/turboladen/upnp.png?branch=master" alt="Build Status" />}[https://travis-ci.org/turboladen/upnp]
+
 == Description
 
 Ruby's UPnP RubyGem was outdated in Ruby 1.9 when support for Soap4r was
