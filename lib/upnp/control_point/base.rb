@@ -1,6 +1,8 @@
 require 'nori'
 require 'em-http-request'
 require_relative 'error'
+require_relative '../../upnp'
+
 
 module UPnP
   class ControlPoint
@@ -19,17 +21,26 @@ module UPnP
         log "<#{self.class}> Getting description with getter ID #{description_getter.object_id} for: #{location}"
         http = EM::HttpRequest.new(location).get
 
-        http.errback {
-          log "<#{self.class}> Unable to retrieve DDF from #{location}", :error
-          log "<#{self.class}> Connection count: #{EM.connection_count}"
-          log "<#{self.class}> Request error: #{http.error}"
-          log "<#{self.class}> Response status: #{http.response_header.status}"
-          description_getter.set_deferred_status(:failed)
+        t = EM::Timer.new(30) do
+          http.fail(:timeout)
+        end
 
-          if ControlPoint.raise_on_remote_error
-            raise ControlPoint::Error, "Unable to retrieve DDF from #{location}"
+        http.errback do |error|
+          if error == :timeout
+            log "<#{self.class}> Timed out getting description.  Retrying..."
+            http = EM::HttpRequest.new(location).get
+          else
+            log "<#{self.class}> Unable to retrieve DDF from #{location}", :error
+            log "<#{self.class}> Request error: #{http.error}"
+            log "<#{self.class}> Response status: #{http.response_header.status}"
+
+            description_getter.set_deferred_status(:failed)
+
+            if ControlPoint.raise_on_remote_error
+              raise ControlPoint::Error, "Unable to retrieve DDF from #{location}"
+            end
           end
-        }
+        end
 
         http.callback {
           log "<#{self.class}> HTTP callback called for #{description_getter.object_id}"
