@@ -1,5 +1,6 @@
 require_relative '../../core_ext/socket_patch'
 require_relative 'network_constants'
+require_relative 'logger'
 require_relative 'error'
 require 'ipaddr'
 require 'socket'
@@ -10,6 +11,7 @@ module UPnP
   class SSDP
     class MulticastConnection < EventMachine::Connection
       include UPnP::SSDP::NetworkConstants
+      include LogSwitch::Mixin
 
       # @param [Fixnum] ttl The TTL value to use when opening the UDP socket
       #   required for SSDP actions.
@@ -43,8 +45,8 @@ module UPnP
         new_data = {}
 
         unless data =~ /\n/
-          SSDP.log "<#{self.class}> Received response as a single-line String.  Discarding."
-          SSDP.log "<#{self.class}> Bad response looked like:\n#{data}"
+          log "Received response as a single-line String.  Discarding."
+          log "Bad response looked like:\n#{data}"
           return new_data
         end
 

@@ -1,3 +1,4 @@
+require_relative 'logger'
 require_relative 'multicast_connection'
 
 module UPnP
@@ -46,7 +47,7 @@ module UPnP
     # @param [String] response The data received on this connection's socket.
     def receive_data(response)
       ip, port = peer_info
-      SSDP.log "<#{self.class}> Response from #{ip}:#{port}:\n#{response}\n"
+      log "Response from #{ip}:#{port}:\n#{response}\n"
       parsed_response = parse(response)
 
       return if parsed_response.has_key? :nts
@@ -60,7 +61,7 @@ module UPnP
     def post_init
       @m_search_count.times do
         if send_datagram(@search, MULTICAST_IP, MULTICAST_PORT) > 0
-          SSDP.log("Sent datagram search:\n#{@search}")
+          log "Sent datagram search:\n#{@search}"
         end
       end
     end

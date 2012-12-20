@@ -1,5 +1,6 @@
 require_relative 'multicast_connection'
 
+
 class UPnP::SSDP::Listener < UPnP::SSDP::MulticastConnection
 
   # @return [EventMachine::Channel] Provides subscribers with notifications

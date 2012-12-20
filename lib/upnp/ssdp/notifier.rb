@@ -1,7 +1,9 @@
+require_relative 'logger'
 require_relative 'multicast_connection'
 require_relative 'version'
 
 class UPnP::SSDP::Notifier < UPnP::SSDP::MulticastConnection
+  include LogSwitch::Mixin
 
   def initialize(nt, usn, ddf_url, valid_for_duration)
     @os = RbConfig::CONFIG['host_vendor'].capitalize + "/" +
@@ -12,7 +14,7 @@ class UPnP::SSDP::Notifier < UPnP::SSDP::MulticastConnection
 
   def post_init
     if send_datagram(@notification, MULTICAST_IP, MULTICAST_PORT) > 0
-      SSDP.log("Sent notification:\n#{@notification}")
+      log "Sent notification:\n#{@notification}"
     end
   end
 

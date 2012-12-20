@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'upnp/ssdp/multicast_connection'
 
+
 describe UPnP::SSDP::MulticastConnection do
   around(:each) do |example|
     EM.run do
@@ -73,7 +74,7 @@ describe UPnP::SSDP::MulticastConnection do
       end
 
       it "logs the 'bad' response" do
-        UPnP::SSDP.should_receive(:log).twice
+        subject.should_receive(:log).twice
         subject.parse @data
       end
     end

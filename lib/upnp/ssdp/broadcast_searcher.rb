@@ -1,4 +1,5 @@
 require_relative '../../core_ext/socket_patch'
+require_relative 'logger'
 require_relative 'network_constants'
 require 'ipaddr'
 require 'socket'
@@ -9,6 +10,7 @@ require 'eventmachine'
 module UPnP
   class SSDP
     class BroadcastSearcher < EventMachine::Connection
+      include LogSwitch::Mixin
       include EventMachine::Deferrable
       include UPnP::SSDP::NetworkConstants
 
@@ -31,7 +33,7 @@ module UPnP
 
       def post_init
         if send_datagram(@search, BROADCAST_IP, MULTICAST_PORT) > 0
-          SSDP.log("Sent broadcast datagram search:\n#{@search}")
+          log "Sent broadcast datagram search:\n#{@search}"
         end
       end
 
@@ -59,7 +61,7 @@ ST: #{search_target}\r
 
       def receive_data(response)
         ip, port = peer_info
-        SSDP.log "<#{self.class}> Response from #{ip}:#{port}:\n#{response}\n"
+        log "Response from #{ip}:#{port}:\n#{response}\n"
         parsed_response = parse(response)
 
         if parsed_response.has_key? :nts
@@ -84,8 +86,8 @@ ST: #{search_target}\r
         new_data = {}
 
         unless data =~ /\n/
-          SSDP.log "<#{self.class}> Received response as a single-line String.  Discarding."
-          SSDP.log "<#{self.class}> Bad response looked like:\n#{data}"
+          log "Received response as a single-line String.  Discarding."
+          log "Bad response looked like:\n#{data}"
           return new_data
         end
 
