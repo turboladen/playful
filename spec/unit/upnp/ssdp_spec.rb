@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'upnp/ssdp'
 
+
 describe UPnP::SSDP do
   subject { UPnP::SSDP }
 

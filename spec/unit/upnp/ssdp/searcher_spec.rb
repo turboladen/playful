@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'upnp/ssdp/searcher'
 
+
 describe UPnP::SSDP::Searcher do
   around(:each) do |example|
     EM.run do
