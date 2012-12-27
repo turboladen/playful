@@ -255,6 +255,9 @@ module UPnP
 
       def extract_spec_version
         "#{@description[:root][:specVersion][:major]}.#{@description[:root][:specVersion][:minor]}"
+        if @description[:root]
+          "#{@description[:root][:specVersion][:major]}.#{@description[:root][:specVersion][:minor]}"
+        end
       end
 
       def start_service_extraction
