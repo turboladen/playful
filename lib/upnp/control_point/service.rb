@@ -236,7 +236,8 @@ module UPnP
         end.size
 =end
             @action_list << action
-            define_method_from_action(action[:name].to_sym, action[:argumentList][:argument])
+            args = action[:argumentList] ? action[:argumentList][:argument] : {}
+            define_method_from_action(action[:name].to_sym, args)
           end
         else
           log "<#{self.class}> Got actionList that's not an Array or Hash."
