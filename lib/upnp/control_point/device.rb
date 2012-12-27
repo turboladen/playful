@@ -254,7 +254,6 @@ module UPnP
       end
 
       def extract_spec_version
-        "#{@description[:root][:specVersion][:major]}.#{@description[:root][:specVersion][:minor]}"
         if @description[:root]
           "#{@description[:root][:specVersion][:major]}.#{@description[:root][:specVersion][:minor]}"
         end
@@ -344,7 +343,7 @@ module UPnP
         device_list_hash = if @description.has_key? :root
           log "<#{self.class}> Description has a :root key..."
 
-          if @description[:root][:device].has_key? :deviceList
+          if @description[:root][:device][:deviceList]
             @description[:root][:device][:deviceList][:device]
           else
             log "<#{self.class}> No child devices to extract."
