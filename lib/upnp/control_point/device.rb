@@ -107,7 +107,7 @@ module UPnP
         super()
 
         @device_info = device_info
-        log "<#{self.class}> Got device info: #{@device_info}"
+        log "Got device info: #{@device_info}"
         @device_list = []
         @service_list = []
         @icon_list = []
@@ -121,7 +121,7 @@ module UPnP
 
         description_getter.errback do
           msg = "Failed getting description."
-          log "<#{self.class}> #{msg}", :error
+          log "#{msg}", :error
           @done_creating_devices = true
           @done_creating_services = true
           set_deferred_status(:failed, msg)
@@ -134,19 +134,19 @@ module UPnP
         if @device_info.has_key? :ssdp_notification
           extract_from_ssdp_notification(description_getter)
         elsif @device_info.has_key? :device_description
-          log "<#{self.class}> Creating device from device description file info."
+          log "Creating device from device description file info."
           description_getter.set_deferred_success @device_info[:device_description]
         else
-          log "<#{self.class}> Not sure what to extract from this device's info."
+          log "Not sure what to extract from this device's info."
           description_getter.set_deferred_failure
         end
 
         description_getter.callback do |description|
-          log "<#{self.class}> Description received from #{description_getter.object_id}"
+          log "Description received from #{description_getter.object_id}"
           @description = description
 
           if @description.nil?
-            log "<#{self.class}> Description is empty.", :error
+            log "Description is empty.", :error
             set_deferred_status(:failed, "Got back an empty description...")
             return
           end
@@ -154,21 +154,21 @@ module UPnP
           extract_spec_version
 
           @url_base = extract_url_base
-          log "<#{self.class}> Set url_base to #{@url_base}"
+          log "Set url_base to #{@url_base}"
 
           if @device_info[:ssdp_notification]
             @xmlns = @description[:root][:@xmlns]
-            log "<#{self.class}> Extracting description for root device #{description_getter.object_id}"
+            log "Extracting description for root device #{description_getter.object_id}"
             extract_description(@description[:root][:device])
           elsif @device_info.has_key? :device_description
-            log "<#{self.class}> Extracting description for non-root device #{description_getter.object_id}"
+            log "Extracting description for non-root device #{description_getter.object_id}"
             extract_description(@description)
           end
         end
 
         tickloop = EM.tick_loop do
           if @done_creating_devices && @done_creating_services
-            log "<#{self.class}> All done creating stuff"
+            log "All done creating stuff"
             :stop
           end
         end
@@ -177,7 +177,7 @@ module UPnP
       end
 
       def extract_from_ssdp_notification(callback)
-        log "<#{self.class}> Creating device from SSDP Notification info."
+        log "Creating device from SSDP Notification info."
         @ssdp_notification = @device_info[:ssdp_notification]
 
         @cache_control = @ssdp_notification[:cache_control]
@@ -231,7 +231,7 @@ module UPnP
       end
 
       def extract_description(ddf)
-        log "<#{self.class}> Extracting basic attributes from description..."
+        log "Extracting basic attributes from description..."
 
         @device_type = ddf[:deviceType] || ''
         @friendly_name = ddf[:friendlyName] || ''
@@ -247,7 +247,7 @@ module UPnP
         @icon_list = extract_icons(ddf[:iconList])
         @presentation_url = ddf[:presentationURL] || ''
 
-        log "<#{self.class}> Basic attributes extracted."
+        log "Basic attributes extracted."
 
         start_device_extraction
         start_service_extraction
@@ -263,16 +263,16 @@ module UPnP
         services_extractor = EventMachine::DefaultDeferrable.new
 
         if @description[:serviceList]
-          log "<#{self.class}> Extracting services from non-root device."
+          log "Extracting services from non-root device."
           extract_services(@description[:serviceList], services_extractor)
         elsif @description[:root][:device][:serviceList]
-          log "<#{self.class}> Extracting services from root device."
+          log "Extracting services from root device."
           extract_services(@description[:root][:device][:serviceList], services_extractor)
         end
 
         services_extractor.errback do
           msg = "Failed extracting services."
-          log "<#{self.class}> #{msg}", :error
+          log "#{msg}", :error
           @done_creating_services = true
 
           if ControlPoint.raise_on_remote_error
@@ -281,10 +281,10 @@ module UPnP
         end
 
         services_extractor.callback do |services|
-          log "<#{self.class}> Done extracting services."
+          log "Done extracting services."
           @service_list = services
 
-          log "<#{self.class}> New service count: #{@service_list.size}."
+          log "New service count: #{@service_list.size}."
           @done_creating_services = true
         end
       end
@@ -295,7 +295,7 @@ module UPnP
 
         device_extractor.errback do
           msg = "Failed extracting device."
-          log "<#{self.class}> #{msg}", :error
+          log "#{msg}", :error
           @done_creating_devices = true
 
           if ControlPoint.raise_on_remote_error
@@ -305,13 +305,13 @@ module UPnP
 
         device_extractor.callback do |device|
           if device
-            log "<#{self.class}> Device extracted from #{device_extractor.object_id}."
+            log "Device extracted from #{device_extractor.object_id}."
             @device_list << device
           else
-            log "<#{self.class}> Device extraction done from #{device_extractor.object_id} but none were extracted."
+            log "Device extraction done from #{device_extractor.object_id} but none were extracted."
           end
 
-          log "<#{self.class}> Child device size is now: #{@device_list.size}"
+          log "Child device size is now: #{@device_list.size}"
           @done_creating_devices = true
         end
       end
@@ -319,7 +319,7 @@ module UPnP
       # @return [Array<Hash>]
       def extract_icons(ddf_icon_list)
         return [] unless ddf_icon_list
-        log "<#{self.class}> Icon list: #{ddf_icon_list}"
+        log "Icon list: #{ddf_icon_list}"
 
         if ddf_icon_list[:icon].is_a? Array
           ddf_icon_list[:icon].map do |values|
@@ -338,22 +338,22 @@ module UPnP
       end
 
       def extract_devices(group_device_extractor)
-        log "<#{self.class}> Extracting child devices for #{self.object_id} using #{group_device_extractor.object_id}"
+        log "Extracting child devices for #{self.object_id} using #{group_device_extractor.object_id}"
 
         device_list_hash = if @description.has_key? :root
-          log "<#{self.class}> Description has a :root key..."
+          log "Description has a :root key..."
 
           if @description[:root][:device][:deviceList]
             @description[:root][:device][:deviceList][:device]
           else
-            log "<#{self.class}> No child devices to extract."
+            log "No child devices to extract."
             group_device_extractor.set_deferred_status(:succeeded)
           end
         elsif @description[:deviceList]
-          log "<#{self.class}> Description does not have a :root key..."
+          log "Description does not have a :root key..."
           @description[:deviceList][:device]
         else
-          log "<#{self.class}> No child devices to extract."
+          log "No child devices to extract."
           group_device_extractor.set_deferred_status(:succeeded)
         end
 
@@ -362,7 +362,7 @@ module UPnP
           return
         end
 
-        log "<#{self.class}> device list: #{device_list_hash}"
+        log "device list: #{device_list_hash}"
 
         if device_list_hash.is_a? Array
           EM::Iterator.new(device_list_hash, device_list_hash.count).map(
@@ -371,7 +371,7 @@ module UPnP
 
               single_device_extractor.errback do
                 msg = "Failed extracting device."
-                log "<#{self.class}> #{msg}", :error
+                log "#{msg}", :error
 
                 if ControlPoint.raise_on_remote_error
                   raise ControlPoint::Error, msg
@@ -393,7 +393,7 @@ module UPnP
 
           single_device_extractor.errback do
             msg = "Failed extracting device."
-            log "<#{self.class}> #{msg}", :error
+            log "#{msg}", :error
             group_device_extractor.set_deferred_status(:failed, msg)
 
             if ControlPoint.raise_on_remote_error
@@ -405,7 +405,7 @@ module UPnP
             group_device_extractor.set_deferred_status(:succeeded, [device])
           end
 
-          log "<#{self.class}> Extracting single device..."
+          log "Extracting single device..."
           extract_device(device_list_hash, group_device_extractor)
         end
       end
@@ -415,7 +415,7 @@ module UPnP
 
         deferred_device.errback do
           msg = "Couldn't build device!"
-          log "<#{self.class}> #{msg}", :error
+          log "#{msg}", :error
           device_extractor.set_deferred_status(:failed, msg)
 
           if ControlPoint.raise_on_remote_error
@@ -424,7 +424,7 @@ module UPnP
         end
 
         deferred_device.callback do |built_device|
-          log "<#{self.class}> Device created: #{built_device.device_type}"
+          log "Device created: #{built_device.device_type}"
           device_extractor.set_deferred_status(:succeeded, built_device)
         end
 
@@ -432,9 +432,9 @@ module UPnP
       end
 
       def extract_services(service_list, group_service_extractor)
-        log "<#{self.class}> Extracting services..."
+        log "Extracting services..."
 
-        log "<#{self.class}> service list: #{service_list}"
+        log "service list: #{service_list}"
         return if service_list.nil?
 
         service_list.each_value do |service|
@@ -445,7 +445,7 @@ module UPnP
 
                 single_service_extractor.errback do
                   msg = "Failed to create service."
-                  log "<#{self.class}> #{msg}", :error
+                  log "#{msg}", :error
 
                   if ControlPoint.raise_on_remote_error
                     raise ControlPoint::Error, msg
@@ -467,7 +467,7 @@ module UPnP
 
             single_service_extractor.errback do
               msg = "Failed to create service."
-              log "<#{self.class}> #{msg}", :error
+              log "#{msg}", :error
               group_service_extractor.set_deferred_status :failed, msg
 
               if ControlPoint.raise_on_remote_error
@@ -479,7 +479,7 @@ module UPnP
               group_service_extractor.set_deferred_status :succeeded, [service]
             end
 
-            log "<#{self.class}> Extracting single service..."
+            log "Extracting single service..."
             extract_service(service, single_service_extractor)
           end
         end
@@ -487,11 +487,11 @@ module UPnP
 
       def extract_service(service, single_service_extractor)
         service_getter = Service.new(@url_base, service)
-        log "<#{self.class}> Extracting service with #{service_getter.object_id}"
+        log "Extracting service with #{service_getter.object_id}"
 
         service_getter.errback do |message|
           msg = "Couldn't build service with info: #{service}"
-          log "<#{self.class}> #{msg}", :error
+          log "#{msg}", :error
           single_service_extractor.set_deferred_status(:failed, msg)
 
           if ControlPoint.raise_on_remote_error
@@ -500,7 +500,7 @@ module UPnP
         end
 
         service_getter.callback do |built_service|
-          log "<#{self.class}> Service created: #{built_service.service_type}"
+          log "Service created: #{built_service.service_type}"
           single_service_extractor.set_deferred_status(:succeeded, built_service)
         end
 

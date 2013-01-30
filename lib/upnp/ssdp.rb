@@ -1,10 +1,10 @@
 require_relative '../core_ext/socket_patch'
 require 'eventmachine'
 require_relative '../core_ext/to_upnp_s'
+require_relative 'logger'
 require_relative 'ssdp/error'
 require_relative 'ssdp/network_constants'
 require_relative 'ssdp/listener'
-require_relative 'ssdp/logger'
 require_relative 'ssdp/searcher'
 require_relative 'ssdp/notifier'
 

@@ -1,4 +1,4 @@
-require_relative 'logger'
+require_relative '../logger'
 require_relative 'multicast_connection'
 require_relative 'version'
 

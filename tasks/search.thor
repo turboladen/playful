@@ -13,7 +13,7 @@ module Upnp
     method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
     def search(target="upnp:rootdevice")
-      UPnP::SSDP.log = options[:log]
+      UPnP.log = options[:log]
       time_before = Time.now
       results = UPnP::SSDP.search(target, options.dup)
       time_after = Time.now

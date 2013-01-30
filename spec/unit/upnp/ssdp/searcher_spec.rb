@@ -11,7 +11,7 @@ describe UPnP::SSDP::Searcher do
   end
 
   before do
-    UPnP::SSDP.log = false
+    UPnP.log = false
     UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
   end
 

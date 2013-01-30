@@ -1,4 +1,4 @@
-require_relative 'logger'
+require_relative '../logger'
 require_relative 'multicast_connection'
 
 module UPnP
@@ -14,6 +14,8 @@ module UPnP
   #   urn:[custom-schema]:device:[deviceType-version]
   #   urn:[custom-schema]:service:[serviceType-version]
   class SSDP::Searcher < SSDP::MulticastConnection
+    include LogSwitch::Mixin
+
     DEFAULT_RESPONSE_WAIT_TIME = 5
     DEFAULT_M_SEARCH_COUNT = 2
 

@@ -2,6 +2,7 @@ require_relative 'multicast_connection'
 
 
 class UPnP::SSDP::Listener < UPnP::SSDP::MulticastConnection
+  include LogSwitch::Mixin
 
   # @return [EventMachine::Channel] Provides subscribers with notifications
   #   from devices that have come online (sent +ssdp:alive+ notifications).
@@ -21,7 +22,7 @@ class UPnP::SSDP::Listener < UPnP::SSDP::MulticastConnection
   # @param [String] response The data received on this connection's socket.
   def receive_data(response)
     ip, port = peer_info
-    UPnP::SSDP.log "<#{self.class}> Response from #{ip}:#{port}:\n#{response}\n"
+    log "Response from #{ip}:#{port}:\n#{response}\n"
     parsed_response = parse(response)
 
     return unless parsed_response.has_key? :nts

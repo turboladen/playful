@@ -1,6 +1,6 @@
 require_relative '../../core_ext/socket_patch'
 require_relative 'network_constants'
-require_relative 'logger'
+require_relative '../logger'
 require_relative 'error'
 require 'ipaddr'
 require 'socket'

@@ -123,18 +123,18 @@ module UPnP
       # behavior.
       def fetch
         if @scpd_url.empty?
-          log "<#{self.class}> NO SCPDURL to get the service description from.  Returning."
+          log "NO SCPDURL to get the service description from.  Returning."
           set_deferred_success self
           return
         end
 
         description_getter = EventMachine::DefaultDeferrable.new
-        log "<#{self.class}> Fetching service description with #{description_getter.object_id}"
+        log "Fetching service description with #{description_getter.object_id}"
         get_description(@scpd_url, description_getter)
 
         description_getter.errback do
           msg = "Failed getting service description."
-          log "<#{self.class}> #{msg}", :error
+          log "#{msg}", :error
           # @todo Should this return self? or should it succeed?
           set_deferred_status(:failed, msg)
 
@@ -144,14 +144,14 @@ module UPnP
         end
 
         description_getter.callback do |description|
-          log "<#{self.class}> Service description received for #{description_getter.object_id}."
+          log "Service description received for #{description_getter.object_id}."
           @description = description
           @xmlns = @description[:scpd][:@xmlns]
           extract_spec_version
           extract_service_state_table
 
           if @description[:scpd][:actionList]
-            log "<#{self.class}> Defining methods from action_list using [#{description_getter.object_id}]"
+            log "Defining methods from action_list using [#{description_getter.object_id}]"
             define_methods_from_actions(@description[:scpd][:actionList][:action])
           end
 
@@ -171,14 +171,14 @@ module UPnP
         @control_url = if @service_list_info[:controlURL]
           build_url(device_base_url, @service_list_info[:controlURL])
         else
-          log "<#{self.class}> Required controlURL attribute is blank."
+          log "Required controlURL attribute is blank."
           ""
         end
 
         @event_sub_url = if @service_list_info[:eventSubURL]
           build_url(device_base_url, @service_list_info[:eventSubURL])
         else
-          log "<#{self.class}> Required eventSubURL attribute is blank."
+          log "Required eventSubURL attribute is blank."
           ""
         end
 
@@ -188,7 +188,7 @@ module UPnP
         @scpd_url = if @service_list_info[:SCPDURL]
           build_url(device_base_url, @service_list_info[:SCPDURL])
         else
-          log "<#{self.class}> Required SCPDURL attribute is blank."
+          log "Required SCPDURL attribute is blank."
           ""
         end
       end
@@ -214,7 +214,7 @@ module UPnP
       # @param [Hash,Array] action_list The value from <scpd><actionList><action>
       #   from the service description.
       def define_methods_from_actions(action_list)
-        log "<#{self.class}> Defining methods; action list: #{action_list}"
+        log "Defining methods; action list: #{action_list}"
 
         if action_list.is_a? Hash
           @action_list << action_list
@@ -232,7 +232,7 @@ module UPnP
             define_method_from_action(action[:name].to_sym, args)
           end
         else
-          log "<#{self.class}> Got actionList that's not an Array or Hash."
+          log "Got actionList that's not an Array or Hash."
         end
       end
 
@@ -288,7 +288,7 @@ module UPnP
               end
             end
           rescue Savon::SOAP::Fault, Savon::HTTP::Error => ex
-            hash = Nori.parse(ex.http.body)
+            hash = xml_parser.parse(ex.http.body)
             msg = <<-MSG
 SOAP request failure!
 HTTP response code: #{ex.http.code}
@@ -297,7 +297,7 @@ HTTP body: #{ex.http.body}
 HTTP body as Hash: #{hash}
             MSG
 
-            log "<#{self.class}> #{msg}"
+            log "#{msg}"
             raise(ActionError, msg) if ControlPoint.raise_on_remote_error
 
             if hash.empty?
@@ -316,14 +316,14 @@ HTTP body as Hash: #{hash}
               end
             end
           else
-            log "<#{self.class}> No args with direction 'out'"
+            log "No args with direction 'out'"
             {}
           end
 
           return_value
         end
 
-        log "<#{self.class}> Defined method: #{action_name}"
+        log "Defined method: #{action_name}"
       end
 
       # Uses the serviceStateTable to look up the output from the SOAP response
@@ -357,7 +357,7 @@ HTTP body as Hash: #{hash}
         false_types = %w[0 false no]
 
         if soap_response.success? && soap_response.to_xml.empty?
-          log "<#{self.class}> Got successful but empty soap response!"
+          log "Got successful but empty soap response!"
           return {}
         end
 
@@ -385,7 +385,7 @@ HTTP body as Hash: #{hash}
             out_arg_name.to_sym => false
           }
         else
-          log "<#{self.class}> Got SOAP response that I dunno what to do with: #{soap_response.hash}"
+          log "Got SOAP response that I dunno what to do with: #{soap_response.hash}"
         end
       end
 

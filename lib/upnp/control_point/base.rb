@@ -1,6 +1,7 @@
 require 'nori'
 require 'em-http-request'
 require_relative 'error'
+require_relative '../logger'
 require_relative '../../upnp'
 
 
@@ -18,7 +19,7 @@ module UPnP
       protected
 
       def get_description(location, description_getter)
-        log "<#{self.class}> Getting description with getter ID #{description_getter.object_id} for: #{location}"
+        log "Getting description with getter ID #{description_getter.object_id} for: #{location}"
         http = EM::HttpRequest.new(location).get
 
         t = EM::Timer.new(30) do
@@ -27,12 +28,12 @@ module UPnP
 
         http.errback do |error|
           if error == :timeout
-            log "<#{self.class}> Timed out getting description.  Retrying..."
+            log "Timed out getting description.  Retrying..."
             http = EM::HttpRequest.new(location).get
           else
-            log "<#{self.class}> Unable to retrieve DDF from #{location}", :error
-            log "<#{self.class}> Request error: #{http.error}"
-            log "<#{self.class}> Response status: #{http.response_header.status}"
+            log "Unable to retrieve DDF from #{location}", :error
+            log "Request error: #{http.error}"
+            log "Response status: #{http.response_header.status}"
 
             description_getter.set_deferred_status(:failed)
 
@@ -43,8 +44,8 @@ module UPnP
         end
 
         http.callback {
-          log "<#{self.class}> HTTP callback called for #{description_getter.object_id}"
-          response = Nori.parse(http.response)
+          log "HTTP callback called for #{description_getter.object_id}"
+          response = xml_parser.parse(http.response)
           description_getter.set_deferred_status(:succeeded, response)
         }
       end

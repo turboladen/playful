@@ -13,7 +13,7 @@ describe UPnP::SSDP::MulticastConnection do
   subject { UPnP::SSDP::MulticastConnection.new(1) }
 
   before do
-    UPnP::SSDP.log = false
+    UPnP.log = false
   end
 
   describe "#peer_info" do
