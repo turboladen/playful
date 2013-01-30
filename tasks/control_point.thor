@@ -1,5 +1,7 @@
+require 'bundler/setup'
 require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/control_point')
 require 'rack'
+require 'em-websocket'
 
 UPnP::ControlPoint.raise_on_remote_error = false
 
