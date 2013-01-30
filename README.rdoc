@@ -108,17 +108,17 @@ receive them.
     # This callback will get called when the device_creator callback is called
     # (which is called after the device has been created).
     device_controller.callback do |device|
-      p device.services.first.class                 # UPnP::ControlPoint::Service
-      p device.services.first.service_type          # "urn:schemas-upnp-org:service:ContentDirectory:1"
+      p device.service_list.first.class                 # UPnP::ControlPoint::Service
+      p device.service_list.first.service_type          # "urn:schemas-upnp-org:service:ContentDirectory:1"
 
       # SOAP actions are converted to Ruby methods--show those
-      p device.services.first.singleton_methods     # [:GetSystemUpdateID, :Search, :GetSearchCapabilities, :GetSortCapabilities, :Browse]
+      p device.service_list.first.singleton_methods     # [:GetSystemUpdateID, :Search, :GetSearchCapabilities, :GetSortCapabilities, :Browse]
 
       # Call a SOAP method defined in the service.  The response is extracted from the
       # XML SOAP response and the value is converted from the UPnP dataType to
       # the related Ruby type.  Reponses are always contained in a Hash, so as
       # to maintain the relation defined in the service.
-      p device.services.first.GetSystemUpdateID     # { :Id => 1 }
+      p device.service_list.first.GetSystemUpdateID     # { :Id => 1 }
     end
 
     # Note that you don't have to check for items in the Channel or for when the
@@ -162,7 +162,6 @@ this as the design settles down.
 == Requirements
 
 * Rubies (tested)
-  * 1.9.2
   * 1.9.3
 * Gems
   * eventmachine
