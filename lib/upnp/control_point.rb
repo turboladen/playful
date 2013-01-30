@@ -6,12 +6,6 @@ require_relative 'control_point/service'
 require_relative 'control_point/device'
 require_relative 'control_point/error'
 
-begin
-  require 'nokogiri'
-  Nori.parser = :nokogiri if defined? ::Nokogiri
-rescue LoadError
-  # Fail quietly
-end
 
 module UPnP
 
@@ -48,10 +42,6 @@ module UPnP
       @devices = []
       @new_device_channel = EventMachine::Channel.new
       @old_device_channel = EventMachine::Channel.new
-
-      Nori.configure do |config|
-        config.convert_tags_to { |tag| tag.to_sym }
-      end
     end
 
     # Starts the ControlPoint.  If an EventMachine reactor is running already,

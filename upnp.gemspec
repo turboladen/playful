@@ -21,21 +21,20 @@ in a UPnP environment.}
   s.require_paths = ["lib"]
   s.required_ruby_version = Gem::Requirement.new(">=1.9.1")
 
-  #s.add_dependency 'httpi', '>=2.0.0.rc1'
   s.add_dependency 'eventmachine', '>=1.0.0'
   s.add_dependency 'em-http-request', '>=1.0.2'
-  s.add_dependency 'nori', '>=1.0.2'
-  s.add_dependency 'log_switch', '>=0.1.4'
-  s.add_dependency 'savon', '~>1.0'
+  s.add_dependency 'em-synchrony'
+  s.add_dependency 'nori', '>=2.0.2'
+  s.add_dependency 'log_switch', '>=0.4.0'
+  s.add_dependency 'savon', '~>2.0'
 
-  s.add_development_dependency 'bundler', '>=0'
-  s.add_development_dependency 'code_statistics', '>=0.2.13'
+  s.add_development_dependency 'bundler'
   s.add_development_dependency 'cucumber', '>=1.0.0'
   s.add_development_dependency 'em-websocket', '>=0.3.6'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec', '>=2.6'
   s.add_development_dependency 'simplecov', '>=0.4.2'
-  s.add_development_dependency 'tailor', ">=1.1.1"
+  s.add_development_dependency 'tailor', ">=1.1.4"
   s.add_development_dependency 'thin'
   s.add_development_dependency 'thor', ">=0.1.6"
   s.add_development_dependency 'yard', '>=0.7.0'

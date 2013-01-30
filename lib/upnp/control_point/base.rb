@@ -56,6 +56,24 @@ module UPnP
 
         url_base + rest_of_url
       end
+
+      # @return [Nori::Parser]
+      def xml_parser
+        @xml_parser if @xml_parser
+
+        options = {
+          convert_tags_to: lambda { |tag| tag.to_sym }
+        }
+
+        begin
+          require 'nokogiri'
+          options.merge! parser: :nokogiri
+        rescue LoadError
+          warn "Tried loading nokogiri for XML couldn't.  This is OK, just letting you know."
+        end
+
+        @xml_parser = Nori.new(options)
+      end
     end
   end
 end

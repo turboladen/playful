@@ -4,17 +4,9 @@ require_relative 'error'
 require_relative '../../core_ext/hash_patch'
 
 
-Savon.configure do |config|
-  #config.log = true
-end
-
-begin
-  require 'em-http'
-  HTTPI.adapter = :em_http
-rescue ArgumentError
-  puts "Couldn't load HTTPI :em_http adapter."
-  # Fail silently
-end
+require 'em-http'
+HTTPI.adapter = :em_http
+HTTPI.log = false
 
 
 module UPnP
