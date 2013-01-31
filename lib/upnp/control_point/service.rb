@@ -390,9 +390,14 @@ HTTP body as Hash: #{hash}
       end
 
       def configure_savon
-        @soap_client = Savon.client do |wsdl|
-          wsdl.endpoint = @control_url
-          wsdl.namespace = @service_type
+        # Required because Savon uses instance_eval in the block
+        control_url = @control_url
+        service_type = @service_type
+
+        @soap_client = Savon.client do
+          endpoint = control_url
+          namespace = service_type
+          convert_request_keys_to :camelcase
         end
 
         @soap_client.config.env_namespace = :s
