@@ -278,7 +278,7 @@ module UPnP
         define_singleton_method(action_name) do |params|
           begin
             response = @soap_client.request(:u, action_name.to_s, "xmlns:u" => @service_type) do
-              http.headers['SOAPACTION'] = "#{st}##{action_name}"
+              http.headers['SOAPACTION'] = %Q{"#{st}##{action_name}"}
               soap.namespaces["s:encodingStyle"] = "http://schemas.xmlsoap.org/soap/encoding/"
 
               unless params.nil?
