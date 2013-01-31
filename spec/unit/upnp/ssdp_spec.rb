@@ -75,9 +75,11 @@ describe UPnP::SSDP do
     end
 
     context "when search_target is a String" do
-      it "does not call #to_upnp_s on search_target" do
+      it "calls #to_upnp_s on search_target but doesn't alter it" do
         search_target = "I'm a string"
-        search_target.should_not_receive(:to_upnp_s)
+        search_target.should_receive(:to_upnp_s)
+        EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0,
+          UPnP::SSDP::Searcher, "I'm a string", {})
         subject.search(search_target)
       end
     end

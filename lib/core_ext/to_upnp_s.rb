@@ -34,6 +34,7 @@ class Hash
   end
 end
 
+
 class Symbol
 
   # Converts Symbol search targets to SSDP search target String.  Conversions are
@@ -52,4 +53,11 @@ class Symbol
       self
     end
   end
+end
+
+
+class String
+  # This doesn't do anything to the string; just allows users to call the
+  # method without having to check type first.
+  alias_method :to_upnp_s, :to_s
 end

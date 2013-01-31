@@ -38,6 +38,7 @@ module UPnP
     # alive and byebye notifications from devices.
     #
     # @param [Fixnum] ttl The TTL to use on the UDP socket.
+    #
     # @return [Hash<Array>,UPnP::SSDP::Listener] If the EventMachine reactor is
     #   _not_ running, it returns two key/value pairs--one for
     #   alive_notifications, one for byebye_notifications.  If the reactor _is_
@@ -88,7 +89,9 @@ module UPnP
     # will stop after +response_wait_time+.
     #
     # @param [String] search_target
+    #
     # @param [Hash] options
+    #
     # @option options [Fixnum] response_wait_time
     # @option options [Fixnum] ttl
     # @option options [Fixnum] m_search_count
@@ -96,6 +99,7 @@ module UPnP
     #   a M-SEARCH over 255.255.255.255.  This is *NOT* part of the UPnP spec;
     #   it's merely a hack for working with some types of devices that don't
     #   properly implement the UPnP spec.
+    #
     # @return [Array<Hash>,UPnP::SSDP::Searcher] Returns a Hash that represents
     #   the headers from the M-SEARCH response.  Each one of these can be passed
     #   in to UPnP::ControlPoint::Device.new to download the device's
@@ -112,7 +116,7 @@ module UPnP
       searcher_options.delete :do_broadcast_search
 
       responses = []
-      search_target = search_target.to_upnp_s unless search_target.is_a? String
+      search_target = search_target.to_upnp_s
 
       multicast_searcher = proc do
         EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
@@ -154,7 +158,7 @@ module UPnP
     #   this may not be working.
     def self.notify(notification_type, usn, ddf_url, valid_for_duration=1800)
       responses = []
-      notification_type = notification_type.to_upnp_s unless notification_type.is_a? String
+      notification_type = notification_type.to_upnp_s
 
       EM.run do
         s = send_notification(notification_type, usn, ddf_url, valid_for_duration)

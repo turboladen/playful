@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'core_ext/to_upnp_s'
+
 
 describe Hash do
   describe '#to_upnp_s' do
@@ -93,4 +95,11 @@ describe Symbol do
     :firestorm.to_upnp_s.should == :firestorm
   end
 end
+
+describe String do
+  it "returns itself" do
+    "Stuff and things".to_upnp_s.should == "Stuff and things"
+  end
+end
+
 
