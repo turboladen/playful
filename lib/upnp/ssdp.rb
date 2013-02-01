@@ -1,5 +1,6 @@
 require_relative '../core_ext/socket_patch'
 require 'eventmachine'
+require 'em-synchrony'
 require_relative '../core_ext/to_upnp_s'
 require_relative 'logger'
 require_relative 'ssdp/error'
@@ -52,14 +53,14 @@ module UPnP
       listener = proc do
         l = EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT, UPnP::SSDP::Listener, ttl)
         i = 0
-        EM.add_periodic_timer(5) { i += 5; log "Listening for #{i}\n"}
+        EM.add_periodic_timer(5) { i += 5; UPnP.log "Listening for #{i}\n"}
         l
       end
 
       if EM.reactor_running?
         return listener.call
       else
-        EM.run do
+        EM.synchrony do
           l = listener.call
 
           alive_getter = Proc.new do |notification|
@@ -131,7 +132,7 @@ module UPnP
       if EM.reactor_running?
         return multicast_searcher.call
       else
-        EM.run do
+        EM.synchrony do
           ms = multicast_searcher.call
 
           ms.discovery_responses.subscribe do |notification|
@@ -160,7 +161,7 @@ module UPnP
       responses = []
       notification_type = notification_type.to_upnp_s
 
-      EM.run do
+      EM.synchrony do
         s = send_notification(notification_type, usn, ddf_url, valid_for_duration)
         EM.add_shutdown_hook { responses = s.discovery_responses }
 

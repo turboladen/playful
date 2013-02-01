@@ -10,17 +10,11 @@ module UPnP
     class Base
       include LogSwitch::Mixin
 
-      def initialize
-        Nori.configure do |config|
-          config.convert_tags_to { |tag| tag.to_sym }
-        end
-      end
-
       protected
 
       def get_description(location, description_getter)
         log "Getting description with getter ID #{description_getter.object_id} for: #{location}"
-        http = EM::HttpRequest.new(location).get
+        http = EM::HttpRequest.new(location).aget
 
         t = EM::Timer.new(30) do
           http.fail(:timeout)

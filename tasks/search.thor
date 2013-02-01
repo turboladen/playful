@@ -46,7 +46,7 @@ search duration: #{time_after - time_before}
       failed_devices = 0
       responses.uniq!
 
-      EM.run do
+      EM.synchrony do
         responses.each_with_index do |response, i|
           device_creator = UPnP::ControlPoint::Device.new(ssdp_notification: response)
 

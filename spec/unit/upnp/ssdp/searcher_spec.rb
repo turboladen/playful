@@ -4,7 +4,7 @@ require 'upnp/ssdp/searcher'
 
 describe UPnP::SSDP::Searcher do
   around(:each) do |example|
-    EM.run do
+    EM.synchrony do
       example.run
       EM.stop
     end

@@ -1,5 +1,6 @@
 require 'open-uri'
 require 'nori'
+require 'em-synchrony'
 require_relative 'logger'
 require_relative 'ssdp'
 require_relative 'control_point/service'
@@ -66,7 +67,7 @@ module UPnP
         starter.call
       else
         log "Starting reactor..."
-        EM.run(&starter)
+        EM.synchrony(&starter)
       end
     end
 

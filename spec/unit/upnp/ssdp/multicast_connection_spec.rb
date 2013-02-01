@@ -4,7 +4,7 @@ require 'upnp/ssdp/multicast_connection'
 
 describe UPnP::SSDP::MulticastConnection do
   around(:each) do |example|
-    EM.run do
+    EM.synchrony do
       example.run
       EM.stop
     end

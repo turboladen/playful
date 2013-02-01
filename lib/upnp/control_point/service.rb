@@ -3,10 +3,8 @@ require_relative 'base'
 require_relative 'error'
 require_relative '../../core_ext/hash_patch'
 
-
 require 'em-http'
 HTTPI.adapter = :em_http
-HTTPI.log = false
 
 
 module UPnP
@@ -277,9 +275,10 @@ module UPnP
 
         define_singleton_method(action_name) do |params|
           begin
-            response = @soap_client.request(:u, action_name.to_s, "xmlns:u" => @service_type) do
-              http.headers['SOAPACTION'] = %Q{"#{st}##{action_name}"}
-              soap.namespaces["s:encodingStyle"] = "http://schemas.xmlsoap.org/soap/encoding/"
+            response = @soap_client.call(action_name.to_s) do |locals|
+              locals.message_tags "xmlns:u" => @service_type
+              locals.soap_action "#{st}##{action_name}"
+              #soap.namespaces["s:encodingStyle"] = "http://schemas.xmlsoap.org/soap/encoding/"
 
               unless params.nil?
                 raise ArgumentError,
@@ -287,7 +286,7 @@ module UPnP
                 soap.body = params.symbolize_keys!
               end
             end
-          rescue Savon::SOAP::Fault, Savon::HTTP::Error => ex
+          rescue Savon::SOAPFault, Savon::HTTPError => ex
             hash = xml_parser.parse(ex.http.body)
             msg = <<-MSG
 SOAP request failure!
@@ -390,17 +389,15 @@ HTTP body as Hash: #{hash}
       end
 
       def configure_savon
-        # Required because Savon uses instance_eval in the block
-        control_url = @control_url
-        service_type = @service_type
+        @soap_client = Savon.client do |globals|
+          globals.endpoint @control_url
+          globals.namespace @service_type
 
-        @soap_client = Savon.client do
-          endpoint = control_url
-          namespace = service_type
-          convert_request_keys_to :camelcase
+          globals.convert_request_keys_to :camelcase
+          globals.namespace_identifier :u
+          globals.env_namespace :s
+          globals.log true
         end
-
-        @soap_client.config.env_namespace = :s
       end
     end
   end
