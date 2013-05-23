@@ -233,24 +233,33 @@ module UPnP
       def extract_description(ddf)
         log "Extracting basic attributes from description..."
 
-        @device_type = ddf[:deviceType] || ''
-        @friendly_name = ddf[:friendlyName] || ''
-        @manufacturer = ddf[:manufacturer] || ''
-        @manufacturer_url = ddf[:manufacturerURL] || ''
-        @model_description = ddf[:modelDescription] || ''
-        @model_name = ddf[:modelName] || ''
-        @model_number = ddf[:modelNumber] || ''
-        @model_url = ddf[:modelURL] || ''
-        @serial_number = ddf[:serialNumber] || ''
-        @udn = ddf[:UDN] || ''
-        @upc = ddf[:UPC] || ''
+        @device_type =        ddf[:deviceType] || ''
+        @friendly_name =      ddf[:friendlyName] || ''
+        @manufacturer =       ddf[:manufacturer] || ''
+        @manufacturer_url =   ddf[:manufacturerURL] || ''
+        @model_description =  ddf[:modelDescription] || ''
+        @model_name =         ddf[:modelName] || ''
+        @model_number =       ddf[:modelNumber] || ''
+        @model_url =          ddf[:modelURL] || ''
+        @serial_number =      ddf[:serialNumber] || ''
+        @udn =                ddf[:UDN] || ''
+        @upc =                ddf[:UPC] || ''
         @icon_list = extract_icons(ddf[:iconList])
-        @presentation_url = ddf[:presentationURL] || ''
+        @presentation_url =   ddf[:presentationURL] || ''
 
         log "Basic attributes extracted."
 
-        start_device_extraction
-        start_service_extraction
+        if ddf[:device]
+          start_device_extraction
+        else
+          @done_creating_devices = true
+        end
+
+        if ddf[:serviceList]
+          start_service_extraction
+        else
+          @done_creating_services = true
+        end
       end
 
       def extract_spec_version
