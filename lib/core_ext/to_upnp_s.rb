@@ -59,5 +59,7 @@ end
 class String
   # This doesn't do anything to the string; just allows users to call the
   # method without having to check type first.
-  alias_method :to_upnp_s, :to_s
+  def to_upnp_s
+    self
+  end
 end
