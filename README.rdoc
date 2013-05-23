@@ -4,6 +4,8 @@
 * {UPnP Device Architecture Documentation}[http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf]
 
 {<img src="https://travis-ci.org/turboladen/upnp.png?branch=master" alt="Build Status" />}[https://travis-ci.org/turboladen/upnp]
+{<img src="https://coveralls.io/repos/turboladen/upnp/badge.png" alt="Coverage Status" />}[https://coveralls.io/r/turboladen/upnp]
+
 
 == Description
 
