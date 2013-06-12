@@ -1,14 +1,14 @@
 require_relative '../logger'
 require_relative 'multicast_connection'
-require_relative 'version'
+
 
 class UPnP::SSDP::Notifier < UPnP::SSDP::MulticastConnection
   include LogSwitch::Mixin
 
   def initialize(nt, usn, ddf_url, valid_for_duration)
-    @os = RbConfig::CONFIG['host_vendor'].capitalize + "/" +
+    @os = RbConfig::CONFIG['host_vendor'].capitalize + '/' +
       RbConfig::CONFIG['host_os']
-    @upnp_version = "1.0"
+    @upnp_version = '1.0'
     @notification = notification(nt, usn, ddf_url, valid_for_duration)
   end
 
@@ -33,7 +33,7 @@ CACHE-CONTROL: max-age=#{valid_for_duration}\r
 LOCATION: #{ddf_url}\r
 NT: #{nt}\r
 NTS: ssdp:alive\r
-SERVER: #{@os} UPnP/#{@upnp_version} RubySSDP/#{SSDP::VERSION}\r
+SERVER: #{@os} UPnP/#{@upnp_version} RubySSDP/#{UPnP::VERSION}\r
 USN: #{usn}\r
 \r
     NOTIFICATION

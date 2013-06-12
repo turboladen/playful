@@ -5,6 +5,7 @@ require_relative 'error'
 require 'ipaddr'
 require 'socket'
 require 'eventmachine'
+require 'em-synchrony'
 
 
 module UPnP
@@ -29,9 +30,9 @@ module UPnP
       #
       # @return [Array<String,Fixnum>] The IP and port.
       def peer_info
-        peer_bytes = get_peername[2, 6].unpack("nC4")
+        peer_bytes = get_peername[2, 6].unpack('nC4')
         port = peer_bytes.first.to_i
-        ip = peer_bytes[1, 4].join(".")
+        ip = peer_bytes[1, 4].join('.')
 
         [ip, port]
       end
@@ -45,7 +46,7 @@ module UPnP
         new_data = {}
 
         unless data =~ /\n/
-          log "Received response as a single-line String.  Discarding."
+          log 'Received response as a single-line String.  Discarding.'
           log "Bad response looked like:\n#{data}"
           return new_data
         end
@@ -71,7 +72,7 @@ module UPnP
         set_multicast_ttl(@ttl)
         set_ttl(@ttl)
 
-        unless ENV["RUBY_UPNP_ENV"] == "testing"
+        unless ENV['RUBY_UPNP_ENV'] == 'testing'
           switch_multicast_loop :off
         end
       end
