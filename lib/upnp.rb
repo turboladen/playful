@@ -1,4 +1,4 @@
-require_relative "upnp/version"
+require_relative 'upnp/version'
 
 module UPnP
 
