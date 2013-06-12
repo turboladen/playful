@@ -188,7 +188,7 @@ module UPnP
     def self.trap_signals
       trap('INT') { EM.stop }
       trap('TERM') { EM.stop }
-      trap("HUP")  { EM.stop } if RUBY_PLATFORM !~ /mswin|mingw/
+      trap('HUP')  { EM.stop } if RUBY_PLATFORM !~ /mswin|mingw/
     end
   end
 end
