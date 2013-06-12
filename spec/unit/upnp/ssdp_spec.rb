@@ -130,6 +130,14 @@ describe UPnP::SSDP do
     end
   end
 
+  describe '.notify' do
+    pending 'Implementation of UPnP Devices'
+  end
+
+  describe '.send_notification' do
+    pending 'Implementation of UPnP Devices'
+  end
+
 =begin
     context 'by default' do
       it "searches for 'ssdp:all'" do
