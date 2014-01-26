@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
-require "playful/version"
+$:.push File.expand_path('../lib', __FILE__)
+require 'playful/version'
 
 Gem::Specification.new do |s|
-  s.name        = "playful"
+  s.name        = 'playful'
   s.version     = Playful::VERSION
-  s.author      = "turboladen"
-  s.email       = "steve.loveless@gmail.com"
-  s.homepage    = "http://github.com/turboladen/playful"
-  s.summary     = "Use me to build a UPnP app!"
+  s.author      = 'turboladen'
+  s.email       = 'steve.loveless@gmail.com'
+  s.homepage    = 'http://github.com/turboladen/playful'
+  s.summary     = 'Use me to build a UPnP app!'
   s.description = %q{playful provides the tools you need to build an app that runs
 in a UPnP environment.}
 
@@ -16,8 +16,8 @@ in a UPnP environment.}
   s.test_files    = `git ls-files -- {spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.extra_rdoc_files = %w(History.rdoc README.rdoc)
-  s.require_paths = ["lib"]
-  s.required_ruby_version = Gem::Requirement.new(">=1.9.1")
+  s.require_paths = ['lib']
+  s.required_ruby_version = Gem::Requirement.new('>=1.9.1')
 
   s.add_dependency 'eventmachine', '>=1.0.0'
   s.add_dependency 'em-http-request', '>=1.0.2'
@@ -33,6 +33,6 @@ in a UPnP environment.}
   s.add_development_dependency 'rspec', '>=3.0.0.beta'
   s.add_development_dependency 'simplecov', '>=0.4.2'
   s.add_development_dependency 'thin'
-  s.add_development_dependency 'thor', ">=0.1.6"
+  s.add_development_dependency 'thor', '>=0.1.6'
   s.add_development_dependency 'yard', '>=0.7.0'
 end

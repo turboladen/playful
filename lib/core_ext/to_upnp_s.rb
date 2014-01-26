@@ -14,7 +14,7 @@ class Hash
   #
   # @return [String] The converted String, according to the UPnP spec.
   def to_upnp_s
-    if self.has_key? :uuid then
+    if self.has_key? :uuid
       return "uuid:#{self[:uuid]}"
     elsif self.has_key? :device_type
       if self.has_key? :domain_name
@@ -46,9 +46,9 @@ class Symbol
   # @return [String] The converted String, according to the UPnP spec.
   def to_upnp_s
     if self == :all
-      "ssdp:all"
+      'ssdp:all'
     elsif self == :root
-      "upnp:rootdevice"
+      'upnp:rootdevice'
     else
       self
     end

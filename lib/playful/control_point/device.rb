@@ -111,7 +111,7 @@ module Playful
         @device_list = []
         @service_list = []
         @icon_list = []
-        @xmlns = ""
+        @xmlns = ''
         @done_creating_devices = false
         @done_creating_services = false
       end
@@ -120,8 +120,8 @@ module Playful
         description_getter = EventMachine::DefaultDeferrable.new
 
         description_getter.errback do
-          msg = "Failed getting description."
-          log "#{msg}", :error
+          msg = 'Failed getting description.'
+          log msg, :error
           @done_creating_devices = true
           @done_creating_services = true
           set_deferred_status(:failed, msg)
@@ -134,7 +134,7 @@ module Playful
         if @device_info.has_key? :ssdp_notification
           extract_from_ssdp_notification(description_getter)
         elsif @device_info.has_key? :device_description
-          log "Creating device from device description file info."
+          log 'Creating device from device description file info.'
           description_getter.set_deferred_success @device_info[:device_description]
         else
           log "Not sure what to extract from this device's info."
@@ -146,8 +146,8 @@ module Playful
           @description = description
 
           if @description.nil?
-            log "Description is empty.", :error
-            set_deferred_status(:failed, "Got back an empty description...")
+            log 'Description is empty.', :error
+            set_deferred_status(:failed, 'Got back an empty description...')
             return
           end
 
@@ -168,7 +168,7 @@ module Playful
 
         tickloop = EM.tick_loop do
           if @done_creating_devices && @done_creating_services
-            log "All done creating stuff"
+            log 'All done creating stuff'
             :stop
           end
         end
@@ -177,7 +177,7 @@ module Playful
       end
 
       def extract_from_ssdp_notification(callback)
-        log "Creating device from SSDP Notification info."
+        log 'Creating device from SSDP Notification info.'
         @ssdp_notification = @device_info[:ssdp_notification]
 
         @cache_control = @ssdp_notification[:cache_control]
@@ -196,7 +196,7 @@ module Playful
         if @location
           get_description(@location, callback)
         else
-          message = "M-SEARCH response is either missing the Location header or has an empty value."
+          message = 'M-SEARCH response is either missing the Location header or has an empty value.'
           message << "Response: #{@ssdp_notification}"
 
           if ControlPoint.raise_on_remote_error
@@ -231,7 +231,7 @@ module Playful
       end
 
       def extract_description(ddf)
-        log "Extracting basic attributes from description..."
+        log 'Extracting basic attributes from description...'
 
         @device_type = ddf[:deviceType] || ''
         @friendly_name = ddf[:friendlyName] || ''
@@ -247,7 +247,7 @@ module Playful
         @icon_list = extract_icons(ddf[:iconList])
         @presentation_url = ddf[:presentationURL] || ''
 
-        log "Basic attributes extracted."
+        log 'Basic attributes extracted.'
 
         start_device_extraction
         start_service_extraction
@@ -263,16 +263,16 @@ module Playful
         services_extractor = EventMachine::DefaultDeferrable.new
 
         if @description[:serviceList]
-          log "Extracting services from non-root device."
+          log 'Extracting services from non-root device.'
           extract_services(@description[:serviceList], services_extractor)
         elsif @description[:root][:device][:serviceList]
-          log "Extracting services from root device."
+          log 'Extracting services from root device.'
           extract_services(@description[:root][:device][:serviceList], services_extractor)
         end
 
         services_extractor.errback do
-          msg = "Failed extracting services."
-          log "#{msg}", :error
+          msg = 'Failed extracting services.'
+          log msg, :error
           @done_creating_services = true
 
           if ControlPoint.raise_on_remote_error
@@ -281,7 +281,7 @@ module Playful
         end
 
         services_extractor.callback do |services|
-          log "Done extracting services."
+          log 'Done extracting services.'
           @service_list = services
 
           log "New service count: #{@service_list.size}."
@@ -294,8 +294,8 @@ module Playful
         extract_devices(device_extractor)
 
         device_extractor.errback do
-          msg = "Failed extracting device."
-          log "#{msg}", :error
+          msg = 'Failed extracting device.'
+          log msg, :error
           @done_creating_devices = true
 
           if ControlPoint.raise_on_remote_error
@@ -341,19 +341,19 @@ module Playful
         log "Extracting child devices for #{self.object_id} using #{group_device_extractor.object_id}"
 
         device_list_hash = if @description.has_key? :root
-          log "Description has a :root key..."
+          log 'Description has a :root key...'
 
           if @description[:root][:device][:deviceList]
             @description[:root][:device][:deviceList][:device]
           else
-            log "No child devices to extract."
+            log 'No child devices to extract.'
             group_device_extractor.set_deferred_status(:succeeded)
           end
         elsif @description[:deviceList]
-          log "Description does not have a :root key..."
+          log 'Description does not have a :root key...'
           @description[:deviceList][:device]
         else
-          log "No child devices to extract."
+          log 'No child devices to extract.'
           group_device_extractor.set_deferred_status(:succeeded)
         end
 
@@ -370,16 +370,16 @@ module Playful
               single_device_extractor = EventMachine::DefaultDeferrable.new
 
               single_device_extractor.errback do
-                msg = "Failed extracting device."
-                log "#{msg}", :error
+                msg = 'Failed extracting device.'
+                log msg, :error
 
                 if ControlPoint.raise_on_remote_error
                   raise ControlPoint::Error, msg
                 end
               end
 
-              single_device_extractor.callback do |device|
-                iter.return(device)
+              single_device_extractor.callback do |d|
+                iter.return(d)
               end
 
               extract_device(device, single_device_extractor)
@@ -392,8 +392,8 @@ module Playful
           single_device_extractor = EventMachine::DefaultDeferrable.new
 
           single_device_extractor.errback do
-            msg = "Failed extracting device."
-            log "#{msg}", :error
+            msg = 'Failed extracting device.'
+            log msg, :error
             group_device_extractor.set_deferred_status(:failed, msg)
 
             if ControlPoint.raise_on_remote_error
@@ -405,7 +405,7 @@ module Playful
             group_device_extractor.set_deferred_status(:succeeded, [device])
           end
 
-          log "Extracting single device..."
+          log 'Extracting single device...'
           extract_device(device_list_hash, group_device_extractor)
         end
       end
@@ -415,7 +415,7 @@ module Playful
 
         deferred_device.errback do
           msg = "Couldn't build device!"
-          log "#{msg}", :error
+          log msg, :error
           device_extractor.set_deferred_status(:failed, msg)
 
           if ControlPoint.raise_on_remote_error
@@ -432,7 +432,7 @@ module Playful
       end
 
       def extract_services(service_list, group_service_extractor)
-        log "Extracting services..."
+        log 'Extracting services...'
 
         log "service list: #{service_list}"
         return if service_list.nil?
@@ -444,16 +444,16 @@ module Playful
                 single_service_extractor = EventMachine::DefaultDeferrable.new
 
                 single_service_extractor.errback do
-                  msg = "Failed to create service."
-                  log "#{msg}", :error
+                  msg = 'Failed to create service.'
+                  log msg, :error
 
                   if ControlPoint.raise_on_remote_error
                     raise ControlPoint::Error, msg
                   end
                 end
 
-                single_service_extractor.callback do |service|
-                  iter.return(service)
+                single_service_extractor.callback do |s|
+                  iter.return(s)
                 end
 
                 extract_service(s, single_service_extractor)
@@ -466,8 +466,8 @@ module Playful
             single_service_extractor = EventMachine::DefaultDeferrable.new
 
             single_service_extractor.errback do
-              msg = "Failed to create service."
-              log "#{msg}", :error
+              msg = 'Failed to create service.'
+              log msg, :error
               group_service_extractor.set_deferred_status :failed, msg
 
               if ControlPoint.raise_on_remote_error
@@ -475,11 +475,11 @@ module Playful
               end
             end
 
-            single_service_extractor.callback do |service|
-              group_service_extractor.set_deferred_status :succeeded, [service]
+            single_service_extractor.callback do |s|
+              group_service_extractor.set_deferred_status :succeeded, [s]
             end
 
-            log "Extracting single service..."
+            log 'Extracting single service...'
             extract_service(service, single_service_extractor)
           end
         end
@@ -491,7 +491,7 @@ module Playful
 
         service_getter.errback do |message|
           msg = "Couldn't build service with info: #{service}"
-          log "#{msg}", :error
+          log msg, :error
           single_service_extractor.set_deferred_status(:failed, msg)
 
           if ControlPoint.raise_on_remote_error

@@ -7,8 +7,8 @@ Playful::ControlPoint.raise_on_remote_error = false
 
 module Playful
   class ControlPoint < Thor
-    desc "test TARGET", "Make a control point"
-    def test(target="upnp:rootdevice")
+    desc 'test TARGET', 'Make a control point'
+    def test(target='upnp:rootdevice')
       cp = Playful::ControlPoint.new(target)
 
       cp.start do |new_device_channel, old_device_channel|
@@ -33,7 +33,7 @@ module Playful
           end
 
           Rack::Handler::Thin.run(Rack::Builder.new {
-            run Rack::File.new(File.expand_path(File.dirname(__FILE__) + "/control_point.html"))
+            run Rack::File.new(File.expand_path(File.dirname(__FILE__) + '/control_point.html'))
           }, Port: 3000)
         end
       end

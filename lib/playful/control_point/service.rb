@@ -110,7 +110,7 @@ module Playful
       def initialize(device_base_url, service_list_info)
         @service_list_info = service_list_info
         @action_list = []
-        @xmlns = ""
+        @xmlns = ''
         extract_service_list_info(device_base_url)
         configure_savon
       end
@@ -121,7 +121,7 @@ module Playful
       # behavior.
       def fetch
         if @scpd_url.empty?
-          log "NO SCPDURL to get the service description from.  Returning."
+          log 'NO SCPDURL to get the service description from.  Returning.'
           set_deferred_success self
           return
         end
@@ -131,7 +131,7 @@ module Playful
         get_description(@scpd_url, description_getter)
 
         description_getter.errback do
-          msg = "Failed getting service description."
+          msg = 'Failed getting service description.'
           log "#{msg}", :error
           # @todo Should this return self? or should it succeed?
           set_deferred_status(:failed, msg)
@@ -169,15 +169,15 @@ module Playful
         @control_url = if @service_list_info[:controlURL]
           build_url(device_base_url, @service_list_info[:controlURL])
         else
-          log "Required controlURL attribute is blank."
-          ""
+          log 'Required controlURL attribute is blank.'
+          ''
         end
 
         @event_sub_url = if @service_list_info[:eventSubURL]
           build_url(device_base_url, @service_list_info[:eventSubURL])
         else
-          log "Required eventSubURL attribute is blank."
-          ""
+          log 'Required eventSubURL attribute is blank.'
+          ''
         end
 
         @service_type = @service_list_info[:serviceType]
@@ -186,8 +186,8 @@ module Playful
         @scpd_url = if @service_list_info[:SCPDURL]
           build_url(device_base_url, @service_list_info[:SCPDURL])
         else
-          log "Required SCPDURL attribute is blank."
-          ""
+          log 'Required SCPDURL attribute is blank.'
+          ''
         end
       end
 
@@ -276,13 +276,13 @@ module Playful
         define_singleton_method(action_name) do |params|
           begin
             response = @soap_client.call(action_name.to_s) do |locals|
-              locals.message_tags "xmlns:u" => @service_type
+              locals.message_tags 'xmlns:u' => @service_type
               locals.soap_action "#{st}##{action_name}"
               #soap.namespaces["s:encodingStyle"] = "http://schemas.xmlsoap.org/soap/encoding/"
 
               unless params.nil?
                 raise ArgumentError,
-                  "Method only accepts Hashes" unless params.is_a? Hash
+                  'Method only accepts Hashes' unless params.is_a? Hash
                 soap.body = params.symbolize_keys!
               end
             end
@@ -306,11 +306,11 @@ HTTP body as Hash: #{hash}
             end
           end
 
-          return_value = if argument_info.is_a?(Hash) && argument_info[:direction] == "out"
+          return_value = if argument_info.is_a?(Hash) && argument_info[:direction] == 'out'
             return_ruby_from_soap(action_name, response, argument_info)
           elsif argument_info.is_a? Array
             argument_info.map do |arg|
-              if arg[:direction] == "out"
+              if arg[:direction] == 'out'
                 return_ruby_from_soap(action_name, response, arg)
               end
             end
@@ -356,7 +356,7 @@ HTTP body as Hash: #{hash}
         false_types = %w[0 false no]
 
         if soap_response.success? && soap_response.to_xml.empty?
-          log "Got successful but empty soap response!"
+          log 'Got successful but empty soap response!'
           return {}
         end
 

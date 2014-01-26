@@ -16,7 +16,7 @@ module Playful
 
       # @param [Fixnum] ttl The TTL value to use when opening the UDP socket
       #   required for SSDP actions.
-      def initialize ttl=TTL
+      def initialize(ttl=TTL)
         @ttl = ttl
 
         @discovery_responses = EM::Channel.new
@@ -68,7 +68,8 @@ module Playful
       # Sets Socket options to allow for multicasting.  If ENV["RUBY_UPNP_ENV"] is
       # equal to "testing", then it doesn't turn off multicast looping.
       def setup_multicast_socket
-        set_membership(IPAddr.new(MULTICAST_IP).hton + IPAddr.new('0.0.0.0').hton)
+        set_membership(IPAddr.new(MULTICAST_IP).hton +
+          IPAddr.new('0.0.0.0').hton)
         set_multicast_ttl(@ttl)
         set_ttl(@ttl)
 
@@ -85,7 +86,8 @@ module Playful
 
       # @param [Fixnum] ttl TTL to set IP_MULTICAST_TTL to.
       def set_multicast_ttl(ttl)
-        set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL, [ttl].pack('i'))
+        set_sock_opt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_TTL,
+          [ttl].pack('i'))
       end
 
       # @param [Fixnum] ttl TTL to set IP_TTL to.

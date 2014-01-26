@@ -29,7 +29,7 @@ module Playful
     # @option options [Fixnum] ttl
     # @option options [Fixnum] m_search_count The number of times to send the
     #   M-SEARCH.  UPnP 1.0 suggests to send the request more than once.
-    def initialize(search_target, options={})
+    def initialize(search_target, options = {})
       options[:ttl] ||= TTL
       options[:response_wait_time] ||= DEFAULT_RESPONSE_WAIT_TIME
       @m_search_count = options[:m_search_count] ||= DEFAULT_M_SEARCH_COUNT
@@ -53,7 +53,8 @@ module Playful
       parsed_response = parse(response)
 
       return if parsed_response.has_key? :nts
-      return if parsed_response[:man] && parsed_response[:man] =~ /ssdp:discover/
+      return if parsed_response[:man] &&
+        parsed_response[:man] =~ /ssdp:discover/
 
       @discovery_responses << parsed_response
     end

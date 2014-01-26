@@ -29,7 +29,7 @@ module Rack
     # @param [Rack::Builder] app Your Rack application.
     # @param [Hash] options Options to pass to the Playful::SSDP::Searcher.
     # @see Playful::SSDP::Searcher
-    def initialize(app, options={})
+    def initialize(app, options = {})
       @app = app
       @devices = []
       options[:search_type] ||= :root

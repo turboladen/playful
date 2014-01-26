@@ -27,9 +27,9 @@ class Playful::SSDP::Listener < Playful::SSDP::MulticastConnection
 
     return unless parsed_response.has_key? :nts
 
-    if parsed_response[:nts] == "ssdp:alive"
+    if parsed_response[:nts] == 'ssdp:alive'
       @alive_notifications << parsed_response
-    elsif parsed_response[:nts] == "ssdp:byebye"
+    elsif parsed_response[:nts] == 'ssdp:byebye'
       @byebye_notifications << parsed_response
     else
       raise "Unknown NTS value: #{parsed_response[:nts]}"

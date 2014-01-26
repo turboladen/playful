@@ -14,7 +14,7 @@ module Playful
           use Rack::CommonLogger
           use Rack::ShowExceptions
 
-          map "/presentation" do
+          map '/presentation' do
             use Rack::Lint
             run Rack::Lobster.new
           end

@@ -51,9 +51,10 @@ module Playful
       byebye_notifications = Set.new
 
       listener = proc do
-        l = EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT, Playful::SSDP::Listener, ttl)
+        l = EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT,
+          Playful::SSDP::Listener, ttl)
         i = 0
-        EM.add_periodic_timer(5) { i += 5; Playful.log "Listening for #{i}\n"}
+        EM.add_periodic_timer(5) { i += 5; Playful.log "Listening for #{i}\n" }
         l
       end
 
@@ -65,7 +66,7 @@ module Playful
 
           alive_getter = Proc.new do |notification|
             alive_notifications << notification
-            EM.next_tick { l.alive_notifications.pop(&alive_getter) }
+            EM.next_tick { l.alive_notifications.pop(&live_getter) }
           end
           l.alive_notifications.pop(&alive_getter)
 
@@ -108,10 +109,10 @@ module Playful
     #   and/or services.  If the reactor is already running this will return a
     #   a Playful::SSDP::Searcher which will make its accessors available so you
     #   can get responses in real time.
-    def self.search(search_target=:all, options={})
+    def self.search(search_target=:all, options = {})
       response_wait_time = options[:response_wait_time] || 5
       ttl = options[:ttl] || TTL
-      do_broadcast_search = options[:do_broadcast_search] || false
+      do_broadcast_search = options[:do_broadcast_search]
 
       searcher_options = options
       searcher_options.delete :do_broadcast_search
@@ -120,13 +121,13 @@ module Playful
       search_target = search_target.to_upnp_s
 
       multicast_searcher = proc do
-        EM.open_datagram_socket('0.0.0.0', 0, Playful::SSDP::Searcher, search_target,
-          searcher_options)
+        EM.open_datagram_socket('0.0.0.0', 0, Playful::SSDP::Searcher,
+          search_target, searcher_options)
       end
 
       broadcast_searcher = proc do
-        EM.open_datagram_socket('0.0.0.0', 0, Playful::SSDP::BroadcastSearcher, search_target,
-          response_wait_time, ttl)
+        EM.open_datagram_socket('0.0.0.0', 0, Playful::SSDP::BroadcastSearcher,
+          search_target, response_wait_time, ttl)
       end
 
       if EM.reactor_running?

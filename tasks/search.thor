@@ -7,12 +7,12 @@ module Playful
     #---------------------------------------------------------------------------
     # search
     #---------------------------------------------------------------------------
-    desc "search TARGET", "Searches for devices of type TARGET"
+    desc 'search TARGET', 'Searches for devices of type TARGET'
     method_option :response_wait_time, default: 5
     method_option :ttl, default: 4
     method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
-    def search(target="upnp:rootdevice")
+    def search(target='upnp:rootdevice')
       Playful.log = options[:log]
       time_before = Time.now
       results = Playful::SSDP.search(target, options.dup)
@@ -32,12 +32,12 @@ search duration: #{time_after - time_before}
     #---------------------------------------------------------------------------
     # search_and_parse
     #---------------------------------------------------------------------------
-    desc "search_and_parse TARGET", "Searches for devices, fetches, and parses their DDFs"
+    desc 'search_and_parse TARGET', 'Searches for devices, fetches, and parses their DDFs'
     method_option :response_wait_time, default: 3
     method_option :ttl, default: 4
     method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
-    def search_and_parse(target="upnp:rootdevice")
+    def search_and_parse(target='upnp:rootdevice')
       responses = invoke :search, target
       return if responses.empty?
 
@@ -78,7 +78,7 @@ search duration: #{time_after - time_before}
         tickloop.on_stop { EM.stop }
       end
 
-      puts "No devices found" && exit if devices.empty?
+      puts 'No devices found' && exit if devices.empty?
 
       first_device = devices.first
 

@@ -11,13 +11,13 @@ class FakeUPnPDeviceCollection
   attr_accessor :respond_with
 
   def initialize
-    @response = ""
+    @response = ''
     @ssdp_listen_thread = nil
     @serve_description = false
     @local_ip, @local_port = local_ip_and_port
   end
 
-  def expect_discovery type
+  def expect_discovery(type)
     case type
     when :m_search
 

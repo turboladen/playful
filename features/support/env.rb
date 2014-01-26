@@ -14,4 +14,4 @@ ensure
   Socket.do_not_reverse_lookup = orig
 end
 
-ENV["RUBY_UPNP_ENV"] = "testing"
+ENV['RUBY_UPNP_ENV'] = 'testing'

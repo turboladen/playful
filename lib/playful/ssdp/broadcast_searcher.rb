@@ -52,9 +52,9 @@ ST: #{search_target}\r
       #
       # @return [Array<String,Fixnum>] The IP and port.
       def peer_info
-        peer_bytes = get_peername[2, 6].unpack("nC4")
+        peer_bytes = get_peername[2, 6].unpack('nC4')
         port = peer_bytes.first.to_i
-        ip = peer_bytes[1, 4].join(".")
+        ip = peer_bytes[1, 4].join('.')
 
         [ip, port]
       end
@@ -65,9 +65,9 @@ ST: #{search_target}\r
         parsed_response = parse(response)
 
         if parsed_response.has_key? :nts
-          if parsed_response[:nts] == "ssdp:alive"
+          if parsed_response[:nts] == 'ssdp:alive'
             @alive_notifications << parsed_response
-          elsif parsed_response[:nts] == "ssdp:bye-bye"
+          elsif parsed_response[:nts] == 'ssdp:bye-bye'
             @byebye_notifications << parsed_response
           else
             raise "Unknown NTS value: #{parsed_response[:nts]}"
@@ -86,7 +86,7 @@ ST: #{search_target}\r
         new_data = {}
 
         unless data =~ /\n/
-          log "Received response as a single-line String.  Discarding."
+          log 'Received response as a single-line String.  Discarding.'
           log "Bad response looked like:\n#{data}"
           return new_data
         end

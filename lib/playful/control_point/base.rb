@@ -22,7 +22,7 @@ module Playful
 
         http.errback do |error|
           if error == :timeout
-            log "Timed out getting description.  Retrying..."
+            log 'Timed out getting description.  Retrying...'
             http = EM::HttpRequest.new(location).get
           else
             log "Unable to retrieve DDF from #{location}", :error
