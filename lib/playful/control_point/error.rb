@@ -1,4 +1,4 @@
-module UPnP
+module Playful
   class ControlPoint
     class Error < StandardError
       #

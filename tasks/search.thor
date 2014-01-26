@@ -1,8 +1,8 @@
 require 'pp'
-require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/ssdp')
-require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/control_point/device')
+require File.expand_path(File.dirname(__FILE__)+ '/../lib/playful/ssdp')
+require File.expand_path(File.dirname(__FILE__)+ '/../lib/playful/control_point/device')
 
-module Upnp
+module Playful
   class Ssdp < Thor
     #---------------------------------------------------------------------------
     # search
@@ -13,9 +13,9 @@ module Upnp
     method_option :do_broadcast_search, type: :boolean
     method_option :log, type: :boolean
     def search(target="upnp:rootdevice")
-      UPnP.log = options[:log]
+      Playful.log = options[:log]
       time_before = Time.now
-      results = UPnP::SSDP.search(target, options.dup)
+      results = Playful::SSDP.search(target, options.dup)
       time_after = Time.now
 
       puts <<-RESULTS
@@ -48,7 +48,7 @@ search duration: #{time_after - time_before}
 
       EM.synchrony do
         responses.each_with_index do |response, i|
-          device_creator = UPnP::ControlPoint::Device.new(ssdp_notification: response)
+          device_creator = Playful::ControlPoint::Device.new(ssdp_notification: response)
 
           device_creator.errback do
             puts "<#{self.class}> Failed creating device."

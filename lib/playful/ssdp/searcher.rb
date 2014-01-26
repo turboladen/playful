@@ -1,7 +1,7 @@
 require_relative '../logger'
 require_relative 'multicast_connection'
 
-module UPnP
+module Playful
 
   # A subclass of an EventMachine::Connection, this handles doing M-SEARCHes.
   #

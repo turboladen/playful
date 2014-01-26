@@ -2,7 +2,7 @@ require_relative '../logger'
 require_relative 'multicast_connection'
 
 
-class UPnP::SSDP::Notifier < UPnP::SSDP::MulticastConnection
+class Playful::SSDP::Notifier < Playful::SSDP::MulticastConnection
   include LogSwitch::Mixin
 
   def initialize(nt, usn, ddf_url, valid_for_duration)
@@ -33,7 +33,7 @@ CACHE-CONTROL: max-age=#{valid_for_duration}\r
 LOCATION: #{ddf_url}\r
 NT: #{nt}\r
 NTS: ssdp:alive\r
-SERVER: #{@os} UPnP/#{@upnp_version} RubySSDP/#{UPnP::VERSION}\r
+SERVER: #{@os} UPnP/#{@upnp_version} Playful/#{Playful::VERSION}\r
 USN: #{usn}\r
 \r
     NOTIFICATION

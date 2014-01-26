@@ -1,7 +1,7 @@
 require_relative 'multicast_connection'
 
 
-class UPnP::SSDP::Listener < UPnP::SSDP::MulticastConnection
+class Playful::SSDP::Listener < Playful::SSDP::MulticastConnection
   include LogSwitch::Mixin
 
   # @return [EventMachine::Channel] Provides subscribers with notifications

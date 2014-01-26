@@ -8,10 +8,10 @@ require 'eventmachine'
 require 'em-synchrony'
 
 
-module UPnP
+module Playful
   class SSDP
     class MulticastConnection < EventMachine::Connection
-      include UPnP::SSDP::NetworkConstants
+      include Playful::SSDP::NetworkConstants
       include LogSwitch::Mixin
 
       # @param [Fixnum] ttl The TTL value to use when opening the UDP socket

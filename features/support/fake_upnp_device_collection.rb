@@ -2,7 +2,7 @@ require 'singleton'
 require 'socket'
 require 'ipaddr'
 
-require_relative '../../lib/upnp/ssdp/network_constants'
+require_relative '../../lib/playful/ssdp/network_constants'
 
 class FakeUPnPDeviceCollection
   include Singleton

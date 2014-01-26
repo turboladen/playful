@@ -1,15 +1,15 @@
 require 'bundler/setup'
-require File.expand_path(File.dirname(__FILE__)+ '/../lib/upnp/control_point')
+require File.expand_path(File.dirname(__FILE__)+ '/../lib/playful/control_point')
 require 'rack'
 require 'em-websocket'
 
-UPnP::ControlPoint.raise_on_remote_error = false
+Playful::ControlPoint.raise_on_remote_error = false
 
-module Upnp
+module Playful
   class ControlPoint < Thor
     desc "test TARGET", "Make a control point"
     def test(target="upnp:rootdevice")
-      cp = UPnP::ControlPoint.new(target)
+      cp = Playful::ControlPoint.new(target)
 
       cp.start do |new_device_channel, old_device_channel|
         EM.defer do

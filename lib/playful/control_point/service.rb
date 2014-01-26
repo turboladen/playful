@@ -7,7 +7,7 @@ require 'em-http'
 HTTPI.adapter = :em_http
 
 
-module UPnP
+module Playful
   class ControlPoint
 
     # An object of this type functions as somewhat of a proxy to a UPnP device's

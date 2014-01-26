@@ -1,14 +1,14 @@
 require 'rack'
-require_relative '../upnp/control_point'
+require_relative '../playful/control_point'
 
 module Rack
 
   # Middleware that allows your Rack app to keep tabs on devices that the
-  # {UPnP::ControlPoint} has found.  UPnP devices that match the +search_type+
+  # {Playful::ControlPoint} has found.  UPnP devices that match the +search_type+
   # are discovered and added to the list, then removed as those devices send out
   # +ssdp:byebye+ notifications.  All of this depends on +EventMachine::Channel+s,
   # and thus requires that an EventMachine reactor is running.  If you don't
-  # have one running, the {UPnP::ControlPoint} will start one for you.
+  # have one running, the {Playful::ControlPoint} will start one for you.
   #
   # @example Control all root devices
   #
@@ -27,8 +27,8 @@ module Rack
   class UPnPControlPoint
 
     # @param [Rack::Builder] app Your Rack application.
-    # @param [Hash] options Options to pass to the UPnP::SSDP::Searcher.
-    # @see UPnP::SSDP::Searcher
+    # @param [Hash] options Options to pass to the Playful::SSDP::Searcher.
+    # @see Playful::SSDP::Searcher
     def initialize(app, options={})
       @app = app
       @devices = []
@@ -36,15 +36,15 @@ module Rack
       EM.next_tick { start_control_point(options[:search_type], options) }
     end
 
-    # Creates and starts the {UPnP::ControlPoint}, then manages the list of
+    # Creates and starts the {Playful::ControlPoint}, then manages the list of
     # devices using the +EventMachine::Channel+ objects yielded in.
     #
     # @param [Symbol,String] search_type The device(s) you want to search for
     #   and control.
-    # @param [Hash] options Options to pass to the UPnP::SSDP::Searcher.
-    # @see UPnP::SSDP::Searcher
+    # @param [Hash] options Options to pass to the Playful::SSDP::Searcher.
+    # @see Playful::SSDP::Searcher
     def start_control_point(search_type, options)
-      @cp = ::UPnP::ControlPoint.new(search_type, options)
+      @cp = ::Playful::ControlPoint.new(search_type, options)
 
       @cp.start do |new_device_channel, old_device_channel|
         new_device_channel.subscribe do |notification|

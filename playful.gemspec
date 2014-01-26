@@ -1,18 +1,16 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "upnp/version"
+require "playful/version"
 
 Gem::Specification.new do |s|
-  s.name        = "upnp"
-  s.version     = UPnP::VERSION
+  s.name        = "playful"
+  s.version     = Playful::VERSION
   s.author      = "turboladen"
   s.email       = "steve.loveless@gmail.com"
-  s.homepage    = "http://github.com/turboladen/upnp"
+  s.homepage    = "http://github.com/turboladen/playful"
   s.summary     = "Use me to build a UPnP app!"
-  s.description = %q{upnp provides the tools you need to build an app that runs
+  s.description = %q{playful provides the tools you need to build an app that runs
 in a UPnP environment.}
-
-  s.rubyforge_project = "upnp"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {spec,features}/*`.split("\n")
@@ -32,11 +30,9 @@ in a UPnP environment.}
   s.add_development_dependency 'cucumber', '>=1.0.0'
   s.add_development_dependency 'em-websocket', '>=0.3.6'
   s.add_development_dependency 'rake'
-  s.add_development_dependency 'rspec', '>=2.6'
+  s.add_development_dependency 'rspec', '>=3.0.0.beta'
   s.add_development_dependency 'simplecov', '>=0.4.2'
-  s.add_development_dependency 'tailor', ">=1.1.4"
   s.add_development_dependency 'thin'
   s.add_development_dependency 'thor', ">=0.1.6"
   s.add_development_dependency 'yard', '>=0.7.0'
-  s.add_development_dependency 'pry'
 end
