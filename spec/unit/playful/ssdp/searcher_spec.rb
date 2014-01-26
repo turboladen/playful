@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'upnp/ssdp/searcher'
+require 'playful/ssdp/searcher'
 
 
-describe UPnP::SSDP::Searcher do
+describe Playful::SSDP::Searcher do
   around(:each) do |example|
     EM.synchrony do
       example.run
@@ -11,12 +11,12 @@ describe UPnP::SSDP::Searcher do
   end
 
   before do
-    UPnP.log = false
-    UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+    Playful.log = false
+    Playful::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
   end
 
   subject do
-    UPnP::SSDP::Searcher.new(1, "ssdp:all", {})
+    Playful::SSDP::Searcher.new(1, "ssdp:all", {})
   end
 
   it "lets you read its responses" do
@@ -27,7 +27,7 @@ describe UPnP::SSDP::Searcher do
 
   describe "#initialize" do
     it "does an #m_search" do
-      UPnP::SSDP::Searcher.any_instance.should_receive(:m_search).and_return(<<-MSEARCH
+      Playful::SSDP::Searcher.any_instance.should_receive(:m_search).and_return(<<-MSEARCH
 M-SEARCH * HTTP/1.1\r
 HOST: 239.255.255.250:1900\r
 MAN: "ssdp:discover"\r
@@ -63,7 +63,7 @@ ST: ssdp:all\r
   end
 
   describe "#post_init" do
-    before { UPnP::SSDP::Searcher.any_instance.stub(:m_search).and_return("hi") }
+    before { Playful::SSDP::Searcher.any_instance.stub(:m_search).and_return("hi") }
 
     it "sends an M-SEARCH as a datagram over 239.255.255.250:1900" do
       m_search_count_times = subject.instance_variable_get(:@m_search_count)

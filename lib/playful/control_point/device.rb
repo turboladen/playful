@@ -6,7 +6,7 @@ require 'eventmachine'
 require 'time'
 
 
-module UPnP
+module Playful
   class ControlPoint
     class Device < Base
       include EM::Deferrable

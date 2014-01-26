@@ -3,7 +3,7 @@ require 'em-synchrony'
 require 'rack'
 require 'rack/lobster'
 
-module UPnP
+module Playful
   class Device
 
     # Multicasts discovery messages to advertise its root device, any embedded

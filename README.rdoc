@@ -1,10 +1,10 @@
-= upnp
+= playful
 
-* {Homepage}[http://github.com/turboladen/upnp]
+* {Homepage}[http://github.com/turboladen/playful]
 * {UPnP Device Architecture Documentation}[http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf]
 
-{<img src="https://travis-ci.org/turboladen/upnp.png?branch=master" alt="Build Status" />}[https://travis-ci.org/turboladen/upnp]
-{<img src="https://coveralls.io/repos/turboladen/upnp/badge.png" alt="Coverage Status" />}[https://coveralls.io/r/turboladen/upnp]
+{<img src="https://travis-ci.org/turboladen/playful.png?branch=master" alt="Build Status" />}[https://travis-ci.org/turboladen/playful]
+{<img src="https://coveralls.io/repos/turboladen/playful/badge.png" alt="Coverage Status" />}[https://coveralls.io/r/turboladen/playful]
 
 
 == Description
@@ -59,7 +59,7 @@ If not, it returns is an Array of responses as Hashes, where keys are the header
 names, values are the header values.  Take a look at the SSDP.search docs for
 more on the options here.
 
-  require 'upnp/ssdp'
+  require 'playful/ssdp'
 
   # Search for all devices (do an M-SEARCH with the ST header set to 'ssdp:all')
   all_devices = UPnP::SSDP.search                         # this is default
@@ -97,8 +97,8 @@ to the resposnes and do what you want with them (most likely you'll want to crea
 UPnP::ControlPoint::Device objects so you can control your device) as you
 receive them.
 
-  require 'upnp/ssdp'
-  require 'upnp/control_point/device'
+  require 'playful/ssdp'
+  require 'playful/control_point/device'
 
   EM.run do
     searcher = UPnP::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
@@ -181,7 +181,7 @@ this as the design settles down.
 == Install
 
   # This won't work yet, as the gem has not yet been released...
-  $ gem install upnp
+  $ gem install playful
 
 == Copyright
 

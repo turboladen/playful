@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'upnp/control_point'
+require 'playful/control_point'
 
 
-describe UPnP::ControlPoint do
+describe Playful::ControlPoint do
   subject do
-    UPnP::ControlPoint.new(1)
+    Playful::ControlPoint.new(1)
   end
 
   describe "#ssdp_search_and_listen" do
@@ -13,14 +13,14 @@ describe UPnP::ControlPoint do
     end
 
     let(:searcher) do
-      s = double "UPnP::SSDP::Searcher"
+      s = double "Playful::SSDP::Searcher"
       s.stub_chain(:discovery_responses, :subscribe).and_yield notification
 
       s
     end
 
     before do
-      UPnP::SSDP.should_receive(:search).with("ssdp:all", {}).and_return searcher
+      Playful::SSDP.should_receive(:search).with("ssdp:all", {}).and_return searcher
       EM.stub(:add_periodic_timer)
     end
 

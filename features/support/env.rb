@@ -1,6 +1,6 @@
 require 'socket'
 require 'log_buddy'
-require_relative '../../lib/upnp/control_point'
+require_relative '../../lib/playful/control_point'
 
 def local_ip_and_port
   orig, Socket.do_not_reverse_lookup = Socket.do_not_reverse_lookup, true

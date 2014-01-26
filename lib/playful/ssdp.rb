@@ -11,7 +11,7 @@ require_relative 'ssdp/notifier'
 
 require_relative 'ssdp/broadcast_searcher'
 
-module UPnP
+module Playful
 
   # This is the main class for doing SSDP stuff.  You can have a look at child
   # classes, but you'll probably want to just use these methods here.
@@ -24,13 +24,13 @@ module UPnP
   # Before you can do anything with any of the UPnP devices on your network, you
   # need to +search+ your network to see what devices are available.  Once you've
   # found what's available, you can then decide device(s) you'd like to control
-  # (that's where Control Points come in; take a look at UPnP::ControlPoint).
+  # (that's where Control Points come in; take a look at Playful::ControlPoint).
   # After searching, you should then +listen+ to the activity on your network.
   # New devices on your network may come online (via +ssdp:alive+) and devices
   # that you care about may go offline (via +ssdp:byebye+), in which case you
   # probably shouldn't try to talk to them anymore.
   #
-  # @todo Add docs for UPnP::Device perspective.
+  # @todo Add docs for Playful::Device perspective.
   class SSDP
     include LogSwitch::Mixin
     include NetworkConstants
@@ -40,20 +40,20 @@ module UPnP
     #
     # @param [Fixnum] ttl The TTL to use on the UDP socket.
     #
-    # @return [Hash<Array>,UPnP::SSDP::Listener] If the EventMachine reactor is
+    # @return [Hash<Array>,Playful::SSDP::Listener] If the EventMachine reactor is
     #   _not_ running, it returns two key/value pairs--one for
     #   alive_notifications, one for byebye_notifications.  If the reactor _is_
-    #   running, it returns a UPnP::SSDP::Listener so that that object can be
-    #   used however desired.  The latter method is used in UPnP::ControlPoints
+    #   running, it returns a Playful::SSDP::Listener so that that object can be
+    #   used however desired.  The latter method is used in Playful::ControlPoints
     #   so that an object of that type can keep track of devices it cares about.
     def self.listen(ttl=TTL)
       alive_notifications = Set.new
       byebye_notifications = Set.new
 
       listener = proc do
-        l = EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT, UPnP::SSDP::Listener, ttl)
+        l = EM.open_datagram_socket(MULTICAST_IP, MULTICAST_PORT, Playful::SSDP::Listener, ttl)
         i = 0
-        EM.add_periodic_timer(5) { i += 5; UPnP.log "Listening for #{i}\n"}
+        EM.add_periodic_timer(5) { i += 5; Playful.log "Listening for #{i}\n"}
         l
       end
 
@@ -85,7 +85,7 @@ module UPnP
       }
     end
 
-    # Opens a UDP socket on 0.0.0.0, on an ephemeral port, has UPnP::SSDP::Searcher
+    # Opens a UDP socket on 0.0.0.0, on an ephemeral port, has Playful::SSDP::Searcher
     # build and send the search request, then receives the responses.  The search
     # will stop after +response_wait_time+.
     #
@@ -101,12 +101,12 @@ module UPnP
     #   it's merely a hack for working with some types of devices that don't
     #   properly implement the UPnP spec.
     #
-    # @return [Array<Hash>,UPnP::SSDP::Searcher] Returns a Hash that represents
+    # @return [Array<Hash>,Playful::SSDP::Searcher] Returns a Hash that represents
     #   the headers from the M-SEARCH response.  Each one of these can be passed
-    #   in to UPnP::ControlPoint::Device.new to download the device's
+    #   in to Playful::ControlPoint::Device.new to download the device's
     #   description file, parse it, and interact with the device's devices
     #   and/or services.  If the reactor is already running this will return a
-    #   a UPnP::SSDP::Searcher which will make its accessors available so you
+    #   a Playful::SSDP::Searcher which will make its accessors available so you
     #   can get responses in real time.
     def self.search(search_target=:all, options={})
       response_wait_time = options[:response_wait_time] || 5
@@ -120,12 +120,12 @@ module UPnP
       search_target = search_target.to_upnp_s
 
       multicast_searcher = proc do
-        EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Searcher, search_target,
+        EM.open_datagram_socket('0.0.0.0', 0, Playful::SSDP::Searcher, search_target,
           searcher_options)
       end
 
       broadcast_searcher = proc do
-        EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::BroadcastSearcher, search_target,
+        EM.open_datagram_socket('0.0.0.0', 0, Playful::SSDP::BroadcastSearcher, search_target,
           response_wait_time, ttl)
       end
 
@@ -155,7 +155,7 @@ module UPnP
       responses.flatten
     end
 
-    # @todo This is for UPnP::Devices, which aren't implemented yet, and thus
+    # @todo This is for Playful::Devices, which aren't implemented yet, and thus
     #   this may not be working.
     def self.notify(notification_type, usn, ddf_url, valid_for_duration=1800)
       responses = []
@@ -175,10 +175,10 @@ module UPnP
       responses
     end
 
-    # @todo This is for UPnP::Devices, which aren't implemented yet, and thus
+    # @todo This is for Playful::Devices, which aren't implemented yet, and thus
     #   this may not be working.
     def self.send_notification(notification_type, usn, ddf_url, valid_for_duration)
-      EM.open_datagram_socket('0.0.0.0', 0, UPnP::SSDP::Notifier, notification_type,
+      EM.open_datagram_socket('0.0.0.0', 0, Playful::SSDP::Notifier, notification_type,
         usn, ddf_url, valid_for_duration)
     end
 

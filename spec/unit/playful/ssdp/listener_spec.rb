@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'upnp/ssdp/listener'
+require 'playful/ssdp/listener'
 
 
-describe UPnP::SSDP::Listener do
+describe Playful::SSDP::Listener do
   around(:each) do |example|
     EM.synchrony do
       example.run
@@ -11,10 +11,10 @@ describe UPnP::SSDP::Listener do
   end
 
   before do
-    UPnP::SSDP::Listener.any_instance.stub(:setup_multicast_socket)
+    Playful::SSDP::Listener.any_instance.stub(:setup_multicast_socket)
   end
 
-  subject { UPnP::SSDP::Listener.new(1) }
+  subject { Playful::SSDP::Listener.new(1) }
 
   describe '#receive_data' do
     it 'logs the IP and port from which the request came from' do

@@ -1,4 +1,4 @@
-module UPnP
+module Playful
   class SSDP
     module NetworkConstants
 

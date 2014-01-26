@@ -1,8 +1,8 @@
 require 'log_switch'
 
 
-module UPnP
+module Playful
   extend LogSwitch
 end
 
-UPnP.log_class_name = true
+Playful.log_class_name = true

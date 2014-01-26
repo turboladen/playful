@@ -6,13 +6,13 @@ require 'socket'
 require 'eventmachine'
 
 
-# TODO: DRY this up!!  (it's mostly the same as UPnP::SSDP::MulticastConnection)
-module UPnP
+# TODO: DRY this up!!  (it's mostly the same as Playful::SSDP::MulticastConnection)
+module Playful
   class SSDP
     class BroadcastSearcher < EventMachine::Connection
       include LogSwitch::Mixin
       include EventMachine::Deferrable
-      include UPnP::SSDP::NetworkConstants
+      include Playful::SSDP::NetworkConstants
 
       # @return [Array] The list of responses from the current discovery request.
       attr_reader :discovery_responses

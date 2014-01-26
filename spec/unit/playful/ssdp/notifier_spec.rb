@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'upnp/ssdp/notifier'
+require 'playful/ssdp/notifier'
 
 
-describe UPnP::SSDP::Notifier do
+describe Playful::SSDP::Notifier do
   around(:each) do |example|
     EM.synchrony do
       example.run
@@ -16,12 +16,12 @@ describe UPnP::SSDP::Notifier do
   let(:duration) { 567 }
 
   subject do
-    UPnP::SSDP::Notifier.new(1, nt, usn, ddf_url, duration)
+    Playful::SSDP::Notifier.new(1, nt, usn, ddf_url, duration)
   end
 
   describe '#initialize' do
     it 'creates a notification' do
-      UPnP::SSDP::Notifier.any_instance.should_receive(:notification).
+      Playful::SSDP::Notifier.any_instance.should_receive(:notification).
         with(nt, usn, ddf_url, duration)
 
       subject

@@ -1,4 +1,4 @@
-module UPnP
+module Playful
   class SSDP
     class Error < StandardError
     end

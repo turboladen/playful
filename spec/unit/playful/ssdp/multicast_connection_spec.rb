@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'upnp/ssdp/multicast_connection'
+require 'playful/ssdp/multicast_connection'
 
 
-describe UPnP::SSDP::MulticastConnection do
+describe Playful::SSDP::MulticastConnection do
   around(:each) do |example|
     EM.synchrony do
       example.run
@@ -10,15 +10,15 @@ describe UPnP::SSDP::MulticastConnection do
     end
   end
 
-  subject { UPnP::SSDP::MulticastConnection.new(1) }
+  subject { Playful::SSDP::MulticastConnection.new(1) }
 
   before do
-    UPnP.log = false
+    Playful.log = false
   end
 
   describe '#peer_info' do
     before do
-      UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+      Playful::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
       subject.stub_chain(:get_peername, :[], :unpack).
           and_return(%w[1234 1 2 3 4])
     end
@@ -38,7 +38,7 @@ describe UPnP::SSDP::MulticastConnection do
 
   describe '#parse' do
     before do
-      UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+      Playful::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
     end
 
     it 'turns headers into Hash keys' do
@@ -82,10 +82,10 @@ describe UPnP::SSDP::MulticastConnection do
 
   describe '#setup_multicast_socket' do
     before do
-      UPnP::SSDP::MulticastConnection.any_instance.stub(:set_membership)
-      UPnP::SSDP::MulticastConnection.any_instance.stub(:switch_multicast_loop)
-      UPnP::SSDP::MulticastConnection.any_instance.stub(:set_multicast_ttl)
-      UPnP::SSDP::MulticastConnection.any_instance.stub(:set_ttl)
+      Playful::SSDP::MulticastConnection.any_instance.stub(:set_membership)
+      Playful::SSDP::MulticastConnection.any_instance.stub(:switch_multicast_loop)
+      Playful::SSDP::MulticastConnection.any_instance.stub(:set_multicast_ttl)
+      Playful::SSDP::MulticastConnection.any_instance.stub(:set_ttl)
     end
 
     it 'adds 0.0.0.0 and 239.255.255.250 to the membership group' do
@@ -118,7 +118,7 @@ describe UPnP::SSDP::MulticastConnection do
 
   describe '#switch_multicast_loop' do
     before do
-      UPnP::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+      Playful::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
     end
 
     it "passes '\\001' to the socket option call when param == :on" do
@@ -151,7 +151,7 @@ describe UPnP::SSDP::MulticastConnection do
 
     it "raises when not :on, :off, '\\000', or '\\001'" do
       expect { subject.switch_multicast_loop 12312312 }.
-        to raise_error(UPnP::SSDP::Error)
+        to raise_error(Playful::SSDP::Error)
     end
   end
 end

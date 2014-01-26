@@ -1,13 +1,13 @@
 require 'spec_helper'
-require 'upnp/ssdp'
+require 'playful/ssdp'
 
 
-describe UPnP::SSDP do
-  subject { UPnP::SSDP }
+describe Playful::SSDP do
+  subject { Playful::SSDP }
 
   describe '.listen' do
     let(:listener) do
-      searcher = double 'UPnP::SSDP::Listener'
+      searcher = double 'Playful::SSDP::Listener'
       searcher.stub_chain(:alive_notifications, :pop).and_yield(%w[one two])
       searcher.stub_chain(:byebye_notifications, :pop).and_yield(%w[three four])
 
@@ -21,7 +21,7 @@ describe UPnP::SSDP do
     end
 
     context 'reactor is already running' do
-      it 'returns a UPnP::SSDP::Listener' do
+      it 'returns a Playful::SSDP::Listener' do
         EM.stub(:reactor_running?).and_return true
         subject.listen.should == listener
       end
@@ -39,7 +39,7 @@ describe UPnP::SSDP do
       it 'opens a UDP socket on 239.255.255.250, port 1900' do
         EM.stub(:add_shutdown_hook)
         EM.should_receive(:open_datagram_socket).with('239.255.255.250', 1900,
-          UPnP::SSDP::Listener, 4)
+          Playful::SSDP::Listener, 4)
         subject.listen
       end
     end
@@ -47,14 +47,14 @@ describe UPnP::SSDP do
 
   describe '.search' do
     let(:multicast_searcher) do
-      searcher = double 'UPnP::SSDP::Searcher'
+      searcher = double 'Playful::SSDP::Searcher'
       searcher.stub_chain(:discovery_responses, :subscribe).and_yield(%w[one two])
 
       searcher
     end
 
     let(:broadcast_searcher) do
-      searcher = double 'UPnP::SSDP::BroadcastSearcher'
+      searcher = double 'Playful::SSDP::BroadcastSearcher'
       searcher.stub_chain(:discovery_responses, :subscribe).and_yield(%w[three four])
 
       searcher
@@ -80,13 +80,13 @@ describe UPnP::SSDP do
         search_target.should_receive(:to_upnp_s).and_call_original
 
         EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0,
-          UPnP::SSDP::Searcher, "I'm a string", {})
+          Playful::SSDP::Searcher, "I'm a string", {})
         subject.search(search_target)
       end
     end
 
     context 'reactor is already running' do
-      it 'returns a UPnP::SSDP::Searcher' do
+      it 'returns a Playful::SSDP::Searcher' do
         EM.stub(:reactor_running?).and_return true
         subject.search.should == multicast_searcher
       end
@@ -106,9 +106,9 @@ describe UPnP::SSDP do
 
         it 'opens 2 UDP sockets on 0.0.0.0, port 0' do
           EM.stub(:add_shutdown_hook)
-          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, UPnP::SSDP::Searcher,
+          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, Playful::SSDP::Searcher,
             'ssdp:all', {})
-          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, UPnP::SSDP::BroadcastSearcher,
+          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, Playful::SSDP::BroadcastSearcher,
             'ssdp:all', 5, 4)
           subject.search(:all, do_broadcast_search: true)
         end
@@ -122,7 +122,7 @@ describe UPnP::SSDP do
 
         it 'opens a UDP socket on 0.0.0.0, port 0' do
           EM.stub(:add_shutdown_hook)
-          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, UPnP::SSDP::Searcher,
+          EM.should_receive(:open_datagram_socket).with('0.0.0.0', 0, Playful::SSDP::Searcher,
             'ssdp:all', {})
           subject.search
         end
