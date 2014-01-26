@@ -33,7 +33,7 @@ CACHE-CONTROL: max-age=#{valid_for_duration}\r
 LOCATION: #{ddf_url}\r
 NT: #{nt}\r
 NTS: ssdp:alive\r
-SERVER: #{@os} Playful/#{@upnp_version} RubySSDP/#{Playful::VERSION}\r
+SERVER: #{@os} UPnP/#{@upnp_version} Playful/#{Playful::VERSION}\r
 USN: #{usn}\r
 \r
     NOTIFICATION

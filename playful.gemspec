@@ -30,7 +30,7 @@ in a UPnP environment.}
   s.add_development_dependency 'cucumber', '>=1.0.0'
   s.add_development_dependency 'em-websocket', '>=0.3.6'
   s.add_development_dependency 'rake'
-  s.add_development_dependency 'rspec', '>=2.6'
+  s.add_development_dependency 'rspec', '>=3.0.0.beta'
   s.add_development_dependency 'simplecov', '>=0.4.2'
   s.add_development_dependency 'thin'
   s.add_development_dependency 'thor', ">=0.1.6"

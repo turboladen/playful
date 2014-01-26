@@ -20,7 +20,7 @@ describe Playful::ControlPoint do
     end
 
     before do
-      Playful::SSDP.should_receive(:search).with("ssdp:all", {}).and_return searcher
+      expect(Playful::SSDP).to receive(:search).with("ssdp:all", {}).and_return searcher
       EM.stub(:add_periodic_timer)
     end
 

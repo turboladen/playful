@@ -18,59 +18,58 @@ describe Playful::SSDP::MulticastConnection do
 
   describe '#peer_info' do
     before do
-      Playful::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+      allow_any_instance_of(Playful::SSDP::MulticastConnection).to receive(:setup_multicast_socket)
       subject.stub_chain(:get_peername, :[], :unpack).
           and_return(%w[1234 1 2 3 4])
     end
 
     it 'returns an Array with IP and port' do
-      subject.peer_info.should == ['1.2.3.4', 1234]
+      expect(subject.peer_info).to eq ['1.2.3.4', 1234]
     end
 
     it 'returns IP as a String' do
-      subject.peer_info.first.should be_a String
+      expect(subject.peer_info.first).to be_a String
     end
 
     it 'returns port as a Fixnum' do
-      subject.peer_info.last.should be_a Fixnum
+      expect(subject.peer_info.last).to be_a Fixnum
     end
   end
 
   describe '#parse' do
     before do
-      Playful::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+      allow_any_instance_of(Playful::SSDP::MulticastConnection).to receive(:setup_multicast_socket)
     end
 
     it 'turns headers into Hash keys' do
       result = subject.parse ROOT_DEVICE1
-      result.should have_key :cache_control
-      result.should have_key :date
-      result.should have_key :location
-      result.should have_key :server
-      result.should have_key :st
-      result.should have_key :ext
-      result.should have_key :usn
-      result.should have_key :content_length
+      expect(result).to have_key :cache_control
+      expect(result).to have_key :date
+      expect(result).to have_key :location
+      expect(result).to have_key :server
+      expect(result).to have_key :st
+      expect(result).to have_key :ext
+      expect(result).to have_key :usn
+      expect(result).to have_key :content_length
     end
 
     it 'turns header values into Hash values' do
       result = subject.parse ROOT_DEVICE1
-      result[:cache_control].should == 'max-age=1200'
-      result[:date].should == 'Mon, 26 Sep 2011 06:40:19 GMT'
-      result[:location].should == 'http://1.2.3.4:5678/description/fetch'
-      result[:server].should == 'Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1'
-      result[:st].should == 'upnp:rootdevice'
-      result[:ext].should be_empty
-      result[:usn].should == 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d::upnp:rootdevice'
-      result[:content_length].should == '0'
-
+      expect(result[:cache_control]).to eq 'max-age=1200'
+      expect(result[:date]).to eq 'Mon, 26 Sep 2011 06:40:19 GMT'
+      expect(result[:location]).to eq 'http://1.2.3.4:5678/description/fetch'
+      expect(result[:server]).to eq 'Linux-i386-2.6.38-10-generic-pae, UPnP/1.0, PMS/1.25.1'
+      expect(result[:st]).to eq 'upnp:rootdevice'
+      expect(result[:ext]).to be_empty
+      expect(result[:usn]).to eq 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d::upnp:rootdevice'
+      expect(result[:content_length]).to eq '0'
     end
 
     context 'single line String as response data' do
       before { @data = ROOT_DEVICE1.gsub("\n", ' ') }
 
       it 'returns an empty Hash' do
-        subject.parse(@data).should == { }
+        expect(subject.parse(@data)).to eq({ })
       end
 
       it "logs the 'bad' response" do
@@ -82,26 +81,26 @@ describe Playful::SSDP::MulticastConnection do
 
   describe '#setup_multicast_socket' do
     before do
-      Playful::SSDP::MulticastConnection.any_instance.stub(:set_membership)
-      Playful::SSDP::MulticastConnection.any_instance.stub(:switch_multicast_loop)
-      Playful::SSDP::MulticastConnection.any_instance.stub(:set_multicast_ttl)
-      Playful::SSDP::MulticastConnection.any_instance.stub(:set_ttl)
+      allow_any_instance_of(Playful::SSDP::MulticastConnection).to receive(:set_membership)
+      allow_any_instance_of(Playful::SSDP::MulticastConnection).to receive(:switch_multicast_loop)
+      allow_any_instance_of(Playful::SSDP::MulticastConnection).to receive(:set_multicast_ttl)
+      allow_any_instance_of(Playful::SSDP::MulticastConnection).to receive(:set_ttl)
     end
 
     it 'adds 0.0.0.0 and 239.255.255.250 to the membership group' do
-      subject.should_receive(:set_membership).with(
+      expect(subject).to receive(:set_membership).with(
         IPAddr.new('239.255.255.250').hton + IPAddr.new('0.0.0.0').hton
       )
       subject.setup_multicast_socket
     end
 
     it 'sets multicast TTL to 4' do
-      subject.should_receive(:set_multicast_ttl).with(4)
+      expect(subject).to receive(:set_multicast_ttl).with(4)
       subject.setup_multicast_socket
     end
 
     it 'sets TTL to 4' do
-      subject.should_receive(:set_ttl).with(4)
+      expect(subject).to receive(:set_ttl).with(4)
       subject.setup_multicast_socket
     end
 
@@ -110,7 +109,7 @@ describe Playful::SSDP::MulticastConnection do
 
       it 'turns multicast loop off' do
         ENV['RUBY_UPNP_ENV'] = 'development'
-        subject.should_receive(:switch_multicast_loop).with(:off)
+        expect(subject).to receive(:switch_multicast_loop).with(:off)
         subject.setup_multicast_socket
       end
     end
@@ -118,32 +117,32 @@ describe Playful::SSDP::MulticastConnection do
 
   describe '#switch_multicast_loop' do
     before do
-      Playful::SSDP::MulticastConnection.any_instance.stub(:setup_multicast_socket)
+      allow_any_instance_of(Playful::SSDP::MulticastConnection).to receive(:setup_multicast_socket)
     end
 
     it "passes '\\001' to the socket option call when param == :on" do
-      subject.should_receive(:set_sock_opt).with(
+      expect(subject).to receive(:set_sock_opt).with(
         Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\001"
       )
       subject.switch_multicast_loop :on
     end
 
     it "passes '\\001' to the socket option call when param == '\\001'" do
-      subject.should_receive(:set_sock_opt).with(
+      expect(subject).to receive(:set_sock_opt).with(
        Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\001"
       )
       subject.switch_multicast_loop "\001"
     end
 
     it "passes '\\000' to the socket option call when param == :off" do
-      subject.should_receive(:set_sock_opt).with(
+      expect(subject).to receive(:set_sock_opt).with(
         Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000"
       )
       subject.switch_multicast_loop :off
     end
 
     it "passes '\\000' to the socket option call when param == '\\000'" do
-      subject.should_receive(:set_sock_opt).with(
+      expect(subject).to receive(:set_sock_opt).with(
         Socket::IPPROTO_IP, Socket::IP_MULTICAST_LOOP, "\000"
       )
       subject.switch_multicast_loop "\000"

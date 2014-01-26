@@ -21,7 +21,7 @@ describe Playful::SSDP::Notifier do
 
   describe '#initialize' do
     it 'creates a notification' do
-      Playful::SSDP::Notifier.any_instance.should_receive(:notification).
+      expect_any_instance_of(Playful::SSDP::Notifier).to receive(:notification).
         with(nt, usn, ddf_url, duration)
 
       subject
@@ -31,11 +31,11 @@ describe Playful::SSDP::Notifier do
   describe '#post_init' do
     context 'send_datagram returns positive value' do
       before do
-        subject.should_receive(:send_datagram).and_return 1
+        expect(subject).to receive(:send_datagram).and_return 1
       end
 
       it 'logs what was sent' do
-        subject.should_receive(:log).with /Sent notification/
+        expect(subject).to receive(:log).with /Sent notification/
 
         subject.post_init
       end
@@ -43,11 +43,11 @@ describe Playful::SSDP::Notifier do
 
     context 'send_datagram returns 0' do
       before do
-        subject.should_receive(:send_datagram).and_return 0
+        expect(subject).to receive(:send_datagram).and_return 0
       end
 
       it 'does not log what was sent' do
-        subject.should_not_receive(:log)
+        expect(subject).to_not receive(:log)
 
         subject.post_init
       end
@@ -60,14 +60,14 @@ describe Playful::SSDP::Notifier do
     end
 
     it 'builds the notification message' do
-      subject.notification(nt, usn, ddf_url, duration).should == <<-NOTE
+      expect(subject.notification(nt, usn, ddf_url, duration)).to eq <<-NOTE
 NOTIFY * HTTP/1.1\r
 HOST: 239.255.255.250:1900\r
 CACHE-CONTROL: max-age=567\r
 LOCATION: ddf url\r
 NT: en tee\r
 NTS: ssdp:alive\r
-SERVER: my OS UPnP/1.0 RubySSDP/0.1.0\r
+SERVER: my OS UPnP/1.0 Playful/#{Playful::VERSION}\r
 USN: you ess en\r
 \r
       NOTE
