@@ -166,17 +166,20 @@ this as the design settles down.
 
 * Rubies (tested)
   * 1.9.3
+  * 2.0.0
+  * 2.1.0
 * Gems
   * eventmachine
+  * em-http-request
+  * em-synchrony
   * nori
   * log_switch
   * savon
-  * thin
 * Gems (development)
   * bundler
   * rspec
   * simplecov
-  * tailor
+  * thin
   * yard
 
 == Install
