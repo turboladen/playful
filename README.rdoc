@@ -2,6 +2,7 @@
 
 * {Homepage}[http://github.com/turboladen/playful]
 * {UPnP Device Architecture Documentation}[http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf]
+* previously `upnp`
 
 {<img src="https://travis-ci.org/turboladen/playful.png?branch=master" alt="Build Status" />}[https://travis-ci.org/turboladen/playful]
 {<img src="https://coveralls.io/repos/turboladen/playful/badge.png" alt="Coverage Status" />}[https://coveralls.io/r/turboladen/playful]
