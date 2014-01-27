@@ -18,16 +18,29 @@ well as provide UPnP devices and services.
 This uses EventMachine[http://github.com/eventmachine/eventmachine], so if
 you're not already, getting familiar with its concepts will be helpful here.
 
-=== Getting Started
+=== Er, what's UPnP??
 
-I'm still working out the overall design of these components, and thus won't be
-working towards a gem release until this settles down.  As such, don't expect
-interfaces to stay the same if you update.  In the mean time, I do intend to
-keep the master branch (mostly) stable, so please feel free to give it whirl and
-report any issues you encounter.
+"Universal Plug and Play" is a mashup of network protocols that let network
+devices identify themselves and discover and use each other's services.  Common
+implementations of UPnP devices are things like:
 
-* <code>gem install bundler</code>
-* <code>bundle install</code>
+* [Media Servers and Clients](http://en.wikipedia.org/wiki/List_of_UPnP_AV_media_servers_and_clients) like...
+    * PS3
+    * Slingbox
+    * Xbox
+    * XBMC
+    * Plex
+    * VLC
+    * Twonky
+    * Mediatomb
+* Home Automation
+    * Philips Hue
+
+If you have a device that implements UPnP, you can most likely control it
+programmatically with +playful+.  You can't today, but eventually you'll be
+able to build your own devices & services with +playful+ that can be consumed
+by other UPnP clients (ex. build a media server with playful and listen on your
+PS3...).
 
 == Features
 
