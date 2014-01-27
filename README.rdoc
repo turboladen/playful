@@ -63,19 +63,19 @@ more on the options here.
   require 'playful/ssdp'
 
   # Search for all devices (do an M-SEARCH with the ST header set to 'ssdp:all')
-  all_devices = UPnP::SSDP.search                         # this is default
-  all_devices = UPnP::SSDP.search 'ssdp:all'              # or be explicit
-  all_devices = UPnP::SSDP.search :all                    # or use short-hand
+  all_devices = Playful::SSDP.search                         # this is default
+  all_devices = Playful::SSDP.search 'ssdp:all'              # or be explicit
+  all_devices = Playful::SSDP.search :all                    # or use short-hand
 
   # Search for root devices (do an M-SEARCH with ST header set to 'upnp:rootdevices')
-  root_devices = UPnP::SSDP.search 'upnp:rootdevices'
-  root_devices = UPnP::SSDP.search :root                  # or use short-hand
+  root_devices = Playful::SSDP.search 'upnp:rootdevices'
+  root_devices = Playful::SSDP.search :root                  # or use short-hand
 
   # Search for a device with a specific UUID
-  my_device = UPnP::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
+  my_device = Playful::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
 
   # Search for devices of a specific type
-  my_media_server = UPnP::SSDP.search 'urn:schemas-upnp-org:device:MediaServer:1'
+  my_media_server = Playful::SSDP.search 'urn:schemas-upnp-org:device:MediaServer:1'
 
   # All of these searches will return something that looks like
   # => [
@@ -92,17 +92,17 @@ more on the options here.
   #     ]
 
 If you do the search inside of an EventMachine reactor, as the
-UPnP::SSDP::Searcher receives and parses responses, it adds them to the accessor
+Playful::SSDP::Searcher receives and parses responses, it adds them to the accessor
 #discovery_responses, which is an EventMachine::Channel.  This lets you subscribe
 to the resposnes and do what you want with them (most likely you'll want to create
-UPnP::ControlPoint::Device objects so you can control your device) as you
+Playful::ControlPoint::Device objects so you can control your device) as you
 receive them.
 
   require 'playful/ssdp'
   require 'playful/control_point/device'
 
   EM.run do
-    searcher = UPnP::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
+    searcher = Playful::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
 
     # Create a deferrable object that can be notified when the device we want
     # has been found and created.
@@ -111,7 +111,7 @@ receive them.
     # This callback will get called when the device_creator callback is called
     # (which is called after the device has been created).
     device_controller.callback do |device|
-      p device.service_list.first.class                 # UPnP::ControlPoint::Service
+      p device.service_list.first.class                 # Playful::ControlPoint::Service
       p device.service_list.first.service_type          # "urn:schemas-upnp-org:service:ContentDirectory:1"
 
       # SOAP actions are converted to Ruby methods--show those
@@ -129,10 +129,10 @@ receive them.
     # they're put there and stop when there are none left.
     searcher.discovery_responses.pop do |notification|
 
-      # UPnP::ControlPoint::Device objects are EventMachine::Deferrables, so you
+      # Playful::ControlPoint::Device objects are EventMachine::Deferrables, so you
       # need to define callback and errback blocks to handle when the Device
       # object is done being created.
-      device_creator = UPnP::ControlPoint::Device.new(ssdp_notification: notification)
+      device_creator = Playful::ControlPoint::Device.new(ssdp_notification: notification)
 
       device_creator.errback do
         puts "Failed creating the device."
@@ -156,8 +156,8 @@ receive them.
 === ControlPoints
 
 If you're wanting to control devices and their services, you'll probably be more
-interested in using a UPnP::ControlPoint, instead of doing all that work (above)
-to create a UPnP::ControlPoint::Device.  The ControlPoint will handle doing the
+interested in using a Playful::ControlPoint, instead of doing all that work (above)
+to create a Playful::ControlPoint::Device.  The ControlPoint will handle doing the
 search and device/service creation for you and will hand you over Devices to
 control them (and present them in a UI, perhaps?) as you need.  More to come on
 this as the design settles down.

@@ -2,7 +2,7 @@ require_relative '../support/fake_upnp_device_collection'
 require 'cucumber/rspec/doubles'
 
 Thread.abort_on_exception = true
-UPnP::SSDP.log = false
+Playful::SSDP.log = false
 
 Given /^there's at least (\d+) root device in my network$/ do |device_count|
   fake_device_collection.respond_with = <<-ROOT_DEVICE
@@ -24,7 +24,7 @@ Content-Length: 0\r
 end
 
 When /^I come online$/ do
-  control_point.should be_a UPnP::ControlPoint
+  control_point.should be_a Playful::ControlPoint
 end
 
 Then /^I should discover at least (\d+) root device$/ do |device_count|

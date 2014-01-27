@@ -1,5 +1,5 @@
 When /^I create my control point$/ do
-  @control_point = UPnP::ControlPoint.new
+  @control_point = Playful::ControlPoint.new
 end
 
 When /^tell it to find all root devices$/ do

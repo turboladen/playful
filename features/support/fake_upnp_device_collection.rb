@@ -6,7 +6,7 @@ require_relative '../../lib/playful/ssdp/network_constants'
 
 class FakeUPnPDeviceCollection
   include Singleton
-  include UPnP::SSDP::NetworkConstants
+  include Playful::SSDP::NetworkConstants
 
   attr_accessor :respond_with
 
