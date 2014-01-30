@@ -1,8 +1,8 @@
 # playful
 
-*   [Homepage](http://github.com/turboladen/playful)
-*   [UPnP Device Architecture Documentation](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf)
-*   previously `upnp`
+* [Homepage](http://github.com/turboladen/playful)
+* [UPnP Device Architecture Documentation](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf)
+* previously `upnp`
 
 
 [<img src="https://travis-ci.org/turboladen/playful.png?branch=master"
@@ -49,14 +49,14 @@ your PS3...).
 
 ### Implemented
 
-*   SSDP search, discovery. (almost settled down)
-*   Ability to act as a UPnP Control Point. (in progress)
-*   Rack middleware to allow for device access in a Rack app.
+* SSDP search, discovery. (almost settled down)
+* Ability to act as a UPnP Control Point. (in progress)
+* Rack middleware to allow for device access in a Rack app.
 
 
 ### Coming
 
-*   UPnP Devices & Services (server)
+* UPnP Devices & Services (server)
 
 
 ## Examples
@@ -78,36 +78,38 @@ reactor or not. If not, it returns is an Array of responses as Hashes, where
 keys are the header names, values are the header values.  Take a look at the
 SSDP.search docs for more on the options here.
 
-    require 'playful/ssdp'
+```ruby
+require 'playful/ssdp'
 
-    # Search for all devices (do an M-SEARCH with the ST header set to 'ssdp:all')
-    all_devices = Playful::SSDP.search                         # this is default
-    all_devices = Playful::SSDP.search 'ssdp:all'              # or be explicit
-    all_devices = Playful::SSDP.search :all                    # or use short-hand
+# Search for all devices (do an M-SEARCH with the ST header set to 'ssdp:all')
+all_devices = Playful::SSDP.search                         # this is default
+all_devices = Playful::SSDP.search 'ssdp:all'              # or be explicit
+all_devices = Playful::SSDP.search :all                    # or use short-hand
 
-    # Search for root devices (do an M-SEARCH with ST header set to 'upnp:rootdevices')
-    root_devices = Playful::SSDP.search 'upnp:rootdevices'
-    root_devices = Playful::SSDP.search :root                  # or use short-hand
+# Search for root devices (do an M-SEARCH with ST header set to 'upnp:rootdevices')
+root_devices = Playful::SSDP.search 'upnp:rootdevices'
+root_devices = Playful::SSDP.search :root                  # or use short-hand
 
-    # Search for a device with a specific UUID
-    my_device = Playful::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
+# Search for a device with a specific UUID
+my_device = Playful::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
 
-    # Search for devices of a specific type
-    my_media_server = Playful::SSDP.search 'urn:schemas-upnp-org:device:MediaServer:1'
+# Search for devices of a specific type
+my_media_server = Playful::SSDP.search 'urn:schemas-upnp-org:device:MediaServer:1'
 
-    # All of these searches will return something that looks like
-    # => [
-    #      {
-    #         :control => "max-age=1200",
-    #         :date => "Sun, 23 Sep 2012 20:31:48 GMT",
-    #         :location => "http://192.168.10.3:5001/description/fetch",
-    #         :server => "Linux-i386-2.6.38-15-generic-pae, UPnP/1.0, PMS/1.50.0",
-    #         :st => "upnp:rootdevice",
-    #         :ext => "",
-    #         :usn => "uuid:3c202906-992d-3f0f-b94c-90e1902a136d::upnp:rootdevice",
-    #         :length => "0"
-    #       }
-    #     ]
+# All of these searches will return something that looks like
+# => [
+#      {
+#         :control => "max-age=1200",
+#         :date => "Sun, 23 Sep 2012 20:31:48 GMT",
+#         :location => "http://192.168.10.3:5001/description/fetch",
+#         :server => "Linux-i386-2.6.38-15-generic-pae, UPnP/1.0, PMS/1.50.0",
+#         :st => "upnp:rootdevice",
+#         :ext => "",
+#         :usn => "uuid:3c202906-992d-3f0f-b94c-90e1902a136d::upnp:rootdevice",
+#         :length => "0"
+#       }
+#     ]
+```
 
 If you do the search inside of an EventMachine reactor, as the
 Playful::SSDP::Searcher receives and parses responses, it adds them to the
@@ -116,60 +118,62 @@ you subscribe to the resposnes and do what you want with them (most likely
 you'll want to create Playful::ControlPoint::Device objects so you can control
 your device) as you receive them.
 
-    require 'playful/ssdp'
-    require 'playful/control_point/device'
+```ruby
+require 'playful/ssdp'
+require 'playful/control_point/device'
 
-    EM.run do
-      searcher = Playful::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
+EM.run do
+  searcher = Playful::SSDP.search 'uuid:3c202906-992d-3f0f-b94c-90e1902a136d'
 
-      # Create a deferrable object that can be notified when the device we want
-      # has been found and created.
-      device_controller = EventMachine::DefaultDeferrable.new
+  # Create a deferrable object that can be notified when the device we want
+  # has been found and created.
+  device_controller = EventMachine::DefaultDeferrable.new
 
-      # This callback will get called when the device_creator callback is called
-      # (which is called after the device has been created).
-      device_controller.callback do |device|
-        p device.service_list.first.class                 # Playful::ControlPoint::Service
-        p device.service_list.first.service_type          # "urn:schemas-upnp-org:service:ContentDirectory:1"
+  # This callback will get called when the device_creator callback is called
+  # (which is called after the device has been created).
+  device_controller.callback do |device|
+    p device.service_list.first.class                 # Playful::ControlPoint::Service
+    p device.service_list.first.service_type          # "urn:schemas-upnp-org:service:ContentDirectory:1"
 
-        # SOAP actions are converted to Ruby methods--show those
-        p device.service_list.first.singleton_methods     # [:GetSystemUpdateID, :Search, :GetSearchCapabilities, :GetSortCapabilities, :Browse]
+    # SOAP actions are converted to Ruby methods--show those
+    p device.service_list.first.singleton_methods     # [:GetSystemUpdateID, :Search, :GetSearchCapabilities, :GetSortCapabilities, :Browse]
 
-        # Call a SOAP method defined in the service.  The response is extracted from the
-        # XML SOAP response and the value is converted from the UPnP dataType to
-        # the related Ruby type.  Reponses are always contained in a Hash, so as
-        # to maintain the relation defined in the service.
-        p device.service_list.first.GetSystemUpdateID     # { :Id => 1 }
-      end
+    # Call a SOAP method defined in the service.  The response is extracted from the
+    # XML SOAP response and the value is converted from the UPnP dataType to
+    # the related Ruby type.  Reponses are always contained in a Hash, so as
+    # to maintain the relation defined in the service.
+    p device.service_list.first.GetSystemUpdateID     # { :Id => 1 }
+  end
 
-      # Note that you don't have to check for items in the Channel or for when the
-      # Channel is empty: EventMachine will pop objects off the Channel as soon as
-      # they're put there and stop when there are none left.
-      searcher.discovery_responses.pop do |notification|
+  # Note that you don't have to check for items in the Channel or for when the
+  # Channel is empty: EventMachine will pop objects off the Channel as soon as
+  # they're put there and stop when there are none left.
+  searcher.discovery_responses.pop do |notification|
 
-        # Playful::ControlPoint::Device objects are EventMachine::Deferrables, so you
-        # need to define callback and errback blocks to handle when the Device
-        # object is done being created.
-        device_creator = Playful::ControlPoint::Device.new(ssdp_notification: notification)
+    # Playful::ControlPoint::Device objects are EventMachine::Deferrables, so you
+    # need to define callback and errback blocks to handle when the Device
+    # object is done being created.
+    device_creator = Playful::ControlPoint::Device.new(ssdp_notification: notification)
 
-        device_creator.errback do
-          puts "Failed creating the device."
-          exit!
-        end
-
-        device_creator.callback do |built_device|
-          puts "Device has been created now."
-
-          # This lets the device_controller know that the device has been created,
-          # calls its callback, and passes the built device to it.
-          device_controller.set_deferred_status(:succeeded, built_device)
-        end
-
-        # This actually starts the Device creation process and will call the
-        # callback or errback (above) when it's done.
-        device_creator.fetch
-      end
+    device_creator.errback do
+      puts "Failed creating the device."
+      exit!
     end
+
+    device_creator.callback do |built_device|
+      puts "Device has been created now."
+
+      # This lets the device_controller know that the device has been created,
+      # calls its callback, and passes the built device to it.
+      device_controller.set_deferred_status(:succeeded, built_device)
+    end
+
+    # This actually starts the Device creation process and will call the
+    # callback or errback (above) when it's done.
+    device_creator.fetch
+  end
+end
+```
 
 ### ControlPoints
 
