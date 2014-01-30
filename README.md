@@ -208,4 +208,4 @@ over Devices to control them (and present them in a UI, perhaps?) as you need.
 
 Copyright (c) 2012-2014 Steve Loveless
 
-See LICENSE.rdoc for details.
+See LICENSE.md for details.
