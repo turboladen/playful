@@ -15,7 +15,7 @@ in a UPnP environment.}
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-  s.extra_rdoc_files = %w(History.rdoc README.rdoc)
+  s.extra_rdoc_files = %w(History.md README.md LICENSE.md)
   s.require_paths = ['lib']
   s.required_ruby_version = Gem::Requirement.new('>=1.9.1')
 
