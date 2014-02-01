@@ -39,8 +39,13 @@ module Playful
 
         http.callback {
           log "HTTP callback called for #{description_getter.object_id}"
-          response = xml_parser.parse(http.response)
-          description_getter.set_deferred_status(:succeeded, response)
+          if http.response_header.status != 200
+            log "Response status: #{http.response_header.status}"
+            description_getter.set_deferred_status(:failed)
+          else
+            response = xml_parser.parse(http.response)
+            description_getter.set_deferred_status(:succeeded, response)
+          end
         }
       end
 
