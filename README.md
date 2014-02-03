@@ -202,7 +202,7 @@ over Devices to control them (and present them in a UI, perhaps?) as you need.
 
 ## Install
 
-    $ gem install playful
+    $ gem install playful --pre
 
 ## Copyright
 
